@@ -1,6 +1,8 @@
 {
+  "name": "NeoRadio",
   "version": "1.2.0",
-  "ipk": "https://example.com/releases/enigma2-plugin-extensions-neoradio_1.2.0_all.ipk",
-  "source": "https://example.com/releases/neoradio_repo_1.2.0.tar.gz",
-  "changelog": "Expanded country station library, cleaner main UI, improved SAT/IPTV picon matching, radio fallback icon"
+  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
+  "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
+  "changelog": "Expanded country station library, cleaner main UI, improved SAT/IPTV picon matching, radio fallback icon",
+  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest"
 }
