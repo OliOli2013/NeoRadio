@@ -1,7 +1,8 @@
 {
-  "version": "1.2.1",
   "name": "NeoRadio",
-  "description": "Enigma2 internet radio plugin",
-  "update_url": "https://raw.githubusercontent.com/OliOli2013/NeoRadio/main/manifest.json",
-  "download_url": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk"
+  "version": "1.2.1",
+  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
+  "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
+  "changelog": "Automatic GitHub update from inside the plugin, built-in manifest URL, update install prompt and GUI restart prompt.",
+  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest"
 }
