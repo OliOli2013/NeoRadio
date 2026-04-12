@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Moja stacja",
+    "url": "http://example.com:8000/stream",
+    "genre": "Custom",
+    "country": "Polska",
+    "bitrate": "128",
+    "description": "Przykładowa własna stacja użytkownika.",
+    "homepage": "https://example.com",
+    "picon": "/usr/share/enigma2/picon/moja_stacja.png"
+  }
+]

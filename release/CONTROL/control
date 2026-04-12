@@ -1,0 +1,8 @@
+Package: enigma2-plugin-extensions-neoradio
+Version: 1.2.0
+Architecture: all
+Maintainer: Paweł Pawełek <aio-iptv@wp.pl>
+Section: base
+Priority: optional
+Depends: enigma2
+Description: NeoRadio internet radio plugin for Enigma2
