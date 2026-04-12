@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-VERSION="${1:-1.2.0}"
+VERSION="${1:-1.2.1}"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PKGROOT="$ROOT_DIR/pkgroot"
 WORKDIR="$ROOT_DIR/release/out/build_${VERSION}"
@@ -29,7 +29,7 @@ rm -f "$OUTIPK" "$LATESTIPK"
   ar r "$OUTIPK" debian-binary control.tar.gz data.tar.gz >/dev/null 2>&1
 )
 cp -f "$OUTIPK" "$LATESTIPK"
-tar -czf "$LATESTSRC" -C "$ROOT_DIR" pkgroot README.md LICENSE .gitignore manifest.json release
+tar --exclude="release/out" -czf "$LATESTSRC" -C "$ROOT_DIR" pkgroot README.md LICENSE .gitignore manifest.json release
 
 echo "Built versioned IPK: $OUTIPK"
 echo "Built latest IPK:    $LATESTIPK"

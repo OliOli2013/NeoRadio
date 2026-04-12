@@ -26,6 +26,10 @@ except Exception:
     VirtualKeyBoard = None
 
 from Components.ActionMap import ActionMap
+try:
+    from Components.Console import Console as ComponentsConsole
+except Exception:
+    ComponentsConsole = None
 from Components.Label import Label
 from Components.MenuList import MenuList
 from Components.Pixmap import Pixmap
@@ -37,7 +41,7 @@ except Exception:
 from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "1.2.0"
+PLUGIN_VERSION = "1.2.1"
 PLUGIN_NAME = "NeoRadio"
 PLUGIN_TITLE = "NeoRadio Online"
 PLUGIN_DESC = "NeoRadio Online"
@@ -108,6 +112,9 @@ if not hasattr(config.plugins.neoradio, "screensaver_timeout"):
     config.plugins.neoradio.screensaver_timeout = ConfigText(default="0", fixed_size=False)
 if not hasattr(config.plugins.neoradio, "github_manifest_url"):
     config.plugins.neoradio.github_manifest_url = ConfigText(default="https://raw.githubusercontent.com/OliOli2013/NeoRadio/main/manifest.json", fixed_size=False)
+
+DEFAULT_GITHUB_MANIFEST_URL = "https://raw.githubusercontent.com/OliOli2013/NeoRadio/main/manifest.json"
+UPDATE_TEMP_IPK = "/tmp/neoradio_update.ipk"
 
 
 def to_text(value):
@@ -331,7 +338,7 @@ I18N = {
         "menu_picons": u"Picon paths: %s",
         "menu_reload": u"Reload station list",
         "menu_github_url": u"GitHub update URL: %s",
-        "menu_github_check": u"Check updates from GitHub",
+        "menu_github_check": u"Check / install updates from GitHub",
         "menu_about": u"Plugin information",
         "no_keyboard_settings": u"No on-screen keyboard. You can also set the path manually in Enigma2 settings.",
         "picon_paths_title": u"Picon paths (separate with ;) ",
@@ -360,6 +367,13 @@ I18N = {
         "github_checking": u"Checking GitHub updates...",
         "github_up_to_date": u"NeoRadio is up to date.",
         "github_new_version": u"New version available: %s",
+        "github_install_prompt": u"New version available: %s\n\nChangelog:\n%s\n\nDownload and install now?",
+        "github_installing": u"installing update %s",
+        "github_install_ok": u"Update %s installed successfully.\n\nRestart Enigma2 GUI now?",
+        "github_install_fail": u"Update %s failed.\n\n%s",
+        "github_missing_ipk": u"Manifest does not contain an IPK download URL.",
+        "github_restarting": u"restarting Enigma2 GUI...",
+        "github_restart_later": u"update installed - restart GUI later",
         "github_error": u"Could not check GitHub updates.",
         "screensaver_hint": u"Press any key to return",
         "screensaver_title": u"NeoRadio screensaver",
@@ -431,7 +445,7 @@ I18N["pl"] = {
     "menu_picons": u"Ścieżki piconów: %s",
     "menu_reload": u"Przeładuj listę stacji",
     "menu_github_url": u"URL aktualizacji GitHub: %s",
-    "menu_github_check": u"Sprawdź aktualizacje z GitHub",
+    "menu_github_check": u"Sprawdź / zainstaluj aktualizacje z GitHub",
     "menu_about": u"Informacje o wtyczce",
     "no_keyboard_settings": u"Brak klawiatury ekranowej. Ścieżkę możesz też ustawić ręcznie w ustawieniach Enigma2.",
     "picon_paths_title": u"Ścieżki piconów (oddzielaj średnikiem ;)",
@@ -460,6 +474,13 @@ I18N["pl"] = {
     "github_checking": u"Sprawdzanie aktualizacji GitHub...",
     "github_up_to_date": u"NeoRadio jest aktualne.",
     "github_new_version": u"Dostępna nowa wersja: %s",
+    "github_install_prompt": u"Dostępna nowa wersja: %s\n\nLista zmian:\n%s\n\nPobrać i zainstalować teraz?",
+    "github_installing": u"instalacja aktualizacji %s",
+    "github_install_ok": u"Aktualizacja %s została zainstalowana.\n\nZrestartować teraz GUI Enigma2?",
+    "github_install_fail": u"Aktualizacja %s nie powiodła się.\n\n%s",
+    "github_missing_ipk": u"Manifest nie zawiera linku do pliku IPK.",
+    "github_restarting": u"restart GUI Enigma2...",
+    "github_restart_later": u"aktualizacja zainstalowana - zrestartuj GUI później",
     "github_error": u"Nie udało się sprawdzić aktualizacji GitHub.",
     "screensaver_hint": u"Naciśnij dowolny klawisz, aby wrócić",
     "screensaver_title": u"Wygaszacz NeoRadio",
@@ -519,6 +540,28 @@ def screensaver_timeout_label(value=None):
     if minutes <= 0:
         return tr('screensaver_off')
     return tr('screensaver_min', to_text(minutes))
+
+
+def parse_version_tuple(value):
+    numbers = re.findall(r'\d+', to_text(value))
+    if not numbers:
+        return (0,)
+    try:
+        return tuple([int(x) for x in numbers[:6]])
+    except Exception:
+        return (0,)
+
+
+def is_remote_version_newer(remote_version, local_version):
+    return parse_version_tuple(remote_version) > parse_version_tuple(local_version)
+
+
+def extract_manifest_ipk_url(info):
+    for key in ('ipk', 'ipk_url', 'download', 'url'):
+        value = to_text(info.get(key, u'')).strip()
+        if value:
+            return value
+    return text_type('')
 
 
 def is_playlist_like_url(url):
@@ -826,6 +869,8 @@ class NeoRadioMain(Screen):
         self.bouquet_service_map = None
         self.playing_station_data = None
         self.playlist_cache = {}
+        self.github_console = None
+        self.github_update_info = {}
 
         self["list_title"] = Label(text_type(""))
         self["header_title"] = Label(text_type(""))
@@ -1639,7 +1684,7 @@ class NeoRadioMain(Screen):
         self["status_label"].setText(tr("status_prefix", tr("menu_github_url", value or tr("none"))))
 
     def check_github_updates(self):
-        url = to_text(config.plugins.neoradio.github_manifest_url.value).strip()
+        url = to_text(config.plugins.neoradio.github_manifest_url.value).strip() or DEFAULT_GITHUB_MANIFEST_URL
         if not url:
             self.session.open(MessageBox, tr("github_not_set"), MessageBox.TYPE_INFO, timeout=6)
             return
@@ -1648,12 +1693,79 @@ class NeoRadioMain(Screen):
             raw = fetch_text_url(url, timeout=10)
             info = json.loads(raw)
             remote_version = to_text(info.get('version', u'')).strip()
-            if remote_version and remote_version != PLUGIN_VERSION:
-                self.session.open(MessageBox, tr("github_new_version", remote_version), MessageBox.TYPE_INFO, timeout=8)
+            if not remote_version:
+                raise Exception('missing version')
+            if is_remote_version_newer(remote_version, PLUGIN_VERSION):
+                ipk_url = extract_manifest_ipk_url(info)
+                if not ipk_url:
+                    self.session.open(MessageBox, tr("github_missing_ipk"), MessageBox.TYPE_INFO, timeout=8)
+                    return
+                changelog = to_text(info.get('changelog', u'-')).strip() or u'-'
+                self.github_update_info = {
+                    'version': remote_version,
+                    'ipk': ipk_url,
+                    'changelog': changelog,
+                }
+                prompt = tr("github_install_prompt", remote_version, changelog)
+                self.session.openWithCallback(self.github_install_prompt_callback, MessageBox, prompt, MessageBox.TYPE_YESNO)
             else:
                 self.session.open(MessageBox, tr("github_up_to_date"), MessageBox.TYPE_INFO, timeout=6)
         except Exception:
             self.session.open(MessageBox, tr("github_error"), MessageBox.TYPE_INFO, timeout=6)
+
+    def github_install_prompt_callback(self, answer):
+        if not answer:
+            return
+        info = self.github_update_info or {}
+        ipk_url = to_text(info.get('ipk', u'')).strip()
+        remote_version = to_text(info.get('version', u'')).strip() or u'?'
+        if not ipk_url:
+            self.session.open(MessageBox, tr("github_missing_ipk"), MessageBox.TYPE_INFO, timeout=8)
+            return
+        self.install_github_update(ipk_url, remote_version)
+
+    def install_github_update(self, ipk_url, remote_version):
+        self.touch_activity()
+        self["status_label"].setText(tr("status_prefix", tr("github_installing", remote_version)))
+        safe_url = to_text(ipk_url).replace('"', '%22')
+        cmd = 'rm -f "%(tmp)s"; wget --no-check-certificate -O "%(tmp)s" "%(url)s" && opkg install --force-reinstall "%(tmp)s"' % {
+            'tmp': UPDATE_TEMP_IPK,
+            'url': safe_url,
+        }
+        self.github_update_info['version'] = remote_version
+        if ComponentsConsole is not None:
+            try:
+                self.github_console = ComponentsConsole()
+                self.github_console.ePopen(cmd, self.github_install_finished)
+                return
+            except Exception:
+                self.github_console = None
+        retval = os.system(cmd)
+        self.github_install_finished(text_type(''), retval, None)
+
+    def github_install_finished(self, result, retval, extra_args=None):
+        try:
+            if os.path.exists(UPDATE_TEMP_IPK):
+                os.remove(UPDATE_TEMP_IPK)
+        except Exception:
+            pass
+        remote_version = to_text((self.github_update_info or {}).get('version', u'?'))
+        if retval == 0:
+            self.session.openWithCallback(self.github_restart_callback, MessageBox, tr("github_install_ok", remote_version), MessageBox.TYPE_YESNO)
+        else:
+            output = to_text(result).strip()
+            if not output:
+                output = u'opkg/wget returned code %s' % to_text(retval)
+            if len(output) > 700:
+                output = output[-700:]
+            self.session.open(MessageBox, tr("github_install_fail", remote_version, output), MessageBox.TYPE_INFO, timeout=12)
+
+    def github_restart_callback(self, answer):
+        if answer:
+            self["status_label"].setText(tr("status_prefix", tr("github_restarting")))
+            os.system('(sleep 2; killall -9 enigma2) >/dev/null 2>&1 &')
+        else:
+            self["status_label"].setText(tr("status_prefix", tr("github_restart_later")))
 
     def picon_paths_callback(self, text=None):
         if text is None:

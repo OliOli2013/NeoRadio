@@ -1,8 +1,8 @@
 {
   "name": "NeoRadio",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
-  "changelog": "Expanded country station library, cleaner main UI, improved SAT/IPTV picon matching, radio fallback icon",
+  "changelog": "Automatic GitHub update from inside the plugin, built-in manifest URL, update install prompt and GUI restart prompt.",
   "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest"
 }

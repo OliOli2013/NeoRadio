@@ -1,0 +1,1646 @@
+[
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "-",
+    "genre": "Pop",
+    "homepage": "",
+    "name": "Hitrádio FM (Severní Čechy)",
+    "picon": "",
+    "url": "http://ice.abradio.cz/hitradiofm128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "Hity pro lepší náladu",
+    "genre": "Pop",
+    "homepage": "",
+    "name": "Hitrádio Magic (Východní Čechy)",
+    "picon": "",
+    "url": "http://ice.abradio.cz/magic128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "Czech Radio Brno.",
+    "genre": "Regional",
+    "homepage": "https://brno.rozhlas.cz",
+    "name": "ČRo Brno",
+    "url": "https://rozhlas.stream/brno_mp3_128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "Czech Radio D-dur.",
+    "genre": "Classical",
+    "homepage": "https://d-dur.rozhlas.cz",
+    "name": "ČRo D-dur",
+    "url": "https://rozhlas.stream/ddur_mp3_128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "Czech Radio Dvojka.",
+    "genre": "General",
+    "homepage": "https://dvojka.rozhlas.cz",
+    "name": "ČRo Dvojka",
+    "url": "https://rozhlas.stream/dvojka_mp3_128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "-",
+    "genre": "Jazz",
+    "homepage": "",
+    "name": "ČRo Jazz",
+    "picon": "",
+    "url": "http://www.rozhlas.cz/audio/download/aac-crojazz-128.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "Czech Radio Ostrava.",
+    "genre": "Regional",
+    "homepage": "https://ostrava.rozhlas.cz",
+    "name": "ČRo Ostrava",
+    "url": "https://rozhlas.stream/ostrava_mp3_128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "Celoplošná stanice Český rozhlas Plus nabízí analytickou publicistiku, komentáře, diskuse, interaktivní pořady. Analyzuje současnost a aktuální dění v širších souvislostech společenských, historických, ekonomických či kulturních. Český rozhlas Plus je informačním kanálem také pro témata z oblasti vědy a techniky nebo historie. Navazuje na stanice ČRo 6, Rádio Česko a Leonardo.",
+    "genre": "Talk-Progressive",
+    "homepage": "",
+    "name": "ČRo Plus",
+    "picon": "",
+    "url": "http://amp.cesnet.cz:8000/cro-plus.ogg.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "Czech Radio Pohoda.",
+    "genre": "Easy listening",
+    "homepage": "https://pohoda.rozhlas.cz",
+    "name": "ČRo Pohoda",
+    "url": "https://rozhlas.stream/pohoda_mp3_128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "Czech Radio Junior.",
+    "genre": "Kids",
+    "homepage": "https://junior.rozhlas.cz",
+    "name": "ČRo Radio Junior",
+    "url": "https://rozhlas.stream/radiojunior_mp3_128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "Český rozhlas Radio Wave is a public-radio station oriented primarily towards a young-thinking audience. We cover contemporary cultural and social events. We offer a variety of impulses that can help you find a way out of mainstream stereotypes. We share your passion for fresh music, and we bring you alternatives of many styles and genres.",
+    "genre": "Rock-Alternative",
+    "homepage": "",
+    "name": "ČRo Radio Wave",
+    "picon": "",
+    "url": "http://icecast5.play.cz:8000/crowave-128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "Český Rozhlas - Radiožurnál je moderní zpravodajsko-publicistická stanice, příjemná k poslechu všem cílovým skupinám. Ve svém vysílání se soustřeďuje na okamžité a rychlé zpravodajství, které se prolíná celým dnem a má přednost před jakýmkoliv naplánovaným programem. 24 hodin denně nabízí rychlý, kvalitní a komplexní informační servis o událostech doma i v zahraničí.",
+    "genre": "Talk-News",
+    "homepage": "",
+    "name": "ČRo Radiožurnál",
+    "picon": "",
+    "url": "http://icecast7.play.cz:443/cro1-128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "Czech Radio sports channel.",
+    "genre": "Sport",
+    "homepage": "https://radiozurnal.rozhlas.cz",
+    "name": "ČRo Radiožurnál Sport",
+    "url": "https://rozhlas.stream/radiozurnal-sport_mp3_128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "Czech Radio Sever.",
+    "genre": "Regional",
+    "homepage": "https://sever.rozhlas.cz",
+    "name": "ČRo Sever",
+    "url": "https://rozhlas.stream/sever_mp3_128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Czechy",
+    "description": "https://www.facebook.com/ceskyrozhlas https://twitter.com/crozhlas Český rozhlas Vltava je kulturní stanicí. Zabýváme se kulturou v nejširším slova smyslu: vysíláme, natáčíme a pořádáme koncerty klasické a jazzové hudby, vytváříme rozhlasové hry, dokumenty a četby, informujeme o všem, co se v Česku v kultuře děje.",
+    "genre": "Classical",
+    "homepage": "",
+    "name": "ČRo Vltava",
+    "picon": "",
+    "url": "http://radio.cesnet.cz/cgi-bin/cro3-256-ogg.pls"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "Cherie FM live stream.",
+    "genre": "Adult contemporary",
+    "homepage": "https://www.cheriefm.fr",
+    "name": "Cherie FM",
+    "url": "https://scdn.nrjaudio.fm/audio1/fr/30201/mp3_128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "French-language radio station that exclusively broadcasts House, Techno, Dance and R'n'B music. Radio FG (since February 2013, formerly FG DJ Radio) is a French-language radio station that began broadcasting from Paris on 98.2 MHz in the FM band in 1981. It is a radio station that exclusively broadcasts House, Techno, Dance and R'n'B",
+    "genre": "Dance/DJ",
+    "homepage": "",
+    "name": "FG.fr",
+    "picon": "",
+    "url": "http://radiofg.impek.com/fg.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "Curated eclectic music from Radio France.",
+    "genre": "Eclectic",
+    "homepage": "https://www.radiofrance.fr/fip",
+    "name": "FIP",
+    "url": "https://icecast.radiofrance.fr/fip-midfi.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "Music interrupted by traffic updates and cultural information with a short news broadcast at 10 before the hour, with no advertising. The broadcasts are presented by live announcers from 7 am to 11 pm, after which a robot replays parts of the music broadcast the previous day. FIP's programming is an eclectic mix of musical genres: chanson, rock, world music, classical music, film music, jazz and more, but connected with a theme. FIP is one of the few stations with this type of programming in the world.",
+    "genre": "Variety",
+    "homepage": "",
+    "name": "FIP Bordeaux",
+    "picon": "",
+    "url": "http://direct.fipradio.fr/live/fipbordeaux-midfi.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "French public culture radio.",
+    "genre": "Culture",
+    "homepage": "https://www.radiofrance.fr/franceculture",
+    "name": "France Culture",
+    "url": "https://icecast.radiofrance.fr/franceculture-midfi.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "French public news radio.",
+    "genre": "News",
+    "homepage": "https://www.francetvinfo.fr/en-direct/radio.html",
+    "name": "France Info",
+    "url": "https://icecast.radiofrance.fr/franceinfo-midfi.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "-",
+    "genre": "Talk-Public Radio",
+    "homepage": "",
+    "name": "France Inter",
+    "picon": "",
+    "url": "http://direct.franceinter.fr/live/franceinter-midfi.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "French public classical radio.",
+    "genre": "Classical",
+    "homepage": "https://www.radiofrance.fr/francemusique",
+    "name": "France Musique",
+    "url": "https://icecast.radiofrance.fr/francemusique-midfi.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "French public youth and urban radio.",
+    "genre": "Urban",
+    "homepage": "https://www.radiofrance.fr/mouv",
+    "name": "Mouv'",
+    "url": "https://icecast.radiofrance.fr/mouv-midfi.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "-",
+    "genre": "70s/80s",
+    "homepage": "",
+    "name": "Nostalgie.fr - Generation 80",
+    "picon": "",
+    "url": "http://cdn.nrjaudio.fm/adwz1/fr/55524/mp3_128.mp3?"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "Radio locale des pays de Savoie",
+    "genre": "Rock-Pop",
+    "homepage": "",
+    "name": "ODS Radio",
+    "picon": "",
+    "url": "http://broadcast.infomaniak.net/ods-high.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "French classical and talk radio.",
+    "genre": "Classical",
+    "homepage": "https://www.radioclassique.fr",
+    "name": "Radio Classique",
+    "url": "https://radioclassique.ice.infomaniak.ch/radioclassique-high.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "Classique le jour, jazz la nuit, magazines culturels, sans publicité Radio du Finistère (Bretagne)",
+    "genre": "Classical",
+    "homepage": "",
+    "name": "Radio Neptune",
+    "picon": "",
+    "url": "http://icecast.infini.fr:8000/neptune"
+  },
+  {
+    "bitrate": "64",
+    "country": "Francja",
+    "description": "Radio France Internationale world service.",
+    "genre": "News",
+    "homepage": "https://www.rfi.fr",
+    "name": "RFI Monde",
+    "url": "https://rfimonde64k.ice.infomaniak.ch/rfimonde-64.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "Une des principales radios généralistes françaises",
+    "genre": "Talk-Public Radio",
+    "homepage": "",
+    "name": "RTL",
+    "picon": "",
+    "url": "http://streaming.radio.rtl.fr/rtl-1-44-128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Francja",
+    "description": "Le son pop rock",
+    "genre": "Hit Radio - Rock/Top 40",
+    "homepage": "",
+    "name": "RTL2",
+    "picon": "",
+    "url": "http://radio.rtl2.fr/playlist/rtl2_hq.pls"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "-",
+    "genre": "Dance/DJ",
+    "homepage": "",
+    "name": "Activa FM Denia",
+    "picon": "",
+    "url": "http://emisorasmusicales.es:8030/denia.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "-",
+    "genre": "Hit Radio - Rock/Top 40",
+    "homepage": "",
+    "name": "Activa FM Valencia",
+    "picon": "",
+    "url": "http://emisorasmusicales.es:8030/valencia.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Cadena Dial live stream.",
+    "genre": "Spanish hits",
+    "homepage": "https://cadenadial.com",
+    "name": "Cadena Dial",
+    "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CADENADIAL.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Cadena SER live stream.",
+    "genre": "Talk",
+    "homepage": "https://cadenaser.com",
+    "name": "Cadena SER",
+    "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CADENASER.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "COPE live stream.",
+    "genre": "Talk",
+    "homepage": "https://www.cope.es",
+    "name": "COPE",
+    "url": "https://net2.cope.stream.flumotion.com/cope/net2.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Radio de Libertad Digital. Madrid, España",
+    "genre": "Talk-News",
+    "homepage": "",
+    "name": "esRadio España",
+    "picon": "",
+    "url": "http://livestreaming.esradio.fm/stream64.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Hits & Dance Radio",
+    "genre": "Electronica-Dance/DJ",
+    "homepage": "",
+    "name": "Happy FM - Spain",
+    "picon": "",
+    "url": "http://happyfm.streaming-pro.com:8038"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Kiss FM Spain live stream.",
+    "genre": "Adult contemporary",
+    "homepage": "https://kissfm.es",
+    "name": "Kiss FM Spain",
+    "url": "https://kissfm.kissfmradio.cires21.com/kissfm.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Los 40 live stream.",
+    "genre": "Hits",
+    "homepage": "https://los40.com",
+    "name": "Los 40",
+    "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Ona mediterrania, radio mallorquina plural i de qualitat",
+    "genre": "Variety",
+    "homepage": "",
+    "name": "Ona Mediterrania",
+    "picon": "",
+    "url": "http://streaming.enantena.com:8000/onamediterrania128.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Radio from Basauri, major municipality of Biscay, in the Basque Country",
+    "genre": "Hits",
+    "homepage": "",
+    "name": "Oye Radio",
+    "picon": "",
+    "url": "http://5.135.155.232:8009/stream"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "La información de los mercados en tiempo real. España",
+    "genre": "Talk-Business",
+    "homepage": "",
+    "name": "Radio Intereconomía 98.2 FM",
+    "picon": "",
+    "url": "http://streaming.elitecomunicacion.es:8004/"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Spanish public alternative music radio.",
+    "genre": "Alternative",
+    "homepage": "https://www.rtve.es/play/radio/radio-3/",
+    "name": "RNE Radio 3",
+    "url": "https://rtvelivestream.akamaized.net/rtvesec/rne/rne_r3_main.m3u8"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Spanish public radio channel 4.",
+    "genre": "General",
+    "homepage": "https://www.rtve.es/play/radio/radio-4/",
+    "name": "RNE Radio 4",
+    "url": "https://rtvelivestream.akamaized.net/rtvesec/rne/rne_r4_main.m3u8"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Spanish public news radio.",
+    "genre": "News",
+    "homepage": "https://www.rtve.es/play/radio/radio-5/",
+    "name": "RNE Radio 5",
+    "url": "https://rtvelivestream.akamaized.net/rtvesec/rne/rne_r5_main.m3u8"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Spanish public classical radio.",
+    "genre": "Classical",
+    "homepage": "https://www.rtve.es/play/radio/radio-clasica/",
+    "name": "RNE Radio Clásica",
+    "url": "https://rtvelivestream.akamaized.net/rtvesec/rne/rne_r2_main.m3u8"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Spanish public national radio.",
+    "genre": "News / General",
+    "homepage": "https://www.rtve.es/play/radio/radio-nacional/",
+    "name": "RNE Radio Nacional",
+    "url": "https://rtvelivestream.akamaized.net/rtvesec/rne/rne_r1_main.m3u8"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Rock FM Spain.",
+    "genre": "Rock",
+    "homepage": "https://www.rockfm.fm",
+    "name": "Rock FM",
+    "url": "https://rockfm-cope.flumotion.com/cope/rockfm.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Hiszpania",
+    "description": "Location: Marbella",
+    "genre": "Talk",
+    "homepage": "",
+    "name": "Talk Radio Europe",
+    "picon": "",
+    "url": "http://s3.yesstreaming.net:7014/;stream/"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "WDR youth radio.",
+    "genre": "Hits",
+    "homepage": "https://www1.wdr.de/radio/1live",
+    "name": "1LIVE",
+    "url": "https://wdr-wdr1live-live.icecastssl.wdr.de/wdr/1live/live/mp3/128/stream.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "Commercial radio station for the German state of Bavaria",
+    "genre": "Hit Radio - Rock/Top 40",
+    "homepage": "",
+    "name": "Antenne Bayern",
+    "picon": "",
+    "url": "http://www.antenne.de/webradio/antenne.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "Das Heimatradio des Bayerischen Rundfunks",
+    "genre": "Variety",
+    "homepage": "",
+    "name": "BR - Bayern 1 Oberbayern",
+    "picon": "",
+    "url": "http://streams.br.de/bayern1obb_2.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "Das Popradio des Bayerischen Rundfunks",
+    "genre": "Adult Contemporary",
+    "homepage": "",
+    "name": "BR - Bayern 3",
+    "picon": "",
+    "url": "http://streams.br.de/bayern3_2.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "Bayerischer Rundfunk classical channel.",
+    "genre": "Classical",
+    "homepage": "https://www.br-klassik.de",
+    "name": "BR Klassik",
+    "url": "http://streams.br.de/br-klassik_2.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "Informationen aus Politik, Wirtschaft und Kultur",
+    "genre": "Talk-Public Radio",
+    "homepage": "",
+    "name": "Deutschlandfunk",
+    "picon": "",
+    "url": "http://www.deutschlandradio.de/streaming/dlf.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "Formerly Deutschlandradio Kultur. Alles zum aktuellen Geschehen in Kunst, Kultur und Wissenschaft.",
+    "genre": "Talk",
+    "homepage": "",
+    "name": "Deutschlandfunk Kultur",
+    "picon": "",
+    "url": "http://www.deutschlandradio.de/streaming/dkultur.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "Formerly Deutschlandradio Wissen (DRadio Wissen ). DLF Nova - All about knowledge. Science, Culture, Internet, News, Future",
+    "genre": "Talk",
+    "homepage": "",
+    "name": "Deutschlandfunk Nova",
+    "picon": "",
+    "url": "http://www.dradio.de/streaming/dradiowissen.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "German classical radio.",
+    "genre": "Classical",
+    "homepage": "https://www.klassikradio.de",
+    "name": "Klassik Radio",
+    "url": "https://klassikr-icecast.rosebud-media.de/klassik-radio.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "NDR youth radio N-JOY.",
+    "genre": "Hits",
+    "homepage": "https://www.n-joy.de",
+    "name": "N-JOY",
+    "url": "https://icecast.ndr.de/ndr/njoy/live/mp3/128/stream.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "NDR 2 live stream.",
+    "genre": "Adult contemporary",
+    "homepage": "https://www.ndr.de/ndr2",
+    "name": "NDR 2",
+    "url": "https://icecast.ndr.de/ndr/ndr2/niedersachsen/mp3/128/stream.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "Culture and classical music from NDR.",
+    "genre": "Culture",
+    "homepage": "https://www.ndr.de/kultur",
+    "name": "NDR Kultur",
+    "url": "https://icecast.ndr.de/ndr/ndrkultur/live/mp3/128/stream.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "Das beste Radio aus Berlin und nur für Erwachsene",
+    "genre": "Adult Contemporary",
+    "homepage": "",
+    "name": "RBB Radio Eins",
+    "picon": "",
+    "url": "http://www.radioeins.de/live.pls"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "Pop-Radio für Baden-Württemberg, Rheinland-Pfalz und den Rest der Welt",
+    "genre": "Hit Radio - Rock/Top 40",
+    "homepage": "",
+    "name": "SWR3",
+    "picon": "",
+    "url": "http://mp3-live.swr3.de/swr3_m.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "WDR 2 live stream.",
+    "genre": "Adult contemporary",
+    "homepage": "https://www1.wdr.de/radio/wdr2",
+    "name": "WDR 2",
+    "url": "https://wdr-wdr2-live.icecastssl.wdr.de/wdr/wdr2/live/mp3/128/stream.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Niemcy",
+    "description": "WDR classical music and culture.",
+    "genre": "Classical",
+    "homepage": "https://www1.wdr.de/radio/wdr3",
+    "name": "WDR 3",
+    "url": "https://wdr-wdr3-live.icecastssl.wdr.de/wdr/wdr3/live/mp3/128/stream.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Antyradio.",
+    "genre": "Rock",
+    "homepage": "https://www.antyradio.pl/",
+    "name": "Antyradio",
+    "picon": "",
+    "url": "https://an.cdn.eurozet.pl/ant-waw.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "ChilliZET.",
+    "genre": "Chillout",
+    "homepage": "https://player.radiozet.pl/",
+    "name": "ChilliZET",
+    "picon": "",
+    "url": "https://ch.cdn.eurozet.pl/chi-net.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Czwórka Polskiego Radia.",
+    "genre": "Młodzież / Muzyka",
+    "homepage": "https://czworka.polskieradio.pl/",
+    "name": "Czwórka",
+    "picon": "",
+    "url": "http://stream3.polskieradio.pl:8956"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Program 2 Polskiego Radia.",
+    "genre": "Kultura / Klasyka",
+    "homepage": "https://dwojka.polskieradio.pl/",
+    "name": "Dwójka",
+    "picon": "",
+    "url": "http://stream3.polskieradio.pl:8952"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Kanał imprezowy ESKA.",
+    "genre": "Pop-Dance",
+    "homepage": "https://fmstream.org/eska-impreska-live",
+    "name": "Eska - Impreska",
+    "picon": "",
+    "url": "http://ic1.smcdn.pl/6030-1.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Letni kanał ESKA z katalogu FMStream.",
+    "genre": "Dance",
+    "homepage": "https://fmstream.org/eska-summer-city-live",
+    "name": "Eska - Summer City",
+    "picon": "",
+    "url": "http://ic1.smcdn.pl/6120-1.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Kanał ESKA 2 dla dzieci.",
+    "genre": "Kids",
+    "homepage": "https://fmstream.org/eska2-dla-dzieci-live",
+    "name": "Eska 2 - Dla Dzieci",
+    "picon": "",
+    "url": "http://waw.ic.smcdn.pl/6220-1.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Rockowy kanał Eska Rock z katalogu FMStream.",
+    "genre": "Rock",
+    "homepage": "https://fmstream.org/index.php?s=eska+rock+dobrze+rockuje",
+    "name": "Eska Rock - Dobrze Rockuje",
+    "picon": "",
+    "url": "http://ic1.smcdn.pl/2120-1.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Program 1 Polskiego Radia.",
+    "genre": "Publicystyka / Muzyka",
+    "homepage": "https://jedynka.polskieradio.pl/",
+    "name": "Jedynka",
+    "picon": "",
+    "url": "http://stream3.polskieradio.pl:8950"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Melo.",
+    "genre": "Adult contemporary",
+    "homepage": "https://player.radiozet.pl/",
+    "name": "Melo",
+    "picon": "",
+    "url": "https://ml.cdn.eurozet.pl/mel-net.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Muzyczne Radio Jelenia Góra.",
+    "genre": "Pop / Rock",
+    "homepage": "https://www.muzyczneradio.pl/",
+    "name": "Muzyczne Radio",
+    "picon": "",
+    "url": "http://stream3.nadaje.com:9000/"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Kanał informacyjny Polskiego Radia.",
+    "genre": "News",
+    "homepage": "https://polskieradio24.pl/",
+    "name": "Polskie Radio 24",
+    "picon": "",
+    "url": "http://stream3.polskieradio.pl:8480"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Chopin.",
+    "genre": "Classical",
+    "homepage": "https://chopin.polskieradio.pl/",
+    "name": "Polskie Radio Chopin",
+    "picon": "",
+    "url": "http://stream3.polskieradio.pl:8960"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Stacja dla dzieci.",
+    "genre": "Dla dzieci",
+    "homepage": "https://www.polskieradio.pl/",
+    "name": "Polskie Radio Dzieciom",
+    "picon": "",
+    "url": "http://stream3.polskieradio.pl:8966"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Polskie Radio Kierowców.",
+    "genre": "Motoryzacja / Muzyka",
+    "homepage": "https://www.polskieradio.pl/",
+    "name": "Polskie Radio Kierowców",
+    "picon": "",
+    "url": "http://stream3.polskieradio.pl:8968"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Oficjalny publiczny stream HTTP dla urządzeń z ręcznym wpisaniem URL.",
+    "genre": "Muzyka / Publicystyka",
+    "homepage": "https://radio357.pl/",
+    "name": "Radio 357",
+    "picon": "",
+    "url": "http://live.r357.eu"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Białystok.",
+    "genre": "Regionalne",
+    "homepage": "https://www.radio.bialystok.pl/",
+    "name": "Radio Białystok",
+    "picon": "",
+    "url": "http://stream4.nadaje.com:15476/radiobialystok"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Hity na Czasie.",
+    "genre": "Pop",
+    "homepage": "https://player.eska.pl/",
+    "name": "Radio ESKA",
+    "picon": "",
+    "url": "http://ic1.smcdn.pl/2380-1.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Main Eska Rock stream.",
+    "genre": "Rock",
+    "homepage": "https://www.eskarock.pl",
+    "name": "Radio Eska Rock",
+    "url": "http://waw.ic.smcdn.pl/2070-1.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Regional hit radio.",
+    "genre": "Regional",
+    "homepage": "https://radiofest.pl",
+    "name": "Radio Fest",
+    "url": "http://stream4.nadaje.com:10764/fest"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Gdańsk.",
+    "genre": "Regionalne",
+    "homepage": "https://radiogdansk.pl/",
+    "name": "Radio Gdańsk",
+    "picon": "",
+    "url": "http://stream.task.gda.pl:8000/rg1"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Regional radio from Częstochowa.",
+    "genre": "Regional",
+    "homepage": "https://radiojura.pl",
+    "name": "Radio Jura",
+    "url": "http://stream4.nadaje.com:10786/jura"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Akademickie Radio Kampus.",
+    "genre": "College / Alternative",
+    "homepage": "https://radiokampus.fm/",
+    "name": "Radio Kampus",
+    "picon": "",
+    "url": "http://193.0.98.66:8002/"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Katowice.",
+    "genre": "Regionalne",
+    "homepage": "https://www.radio.katowice.pl/",
+    "name": "Radio Katowice",
+    "picon": "",
+    "url": "http://stream4.nadaje.com:9212/radiokatowice"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Kielce.",
+    "genre": "Regionalne",
+    "homepage": "https://radiokielce.pl/",
+    "name": "Radio Kielce",
+    "picon": "",
+    "url": "http://gra.radio.kielce.pl:8000/rk1"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Kraków.",
+    "genre": "Regionalne",
+    "homepage": "https://www.radiokrakow.pl/",
+    "name": "Radio Kraków",
+    "picon": "",
+    "url": "http://stream3.nadaje.com:9116/radiokrakow"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Lublin.",
+    "genre": "Regionalne",
+    "homepage": "https://radio.lublin.pl/",
+    "name": "Radio Lublin",
+    "picon": "",
+    "url": "https://streaming.radio.lublin.pl:8843/128k"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Fallback HTTP dla odbiorników bez obsługi HTTPS.",
+    "genre": "Muzyka / Publicystyka",
+    "homepage": "https://nowyswiat.online/",
+    "name": "Radio Nowy Świat",
+    "picon": "",
+    "url": "http://stream.rcs.revma.com/ypqt40u0x1zuv"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Regional radio from Olsztyn.",
+    "genre": "Regional",
+    "homepage": "https://radioolsztyn.pl",
+    "name": "Radio Olsztyn",
+    "url": "http://stream4.nadaje.com:8286/olsztyn"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Regional radio from Opole.",
+    "genre": "Regional",
+    "homepage": "https://radio.opole.pl",
+    "name": "Radio Opole",
+    "url": "http://stream4.nadaje.com:8648/opole"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Regional radio from Bydgoszcz and Toruń.",
+    "genre": "Regional",
+    "homepage": "https://radiopik.pl",
+    "name": "Radio PiK",
+    "url": "http://stream4.nadaje.com:9720/pik"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Plus.",
+    "genre": "Talk / Easy",
+    "homepage": "https://radioplus.pl/",
+    "name": "Radio Plus",
+    "picon": "",
+    "url": "https://pl.cdn.eurozet.pl/plu-waw.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Pogoda.",
+    "genre": "Oldies",
+    "homepage": "https://www.radiopogoda.pl/",
+    "name": "Radio Pogoda",
+    "picon": "",
+    "url": "http://stream10.radioagora.pl/tuba38-1.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Polskie Radio dla Zagranicy.",
+    "genre": "News / English",
+    "homepage": "https://www.polskieradio.pl/",
+    "name": "Radio Poland",
+    "picon": "",
+    "url": "http://stream3.polskieradio.pl:8958"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Poznań.",
+    "genre": "Regionalne",
+    "homepage": "https://radiopoznan.fm/",
+    "name": "Radio Poznań",
+    "picon": "",
+    "url": "http://stream4.nadaje.com:8578/poznan"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Local and regional hits.",
+    "genre": "Regional",
+    "homepage": "https://radiorekord.fm",
+    "name": "Radio Rekord",
+    "url": "http://stream4.nadaje.com:10262/rekord"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Regional radio from Rzeszów.",
+    "genre": "Regional",
+    "homepage": "https://radio.rzeszow.pl",
+    "name": "Radio Rzeszów",
+    "url": "http://stream4.nadaje.com:9178/rzeszow"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Silesian regional station.",
+    "genre": "Regional",
+    "homepage": "https://radiosilesia.pl",
+    "name": "Radio Silesia",
+    "url": "http://stream4.nadaje.com:8462/silesia"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Szczecin.",
+    "genre": "Regionalne",
+    "homepage": "https://radioszczecin.pl/",
+    "name": "Radio Szczecin",
+    "picon": "",
+    "url": "http://stream4.nadaje.com:11986/prs"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Talk and current affairs radio.",
+    "genre": "Talk",
+    "homepage": "https://wnet.fm",
+    "name": "Radio WNET",
+    "url": "http://stream5.nadaje.com:8096/radiownet"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Wrocław.",
+    "genre": "Regionalne",
+    "homepage": "https://www.radiowroclaw.pl/",
+    "name": "Radio Wrocław",
+    "picon": "",
+    "url": "http://stream4.nadaje.com:9240/prw"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Regional radio from western Poland.",
+    "genre": "Regional",
+    "homepage": "https://zachod.pl",
+    "name": "Radio Zachód",
+    "url": "http://stream4.nadaje.com:10626/zachod"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio ZET.",
+    "genre": "Hits",
+    "homepage": "https://player.radiozet.pl/",
+    "name": "Radio ZET",
+    "picon": "",
+    "url": "https://zt.cdn.eurozet.pl/zet-net.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Classic hits from Radio ZET Gold.",
+    "genre": "Oldies",
+    "homepage": "https://gold.radiozet.pl",
+    "name": "Radio ZET Gold",
+    "url": "https://zg.cdn.eurozet.pl/zetgold-net.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Największe przeboje lat 80., 90. i 00.",
+    "genre": "Oldies",
+    "homepage": "https://fmstream.org/index.php?s=radio+zlote+przeboje",
+    "name": "Radio Złote Przeboje",
+    "picon": "",
+    "url": "https://radiostream.pl/tuba8938-1.mp3"
+  },
+  {
+    "bitrate": "96",
+    "country": "Polska",
+    "description": "Radio Łódź.",
+    "genre": "Regionalne",
+    "homepage": "https://www.radiolodz.pl/",
+    "name": "Radio Łódź",
+    "picon": "",
+    "url": "https://stream.radiolodz.toya.cloud/RadioLodz-1-LQ-0935616413-web.aac"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "RMF Classic.",
+    "genre": "Classical / Film",
+    "homepage": "https://www.rmfclassic.pl/",
+    "name": "RMF Classic",
+    "picon": "",
+    "url": "http://195.150.20.242:8000/rmf_classic"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "RMF FM.",
+    "genre": "Hits",
+    "homepage": "https://www.rmf.fm/",
+    "name": "RMF FM",
+    "picon": "",
+    "url": "http://195.150.20.242:8000/rmf_fm"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "RMF MAXX.",
+    "genre": "CHR / Dance",
+    "homepage": "https://www.rmfmaxx.pl/",
+    "name": "RMF MAXX",
+    "picon": "",
+    "url": "http://195.150.20.242:8000/rmf_maxxx"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "TOK FM przez playlistę PLS.",
+    "genre": "Talk / News",
+    "homepage": "https://audycje.tokfm.pl/",
+    "name": "TOK FM",
+    "picon": "",
+    "url": "http://www.radio.pionier.net.pl/stream.pls?radio=radiotok"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Program 3 Polskiego Radia.",
+    "genre": "Muzyka / Publicystyka",
+    "homepage": "https://trojka.polskieradio.pl/",
+    "name": "Trójka",
+    "picon": "",
+    "url": "http://stream3.polskieradio.pl:8954"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Tematyczny kanał VOX z katalogu FMStream.",
+    "genre": "Dance",
+    "homepage": "https://fmstream.org/index.php?c=POL&n=600",
+    "name": "Vox - Dance",
+    "picon": "",
+    "url": "http://go-audio.toya.net.pl/214"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "VOX FM.",
+    "genre": "Dance / Pop",
+    "homepage": "https://www.voxfm.pl/",
+    "name": "VOX FM",
+    "picon": "",
+    "url": "http://ic1.smcdn.pl/3990-1.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Regionalny stream Złotych Przebojów znaleziony w katalogu FMStream.",
+    "genre": "Oldies",
+    "homepage": "https://fmstream.org/index.php?s=101fm",
+    "name": "Złote Przeboje Białystok 101 FM",
+    "picon": "",
+    "url": "http://stream51.radiostream.pl:443/tuba8900-1.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Swiss alternative music radio.",
+    "genre": "Alternative",
+    "homepage": "https://www.rts.ch/audio-podcast/live/couleur-3/",
+    "name": "Couleur 3",
+    "url": "https://stream.srg-ssr.ch/m/couleur3/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Swiss chanson and hits radio.",
+    "genre": "French hits",
+    "homepage": "https://www.rts.ch/audio-podcast/live/option-musique/",
+    "name": "Option Musique",
+    "url": "https://stream.srg-ssr.ch/m/option-musique/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Das Klassikradio zum Entspannen",
+    "genre": "Classical",
+    "homepage": "",
+    "name": "Radio Swiss Classic",
+    "picon": "",
+    "url": "http://www.radioswissclassic.ch/live/mp3.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Jazzradio der SRG SSR idée suisse mit vielen Schweizer Produktionen",
+    "genre": "Jazz",
+    "homepage": "",
+    "name": "Radio Swiss Jazz",
+    "picon": "",
+    "url": "http://www.radioswissjazz.ch/live/mp3.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "24/7 Pop, Pop-Rock and A/C music",
+    "genre": "Rock-Pop",
+    "homepage": "",
+    "name": "Radio Swiss Pop",
+    "picon": "",
+    "url": "http://www.radioswisspop.ch/live/mp3.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Fréquence Jura - Votre radio régionale",
+    "genre": "Variety",
+    "homepage": "",
+    "name": "RFJ",
+    "picon": "",
+    "url": "http://broadcast.infomaniak.net/rfj-high.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Radio Jura Bernois - Votre radio régionale",
+    "genre": "Hot Adult Contemporary",
+    "homepage": "",
+    "name": "RJB",
+    "picon": "",
+    "url": "http://broadcast.infomaniak.net/rjb-high.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Italian-language Swiss culture radio.",
+    "genre": "Culture",
+    "homepage": "https://www.rsi.ch/rete-due/",
+    "name": "RSI Rete Due",
+    "url": "https://stream.srg-ssr.ch/m/rete-due/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Italian-language Swiss youth radio.",
+    "genre": "Hits",
+    "homepage": "https://www.rsi.ch/rete-tre/",
+    "name": "RSI Rete Tre",
+    "url": "https://stream.srg-ssr.ch/m/rete-tre/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Italian-language Swiss public radio.",
+    "genre": "General",
+    "homepage": "https://www.rsi.ch/rete-uno/",
+    "name": "RSI Rete Uno",
+    "url": "https://stream.srg-ssr.ch/m/rete-uno/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Swiss culture and classical radio.",
+    "genre": "Culture",
+    "homepage": "https://www.rts.ch/audio-podcast/live/espace-2/",
+    "name": "RTS Espace 2",
+    "url": "https://stream.srg-ssr.ch/m/espace-2/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "French-language Swiss public radio.",
+    "genre": "General",
+    "homepage": "https://www.rts.ch/audio-podcast/live/la-1ere/",
+    "name": "RTS La 1ère",
+    "url": "https://stream.srg-ssr.ch/m/la-1ere/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Das erste Programm von Schweizer Radio SRF sendet Information, Musik und Unterhaltung fuer alle Generationen.",
+    "genre": "Easy Listening",
+    "homepage": "",
+    "name": "SRF 1",
+    "picon": "",
+    "url": "http://streaming.swisstxt.ch/m/drs1/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Swiss public culture radio.",
+    "genre": "Culture",
+    "homepage": "https://www.srf.ch/radio-srf-2-kultur",
+    "name": "SRF 2 Kultur",
+    "url": "https://streaming.swisstxt.ch/m/drs2/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Das dritte Programm von Schweizer Radio DRS mit Musik, News, Sport und Service",
+    "genre": "Variety",
+    "homepage": "",
+    "name": "SRF 3",
+    "picon": "",
+    "url": "http://streaming.swisstxt.ch/m/drs3/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Swiss public news radio.",
+    "genre": "News",
+    "homepage": "https://www.srf.ch/audio/srf-4-news",
+    "name": "SRF 4 News",
+    "url": "https://streaming.swisstxt.ch/m/drs4news/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Musigwaelle 531 Schlager Oldies and Mainly Traditional Swiss Folk Music",
+    "genre": "Folk",
+    "homepage": "",
+    "name": "SRF Musikwelle",
+    "picon": "",
+    "url": "http://streaming.swisstxt.ch/m/drsmw/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "Szwajcaria",
+    "description": "Swiss youth and alternative radio.",
+    "genre": "Youth",
+    "homepage": "https://www.srf.ch/audio/srf-virus",
+    "name": "SRF Virus",
+    "url": "https://streaming.swisstxt.ch/m/drsvirus/mp3_128"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "A late night blend of deep-house and downtempo grooves.",
+    "genre": "Electronic",
+    "homepage": "https://somafm.com/beatblender/",
+    "name": "SomaFM Beat Blender",
+    "picon": "",
+    "url": "https://ice4.somafm.com/beatblender-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "Great cover songs from all eras.",
+    "genre": "Covers",
+    "homepage": "https://somafm.com/covers/",
+    "name": "SomaFM Covers",
+    "url": "https://ice4.somafm.com/covers-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "Deep ambient electronic textures.",
+    "genre": "Ambient",
+    "homepage": "https://somafm.com/deepspaceone/",
+    "name": "SomaFM Deep Space One",
+    "url": "https://ice4.somafm.com/deepspaceone-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "Music and talks from hacker culture.",
+    "genre": "Electronic",
+    "homepage": "https://somafm.com/defcon/",
+    "name": "SomaFM DEF CON Radio",
+    "url": "https://ice4.somafm.com/defcon-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "Served best chilled, safe with most medications.",
+    "genre": "Ambient",
+    "homepage": "https://somafm.com/dronezone/",
+    "name": "SomaFM Drone Zone",
+    "picon": "",
+    "url": "https://ice4.somafm.com/dronezone-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "Indie folk and roots discoveries.",
+    "genre": "Folk",
+    "homepage": "https://somafm.com/folkfwd/",
+    "name": "SomaFM Folk Forward",
+    "url": "https://ice4.somafm.com/folkfwd-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "A nicely chilled plate of ambient/downtempo beats and grooves.",
+    "genre": "Ambient / Chillout",
+    "homepage": "https://somafm.com/groovesalad/",
+    "name": "SomaFM Groove Salad",
+    "picon": "",
+    "url": "https://ice4.somafm.com/groovesalad-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "Ambient grooves and chilled beats.",
+    "genre": "Ambient",
+    "homepage": "https://somafm.com/gsclassic/",
+    "name": "SomaFM Groove Salad Classic",
+    "url": "https://ice4.somafm.com/gsclassic-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "Classic bachelor pad lounge.",
+    "genre": "Lounge",
+    "homepage": "https://somafm.com/illstreet/",
+    "name": "SomaFM Illinois Street Lounge",
+    "url": "https://ice4.somafm.com/illstreet-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "New and classic favorite indie pop tracks.",
+    "genre": "Indie Pop",
+    "homepage": "https://somafm.com/indiepop/",
+    "name": "SomaFM Indie Pop Rocks!",
+    "picon": "",
+    "url": "https://ice4.somafm.com/indiepop-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "A proper 70s channel without soft-focus nostalgia.",
+    "genre": "70s",
+    "homepage": "https://somafm.com/seventies/",
+    "name": "SomaFM Left Coast 70s",
+    "url": "https://ice4.somafm.com/seventies-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "Sensuous and mellow female vocals.",
+    "genre": "Vocal chillout",
+    "homepage": "https://somafm.com/lush/",
+    "name": "SomaFM Lush",
+    "url": "https://ice4.somafm.com/lush-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "From black to doom to post metal.",
+    "genre": "Metal",
+    "homepage": "https://somafm.com/metal/",
+    "name": "SomaFM Metal Detector",
+    "url": "https://ice4.somafm.com/metal-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "Music for a journey to the stars.",
+    "genre": "Space / Ambient",
+    "homepage": "https://somafm.com/missioncontrol/",
+    "name": "SomaFM Mission Control",
+    "picon": "",
+    "url": "https://ice4.somafm.com/missioncontrol-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "Electropop and indie dance.",
+    "genre": "Electronic pop",
+    "homepage": "https://somafm.com/poptron/",
+    "name": "SomaFM PopTron",
+    "url": "https://ice4.somafm.com/poptron-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "The soundtrack for your stylish, mysterious, dangerous life.",
+    "genre": "Lounge / Soundtracks",
+    "homepage": "https://somafm.com/secretagent/",
+    "name": "SomaFM Secret Agent",
+    "picon": "",
+    "url": "https://ice4.somafm.com/secretagent-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "Transitional jazz and space fusion.",
+    "genre": "Jazz",
+    "homepage": "https://somafm.com/sonicuniverse/",
+    "name": "SomaFM Sonic Universe",
+    "url": "https://ice4.somafm.com/sonicuniverse-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "USA",
+    "description": "Space rock and ambient textures.",
+    "genre": "Space rock",
+    "homepage": "https://somafm.com/spacestation/",
+    "name": "SomaFM Space Station Soma",
+    "url": "https://ice4.somafm.com/spacestation-128-mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Style Rock",
+    "genre": "Rock-Pop",
+    "homepage": "",
+    "name": "Mediaset - Virgin Radio",
+    "picon": "",
+    "url": "http://icecast.unitedradio.it/Virgin.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "R101 live stream.",
+    "genre": "Adult contemporary",
+    "homepage": "https://www.r101.it",
+    "name": "R101",
+    "url": "https://icy.unitedradio.it/R101.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Radio 105 live stream.",
+    "genre": "Hits",
+    "homepage": "https://www.105.net",
+    "name": "Radio 105",
+    "url": "https://icy.unitedradio.it/Radio105.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Italian news and economy radio, powered by Il Sole 24 Ore.",
+    "genre": "Talk",
+    "homepage": "",
+    "name": "Radio 24",
+    "picon": "",
+    "url": "http://shoutcast.radio24.it:8000"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Radio Capital przez playlistę M3U.",
+    "genre": "Adult Contemporary",
+    "homepage": "",
+    "name": "Radio Capital",
+    "picon": "",
+    "url": "http://www.radiocapitale.net/listen.m3u"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Radio Deejay live stream.",
+    "genre": "Hits",
+    "homepage": "https://www.deejay.it",
+    "name": "Radio Deejay",
+    "url": "https://streamcdneast.radio.deejay.it/deejay.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Radio Italia Solo Musica Italiana.",
+    "genre": "Italian hits",
+    "homepage": "https://www.radioitalia.it",
+    "name": "Radio Italia",
+    "url": "https://radioitaliasmi.ice.infomaniak.ch/radioitaliasmi-high.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Radio Kiss Kiss live stream.",
+    "genre": "Hits",
+    "homepage": "https://www.kisskiss.it",
+    "name": "Radio Kiss Kiss",
+    "url": "https://kisskiss.fluidstream.eu/kisskiss.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Radio Monte Carlo Italy.",
+    "genre": "Adult contemporary",
+    "homepage": "https://www.radiomontecarlo.net",
+    "name": "Radio Monte Carlo",
+    "url": "https://edge.radiomontecarlo.net/RMC.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "-",
+    "genre": "Independent",
+    "homepage": "",
+    "name": "Radio Onda Rossa",
+    "picon": "",
+    "url": "http://radio.dyne.org:8000/ondarossa.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Conoscere per deliberare",
+    "genre": "Talk",
+    "homepage": "",
+    "name": "Radio Radicale",
+    "picon": "",
+    "url": "http://livemp3.radioradicale.it/live.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Radio Subasio live stream.",
+    "genre": "Adult contemporary",
+    "homepage": "https://www.radiosubasio.it",
+    "name": "Radio Subasio",
+    "url": "https://stream.subasio.it/7680/radiosubasio.aac"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "La 1ª rete radiofonica della Rai.",
+    "genre": "Public Radio",
+    "homepage": "",
+    "name": "Rai Radio 1",
+    "picon": "",
+    "url": "http://icestreaming.rai.it/1.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Rai Radio 2.",
+    "genre": "Variety",
+    "homepage": "",
+    "name": "Rai Radio 2",
+    "picon": "",
+    "url": "http://icestreaming.rai.it/2.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Rai Radio 3.",
+    "genre": "Culture",
+    "homepage": "",
+    "name": "Rai Radio 3",
+    "picon": "",
+    "url": "http://icestreaming.rai.it/3.mp3"
+  },
+  {
+    "bitrate": "128",
+    "country": "Włochy",
+    "description": "Hit radio nazionale privata italiana.",
+    "genre": "Hits",
+    "homepage": "",
+    "name": "RTL 102.5",
+    "picon": "",
+    "url": "http://shoutcast.rtl.it:3010/listen.pls"
+  }
+]
