@@ -38,10 +38,10 @@ try:
     from Components.Language import language
 except Exception:
     language = None
-from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation
+from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation, ePoint
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "1.2.1"
+PLUGIN_VERSION = "1.2.2"
 PLUGIN_NAME = "NeoRadio"
 PLUGIN_TITLE = "NeoRadio Online"
 PLUGIN_DESC = "NeoRadio Online"
@@ -68,21 +68,21 @@ DEFAULT_PICON_DIRS = [
 
 PICON_ALIASES = {
     "polskie_radio_24": ["pr24", "polskieradio24", "polskie_radio24"],
-    "radio_poland": ["polskieradiodlazagranicy", "poland"],
-    "radio_zet": ["zet", "radiozet"],
-    "rmf_fm": ["rmf", "rmffm"],
+    "radio_poland": ["polskieradiodlazagranicy", "radio_poland"],
+    "radio_zet": ["radiozet", "radio_zet"],
+    "rmf_fm": ["rmffm", "rmf_fm"],
     "rmf_classic": ["rmfclassic"],
     "rmf_maxx": ["rmfmaxx", "rmfmaxxx"],
-    "polskie_radio_chopin": ["chopin", "prchopin"],
-    "polskie_radio_kierowcow": ["prkierowcow", "kierowcow"],
-    "polskie_radio_dzieciom": ["prdzieciom", "dzieciom"],
+    "polskie_radio_chopin": ["prchopin", "polskie_radio_chopin"],
+    "polskie_radio_kierowcow": ["prkierowcow", "polskie_radio_kierowcow"],
+    "polskie_radio_dzieciom": ["prdzieciom", "polskie_radio_dzieciom"],
     "radio_nowy_swiat": ["nowyswiat", "radio_nowy_swiat"],
-    "radio_357": ["357", "radio357"],
+    "radio_357": ["radio357", "radio_357"],
     "antyradio": ["antyradio_warszawa"],
     "melo": ["meloradio", "melo_radio"],
-    "radio_plus": ["plus", "radioplus"],
-    "radio_pogoda": ["pogoda", "radiopogoda"],
-    "vox_fm": ["voxfm", "vox"],
+    "radio_plus": ["radioplus", "radio_plus"],
+    "radio_pogoda": ["radiopogoda", "radio_pogoda"],
+    "vox_fm": ["voxfm", "vox_fm"],
 }
 
 try:
@@ -637,6 +637,7 @@ def get_skin():
             <eLabel position="0,0" size="1680,940" backgroundColor="#00081418" zPosition="0" />
             <eLabel position="22,20" size="500,840" backgroundColor="#00101a2d" zPosition="0" />
             <eLabel position="542,20" size="1116,600" backgroundColor="#00101a2d" zPosition="0" />
+            <eLabel position="760,346" size="472,170" backgroundColor="#00111d31" zPosition="1" />
             <eLabel position="542,640" size="1116,220" backgroundColor="#000d1626" zPosition="0" />
             <eLabel position="1412,168" size="224,224" backgroundColor="#00121f36" zPosition="1" />
             <eLabel position="1412,404" size="224,92" backgroundColor="#00121f36" zPosition="1" />
@@ -667,6 +668,8 @@ def get_skin():
             <widget name="station_desc_title" position="570,244" size="240,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="station_desc" position="570,282" size="820,264" font="Regular;24" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="station_extra" position="570,548" size="820,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
+            <widget name="hero_clock" position="792,374" size="408,68" font="Regular;58" foregroundColor="#00d8ecff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
+            <widget name="hero_date" position="792,448" size="408,32" font="Regular;24" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
             <widget name="cover" position="1414,170" size="220,220" alphatest="blend" zPosition="2" />
             <widget name="spectrum_title" position="1432,410" size="184,28" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
             <widget name="spectrum_label" position="1426,444" size="196,44" font="Regular;34" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
@@ -687,6 +690,13 @@ def get_skin():
             <widget name="key_blue" position="802,882" size="240,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#001d4fc9" halign="center" valign="center" zPosition="2" />
             <widget name="key_menu" position="1062,882" size="280,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#00303a4d" halign="center" valign="center" zPosition="2" />
             <widget name="key_info" position="1362,882" size="296,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#00434b5b" halign="center" valign="center" zPosition="2" />
+
+            <widget name="saver_bg" position="0,0" size="1680,940" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00060d16" transparent="0" zPosition="10" />
+            <widget name="saver_picon" position="1210,620" size="340,200" alphatest="blend" zPosition="12" />
+            <widget name="saver_station" position="160,764" size="1040,52" font="Regular;40" foregroundColor="#00ffffff" backgroundColor="#00060d16" halign="left" transparent="0" zPosition="12" />
+            <widget name="saver_hint" position="160,822" size="1040,28" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00060d16" halign="left" transparent="0" zPosition="12" />
+            <widget name="saver_clock" position="620,250" size="460,86" font="Regular;72" foregroundColor="#00d8ecff" backgroundColor="#00060d16" halign="center" transparent="0" zPosition="12" />
+            <widget name="saver_date" position="620,346" size="460,34" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#00060d16" halign="center" transparent="0" zPosition="12" />
         </screen>
         """
     return """
@@ -694,6 +704,7 @@ def get_skin():
         <eLabel position="0,0" size="1180,660" backgroundColor="#00081418" zPosition="0" />
         <eLabel position="20,20" size="420,560" backgroundColor="#00101a2d" zPosition="0" />
         <eLabel position="460,20" size="700,400" backgroundColor="#00101a2d" zPosition="0" />
+        <eLabel position="662,248" size="240,88" backgroundColor="#00111d31" zPosition="1" />
         <eLabel position="920,110" size="220,220" backgroundColor="#00121f36" zPosition="1" />
         <eLabel position="920,340" size="220,60" backgroundColor="#00121f36" zPosition="1" />
         <eLabel position="898,438" size="264,140" backgroundColor="#00121f36" zPosition="1" />
@@ -724,6 +735,8 @@ def get_skin():
         <widget name="station_desc_title" position="486,172" size="160,24" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
         <widget name="station_desc" position="486,204" size="414,178" font="Regular;18" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
         <widget name="station_extra" position="486,384" size="414,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
+        <widget name="hero_clock" position="682,258" size="200,34" font="Regular;30" foregroundColor="#00d8ecff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
+        <widget name="hero_date" position="682,296" size="200,18" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
         <widget name="cover" position="920,110" size="220,220" alphatest="blend" zPosition="2" />
         <widget name="spectrum_title" position="942,344" size="176,16" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
         <widget name="spectrum_label" position="934,364" size="192,28" font="Regular;24" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
@@ -744,6 +757,13 @@ def get_skin():
         <widget name="key_blue" position="470,614" size="140,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#001d4fc9" halign="center" valign="center" zPosition="2" />
         <widget name="key_menu" position="620,614" size="220,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#00303a4d" halign="center" valign="center" zPosition="2" />
         <widget name="key_info" position="850,614" size="220,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#00434b5b" halign="center" valign="center" zPosition="2" />
+
+        <widget name="saver_bg" position="0,0" size="1180,660" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00060d16" transparent="0" zPosition="10" />
+        <widget name="saver_picon" position="840,392" size="280,168" alphatest="blend" zPosition="12" />
+        <widget name="saver_station" position="60,546" size="720,28" font="Regular;22" foregroundColor="#00ffffff" backgroundColor="#00060d16" halign="left" transparent="0" zPosition="12" />
+        <widget name="saver_hint" position="60,580" size="720,20" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00060d16" halign="left" transparent="0" zPosition="12" />
+        <widget name="saver_clock" position="368,176" size="300,40" font="Regular;34" foregroundColor="#00d8ecff" backgroundColor="#00060d16" halign="center" transparent="0" zPosition="12" />
+        <widget name="saver_date" position="368,222" size="300,18" font="Regular;16" foregroundColor="#00ffffff" backgroundColor="#00060d16" halign="center" transparent="0" zPosition="12" />
     </screen>
     """
 
@@ -850,6 +870,9 @@ class NeoRadioMain(Screen):
         Screen.__init__(self, session)
         self.session = session
         self.setTitle(PLUGIN_TITLE)
+        self.is_fhd = getDesktop(0).size().width() >= 1920
+        self.ui_width = 1680 if self.is_fhd else 1180
+        self.ui_height = 940 if self.is_fhd else 660
         self.base_stations = load_stations()
         self.favorites = load_favorites()
         self.current_filter = text_type("")
@@ -871,6 +894,11 @@ class NeoRadioMain(Screen):
         self.playlist_cache = {}
         self.github_console = None
         self.github_update_info = {}
+        self.saver_visible = False
+        self.saver_clock_x = 0
+        self.saver_clock_y = 0
+        self.saver_dx = 18 if self.is_fhd else 12
+        self.saver_dy = 14 if self.is_fhd else 10
 
         self["list_title"] = Label(text_type(""))
         self["header_title"] = Label(text_type(""))
@@ -879,6 +907,8 @@ class NeoRadioMain(Screen):
         self["help_label"] = Label(text_type(""))
         self["status_label"] = Label(text_type(""))
         self["clock_label"] = Label(text_type(""))
+        self["hero_clock"] = Label(text_type(""))
+        self["hero_date"] = Label(text_type(""))
         self["visualizer_label"] = Label(text_type(""))
         self["footer_brand"] = Label(text_type(""))
         self["footer_label"] = Label(text_type(""))
@@ -906,6 +936,12 @@ class NeoRadioMain(Screen):
         self["picon"] = Pixmap()
         self["picon_large_title"] = Label(text_type(""))
         self["picon_large"] = Pixmap()
+        self["saver_bg"] = Label(text_type(""))
+        self["saver_clock"] = Label(text_type(""))
+        self["saver_date"] = Label(text_type(""))
+        self["saver_station"] = Label(text_type(""))
+        self["saver_hint"] = Label(tr("screensaver_hint"))
+        self["saver_picon"] = Pixmap()
 
         try:
             self["station_list"].onSelectionChanged.append(self.on_selection_changed)
@@ -945,6 +981,7 @@ class NeoRadioMain(Screen):
     def on_layout_ready(self):
         self.touch_activity()
         self.prepare_pixmaps()
+        self.setup_screensaver_overlay()
         self.current_filter = self.get_default_filter()
         self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value))
         self.update_cover(self.get_current_station())
@@ -975,6 +1012,84 @@ class NeoRadioMain(Screen):
         self["key_info"].setText(tr('info_details'))
         self["picon_large_title"].setText(tr('picon_title'))
 
+    def setup_screensaver_overlay(self):
+        for widget_name in ("saver_bg", "saver_clock", "saver_date", "saver_station", "saver_hint", "saver_picon"):
+            try:
+                self[widget_name].hide()
+            except Exception:
+                pass
+        try:
+            self["saver_picon"].instance.setScale(1)
+        except Exception:
+            pass
+
+    def hide_screensaver_overlay(self):
+        self.saver_visible = False
+        for widget_name in ("saver_bg", "saver_clock", "saver_date", "saver_station", "saver_hint", "saver_picon"):
+            try:
+                self[widget_name].hide()
+            except Exception:
+                pass
+
+    def show_screensaver_overlay(self):
+        self.saver_visible = True
+        self.saver_clock_x = 140 if self.is_fhd else 80
+        self.saver_clock_y = 120 if self.is_fhd else 70
+        self.saver_dx = abs(self.saver_dx) or (18 if self.is_fhd else 12)
+        self.saver_dy = abs(self.saver_dy) or (14 if self.is_fhd else 10)
+        for widget_name in ("saver_bg", "saver_clock", "saver_date", "saver_station", "saver_hint", "saver_picon"):
+            try:
+                self[widget_name].show()
+            except Exception:
+                pass
+        self.update_screensaver_overlay(reset=True)
+
+    def move_widget_to(self, widget_name, x, y):
+        try:
+            self[widget_name].instance.move(ePoint(int(x), int(y)))
+        except Exception:
+            pass
+
+    def update_screensaver_overlay(self, reset=False):
+        if not self.saver_visible:
+            return
+        clock_w = 460 if self.is_fhd else 300
+        clock_h = 86 if self.is_fhd else 40
+        date_h = 34 if self.is_fhd else 18
+        pad = 24 if self.is_fhd else 16
+        if reset:
+            self.saver_clock_x = 140 if self.is_fhd else 80
+            self.saver_clock_y = 120 if self.is_fhd else 70
+        else:
+            max_x = max(pad, self.ui_width - clock_w - pad)
+            max_y = max(pad, self.ui_height - (clock_h + date_h + 18) - pad)
+            nx = self.saver_clock_x + self.saver_dx
+            ny = self.saver_clock_y + self.saver_dy
+            if nx <= pad or nx >= max_x:
+                self.saver_dx = -self.saver_dx
+                nx = max(pad, min(max_x, nx))
+            if ny <= pad or ny >= max_y:
+                self.saver_dy = -self.saver_dy
+                ny = max(pad, min(max_y, ny))
+            self.saver_clock_x = nx
+            self.saver_clock_y = ny
+        station = self.get_screensaver_station()
+        station_name = to_text(station.get("name", u"NeoRadio")) if station else u"NeoRadio"
+        self["saver_clock"].setText(to_text(time.strftime("%H:%M:%S")))
+        self["saver_date"].setText(to_text(time.strftime("%d.%m.%Y")))
+        self["saver_station"].setText(station_name)
+        self["saver_hint"].setText(tr("screensaver_hint"))
+        self.set_pixmap_file("saver_picon", self.current_picon_path or DEFAULT_PICON)
+        self.move_widget_to("saver_clock", self.saver_clock_x, self.saver_clock_y)
+        self.move_widget_to("saver_date", self.saver_clock_x, self.saver_clock_y + (92 if self.is_fhd else 46))
+
+    def consume_screensaver_key(self):
+        if not self.saver_visible:
+            return False
+        self.hide_screensaver_overlay()
+        self.touch_activity()
+        return True
+
     def get_screensaver_station(self):
         return self.playing_station_data or self.get_current_station()
 
@@ -988,34 +1103,28 @@ class NeoRadioMain(Screen):
     def touch_activity(self):
         self.last_activity_ts = time.time()
         self.schedule_screensaver()
+        if self.saver_visible:
+            self.hide_screensaver_overlay()
         if self.saver_open:
             self.saver_open = False
 
     def maybe_open_screensaver(self):
         timeout_min = get_screensaver_timeout_minutes()
-        if timeout_min <= 0 or self.saver_open:
-            return
-        station = self.get_screensaver_station()
-        if not station:
+        if timeout_min <= 0 or self.saver_visible:
             return
         if not self.saver_deadline:
             self.schedule_screensaver()
             return
         if time.time() < self.saver_deadline:
             return
-        self.saver_open = True
-        try:
-            self.session.openWithCallback(self.screensaver_closed, NeoRadioSaver, self)
-        except Exception:
-            self.saver_open = False
-            self.schedule_screensaver()
+        self.show_screensaver_overlay()
 
     def screensaver_closed(self, *args, **kwargs):
-        self.saver_open = False
+        self.hide_screensaver_overlay()
         self.schedule_screensaver()
 
     def prepare_pixmaps(self):
-        for widget_name in ("cover", "picon", "picon_large"):
+        for widget_name in ("cover", "picon", "picon_large", "saver_picon"):
             try:
                 self[widget_name].instance.setScale(1)
             except Exception:
@@ -1032,12 +1141,17 @@ class NeoRadioMain(Screen):
         now_full = time.strftime("%Y-%m-%d  %H:%M:%S")
         now_date = time.strftime("%Y-%m-%d")
         self["clock_label"].setText(to_text(now_full))
+        self["hero_clock"].setText(to_text(time.strftime("%H:%M")))
+        self["hero_date"].setText(to_text(time.strftime("%d.%m.%Y")))
         self["footer_label"].setText(u"| email: aio-iptv@wp.pl | %s" % to_text(now_date))
         self.visualizer_idx = (self.visualizer_idx + 1) % len(self.visualizer_frames)
         self["visualizer_label"].setText(u"EQ %s" % self.visualizer_frames[self.visualizer_idx])
         self["spectrum_label"].setText(self.spectrum_frames[self.visualizer_idx % len(self.spectrum_frames)])
         self.update_now_playing()
-        self.maybe_open_screensaver()
+        if self.saver_visible:
+            self.update_screensaver_overlay()
+        else:
+            self.maybe_open_screensaver()
 
     def get_available_countries(self):
         countries = []
@@ -1289,7 +1403,7 @@ class NeoRadioMain(Screen):
                 tail = slug[len("polskie_radio_"):]
                 items.extend([tail, "pr_" + tail, "polskieradio_" + tail, "polskieradio" + tail.replace("_", "")])
             if slug.endswith("_fm"):
-                items.extend([slug[:-3] + "fm", slug[:-3]])
+                items.append(slug[:-3] + "fm")
             for alias in PICON_ALIASES.get(slug, []):
                 items.extend([alias, alias.replace("_", "")])
         return unique_text_list([x.replace(" ", "_") for x in items if x])
@@ -1392,21 +1506,29 @@ class NeoRadioMain(Screen):
         configfile.save()
 
     def move_up(self):
+        if self.consume_screensaver_key():
+            return
         self.touch_activity()
         self["station_list"].up()
         self.on_selection_changed()
 
     def move_down(self):
+        if self.consume_screensaver_key():
+            return
         self.touch_activity()
         self["station_list"].down()
         self.on_selection_changed()
 
     def page_up(self):
+        if self.consume_screensaver_key():
+            return
         self.touch_activity()
         self["station_list"].pageUp()
         self.on_selection_changed()
 
     def page_down(self):
+        if self.consume_screensaver_key():
+            return
         self.touch_activity()
         self["station_list"].pageDown()
         self.on_selection_changed()
@@ -1433,6 +1555,8 @@ class NeoRadioMain(Screen):
         return resolved
 
     def play_current(self):
+        if self.consume_screensaver_key():
+            return
         self.touch_activity()
         station = self.get_current_station()
         if not station:
@@ -1458,6 +1582,8 @@ class NeoRadioMain(Screen):
         self["spectrum_label"].setText(self.spectrum_frames[self.visualizer_idx % len(self.spectrum_frames)])
 
     def toggle_favorite(self):
+        if self.consume_screensaver_key():
+            return
         self.touch_activity()
         station = self.get_current_station()
         if not station:
@@ -1474,6 +1600,8 @@ class NeoRadioMain(Screen):
         self["status_label"].setText(tr("status_prefix", msg))
 
     def open_search(self):
+        if self.consume_screensaver_key():
+            return
         self.touch_activity()
         if VirtualKeyBoard is None:
             self.session.open(MessageBox, tr("no_keyboard"), MessageBox.TYPE_INFO, timeout=6)
@@ -1540,6 +1668,8 @@ class NeoRadioMain(Screen):
             self["np_status"].setText(tr("metadata_missing"))
 
     def show_details(self):
+        if self.consume_screensaver_key():
+            return
         self.touch_activity()
         station = self.get_current_station()
         if not station:
@@ -1548,6 +1678,8 @@ class NeoRadioMain(Screen):
         self.session.open(MessageBox, text, MessageBox.TYPE_INFO)
 
     def open_main_menu(self):
+        if self.consume_screensaver_key():
+            return
         self.touch_activity()
         options = []
         for item in self.get_filters():
@@ -1559,14 +1691,10 @@ class NeoRadioMain(Screen):
         picon_value = to_text(config.plugins.neoradio.picon_paths.value).strip() or u"auto"
         if len(picon_value) > 52:
             picon_value = picon_value[:49] + u"..."
-        github_value = to_text(config.plugins.neoradio.github_manifest_url.value).strip() or tr("none")
-        if len(github_value) > 52:
-            github_value = github_value[:49] + u"..."
         options.append((tr("menu_country", country_value), ("choose_country", None)))
         options.append((tr("menu_lang", language_label(config.plugins.neoradio.ui_language.value)), ("choose_language", None)))
         options.append((tr("menu_saver", screensaver_timeout_label()), ("choose_screensaver", None)))
         options.append((tr("menu_picons", picon_value), ("picon_paths", None)))
-        options.append((tr("menu_github_url", github_value), ("github_url", None)))
         options.append((tr("menu_github_check"), ("github_check", None)))
         options.append((tr("menu_reload"), ("reload", None)))
         options.append((tr("menu_about"), ("about", None)))
@@ -1607,12 +1735,6 @@ class NeoRadioMain(Screen):
                 self.session.open(MessageBox, tr("no_keyboard_settings"), MessageBox.TYPE_INFO, timeout=7)
             else:
                 self.session.openWithCallback(self.picon_paths_callback, VirtualKeyBoard, title=tr("picon_paths_title"), text=current)
-        elif action == "github_url":
-            current = to_text(config.plugins.neoradio.github_manifest_url.value)
-            if VirtualKeyBoard is None:
-                self.session.open(MessageBox, tr("no_keyboard_settings"), MessageBox.TYPE_INFO, timeout=7)
-            else:
-                self.session.openWithCallback(self.github_url_callback, VirtualKeyBoard, title=tr("menu_github_url", "https://.../manifest.json"), text=current)
         elif action == "github_check":
             self.check_github_updates()
         elif action == "reload":
@@ -1782,6 +1904,8 @@ class NeoRadioMain(Screen):
             self["status_label"].setText(tr("status_prefix", tr("auto_picons")))
 
     def close_plugin(self):
+        if self.consume_screensaver_key():
+            return
         self.touch_activity()
         try:
             self.timer.stop()
