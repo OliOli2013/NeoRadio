@@ -8,16 +8,17 @@ import json
 import time
 import unicodedata
 import glob
+import hashlib
 try:
     from PIL import Image
 except Exception:
     Image = None
 try:
     from urllib2 import Request, urlopen
-    from urlparse import urlparse
+    from urlparse import urlparse, urljoin
 except Exception:
     from urllib.request import Request, urlopen
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, urljoin
 
 
 from Plugins.Plugin import PluginDescriptor
@@ -45,7 +46,7 @@ except Exception:
 from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation, ePoint
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "1.2.3"
+PLUGIN_VERSION = "1.2.4"
 PLUGIN_NAME = "NeoRadio"
 PLUGIN_TITLE = "NeoRadio Online"
 PLUGIN_DESC = "NeoRadio Online"
@@ -69,6 +70,8 @@ DEFAULT_PICON_DIRS = [
     "/media/mmc/picon",
     "/media/mmc/piconlcd",
 ]
+REMOTE_PICON_CACHE_DIR = os.path.join(CONFIG_DIR, "neoradio_picon_cache")
+
 
 PICON_ALIASES = {
     "polskie_radio_24": ["pr24", "polskieradio24", "polskie_radio24"],
@@ -193,6 +196,7 @@ def normalize_station(entry):
         "description": to_text(entry.get("description", "")),
         "homepage": to_text(entry.get("homepage", "")),
         "picon": to_text(entry.get("picon", "")),
+        "picon_url": to_text(entry.get("picon_url", "")),
     }
 
 
@@ -694,8 +698,8 @@ def get_skin():
             <widget name="station_desc_title" position="570,244" size="240,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="station_desc" position="570,282" size="820,264" font="Regular;24" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="station_extra" position="570,548" size="820,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-            <widget name="hero_clock" position="764,364" size="468,84" font="Regular;66" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
-            <widget name="hero_date" position="754,456" size="488,40" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
+            <widget name="hero_clock" position="646,258" size="284,72" font="Regular;64" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
+            <widget name="hero_date" position="630,330" size="320,28" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
             <widget name="cover" position="1414,170" size="220,220" alphatest="blend" zPosition="2" />
             <widget name="spectrum_title" position="1432,410" size="184,28" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
             <widget name="spectrum_label" position="1426,444" size="196,44" font="Regular;34" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
@@ -730,7 +734,7 @@ def get_skin():
         <eLabel position="0,0" size="1180,660" backgroundColor="#00081418" zPosition="0" />
         <eLabel position="20,20" size="420,560" backgroundColor="#00101a2d" zPosition="0" />
         <eLabel position="460,20" size="700,400" backgroundColor="#00101a2d" zPosition="0" />
-        <eLabel position="618,230" size="328,124" backgroundColor="#00111d31" zPosition="1" />
+        <eLabel position="620,214" size="336,156" backgroundColor="#00111d31" zPosition="1" />
         <eLabel position="920,110" size="220,220" backgroundColor="#00121f36" zPosition="1" />
         <eLabel position="920,340" size="220,60" backgroundColor="#00121f36" zPosition="1" />
         <eLabel position="898,438" size="264,140" backgroundColor="#00121f36" zPosition="1" />
@@ -761,8 +765,8 @@ def get_skin():
         <widget name="station_desc_title" position="486,172" size="160,24" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
         <widget name="station_desc" position="486,204" size="414,178" font="Regular;18" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
         <widget name="station_extra" position="486,384" size="414,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-        <widget name="hero_clock" position="644,248" size="280,44" font="Regular;36" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
-        <widget name="hero_date" position="630,296" size="308,24" font="Regular;18" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
+        <widget name="hero_clock" position="620,240" size="328,44" font="Regular;38" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
+        <widget name="hero_date" position="610,286" size="348,24" font="Regular;18" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
         <widget name="cover" position="920,110" size="220,220" alphatest="blend" zPosition="2" />
         <widget name="spectrum_title" position="942,344" size="176,16" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
         <widget name="spectrum_label" position="934,364" size="192,28" font="Regular;24" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
@@ -923,6 +927,8 @@ class NeoRadioMain(Screen):
         self.bouquet_service_map = None
         self.playing_station_data = None
         self.playlist_cache = {}
+        self.remote_picon_cache = {}
+        self.remote_picon_discovery_cache = {}
         self.github_console = None
         self.github_update_info = {}
         self.saver_visible = False
@@ -1003,6 +1009,11 @@ class NeoRadioMain(Screen):
             self.timer.callback.append(self.on_timer)
         except Exception:
             self.timer_conn = self.timer.timeout.connect(self.on_timer)
+        self.saver_timer = eTimer()
+        try:
+            self.saver_timer.callback.append(self.on_screensaver_timeout)
+        except Exception:
+            self.saver_timer_conn = self.saver_timer.timeout.connect(self.on_screensaver_timeout)
         self.last_activity_ts = time.time()
         self.saver_open = False
         self.saver_deadline = 0
@@ -1188,8 +1199,8 @@ class NeoRadioMain(Screen):
         now_full = time.strftime("%Y-%m-%d  %H:%M:%S")
         now_date = time.strftime("%Y-%m-%d")
         self["clock_label"].setText(to_text(now_full))
-        self["hero_clock"].setText(to_text(time.strftime("%H:%M:%S")))
-        self["hero_date"].setText(to_text(time.strftime("%A | %d.%m.%Y")))
+        self["hero_clock"].setText(to_text(time.strftime("%H:%M")))
+        self["hero_date"].setText(to_text(time.strftime("%A • %d.%m.%Y • %S s")))
         self["footer_label"].setText(u"| email: aio-iptv@wp.pl | %s" % to_text(now_date))
         self.visualizer_idx = (self.visualizer_idx + 1) % len(self.visualizer_frames)
         self["visualizer_label"].setText(u"EQ %s" % self.visualizer_frames[self.visualizer_idx])
@@ -1455,16 +1466,140 @@ class NeoRadioMain(Screen):
                 items.extend([alias, alias.replace("_", "")])
         return unique_text_list([x.replace(" ", "_") for x in items if x])
 
+    def get_remote_picon_url(self, station):
+        if not station:
+            return None
+        base = to_text(station.get("picon_url", u"")).strip() or to_text(station.get("homepage", u"")).strip()
+        if not base:
+            return None
+        if base in self.remote_picon_discovery_cache:
+            return self.remote_picon_discovery_cache.get(base)
+        resolved = None
+        try:
+            if is_probably_image_url(base):
+                resolved = base
+            else:
+                request = Request(base, headers={"User-Agent": "NeoRadio/%s" % PLUGIN_VERSION})
+                response = urlopen(request, timeout=8)
+                payload = response.read()
+                if isinstance(payload, binary_type):
+                    html = payload.decode('utf-8', 'ignore')
+                else:
+                    html = to_text(payload)
+                resolved = extract_logo_url_from_html(base, html)
+        except Exception:
+            resolved = None
+        self.remote_picon_discovery_cache[base] = resolved
+        return resolved
+
+    def download_remote_picon(self, station):
+        if not station:
+            return None
+        source_url = self.get_remote_picon_url(station)
+        if not source_url:
+            return None
+        if source_url in self.remote_picon_cache:
+            cached = self.remote_picon_cache.get(source_url)
+            if cached and os.path.exists(cached):
+                return cached
+        ensure_dir(REMOTE_PICON_CACHE_DIR)
+        digest = hashlib.md5(to_text(source_url).encode('utf-8')).hexdigest()
+        target_png = os.path.join(REMOTE_PICON_CACHE_DIR, digest + '.png')
+        if os.path.exists(target_png) and os.path.getsize(target_png) > 0:
+            self.remote_picon_cache[source_url] = target_png
+            return target_png
+        try:
+            request = Request(source_url, headers={"User-Agent": "NeoRadio/%s" % PLUGIN_VERSION})
+            response = urlopen(request, timeout=8)
+            data = response.read()
+            content_type = to_text(response.info().get('Content-Type', ''))
+        except Exception:
+            data = None
+            content_type = ''
+        if data:
+            try:
+                if Image is not None:
+                    stream = io.BytesIO(data)
+                    image = Image.open(stream)
+                    image.load()
+                    if image.mode not in ('RGB', 'RGBA'):
+                        image = image.convert('RGBA')
+                    image.save(target_png, 'PNG')
+                    if os.path.exists(target_png) and os.path.getsize(target_png) > 0:
+                        self.remote_picon_cache[source_url] = target_png
+                        return target_png
+            except Exception:
+                pass
+            ext = guess_image_extension(source_url, content_type)
+            fallback_target = os.path.join(REMOTE_PICON_CACHE_DIR, digest + ext)
+            try:
+                with open(fallback_target, 'wb') as handle:
+                    handle.write(data)
+                if os.path.exists(fallback_target) and os.path.getsize(fallback_target) > 0:
+                    self.remote_picon_cache[source_url] = fallback_target
+                    return fallback_target
+            except Exception:
+                pass
+        tmp_target = os.path.join(REMOTE_PICON_CACHE_DIR, digest + '.download')
+        try:
+            os.system('wget -q --timeout=10 --tries=1 --no-check-certificate -O "%s" "%s"' % (tmp_target, source_url))
+            if os.path.exists(tmp_target) and os.path.getsize(tmp_target) > 0:
+                try:
+                    if Image is not None:
+                        image = Image.open(tmp_target)
+                        image.load()
+                        if image.mode not in ('RGB', 'RGBA'):
+                            image = image.convert('RGBA')
+                        image.save(target_png, 'PNG')
+                        if os.path.exists(target_png) and os.path.getsize(target_png) > 0:
+                            self.remote_picon_cache[source_url] = target_png
+                            return target_png
+                except Exception:
+                    pass
+                ext = guess_image_extension(source_url, '')
+                fallback_target = os.path.join(REMOTE_PICON_CACHE_DIR, digest + ext)
+                try:
+                    os.rename(tmp_target, fallback_target)
+                except Exception:
+                    try:
+                        with open(tmp_target, 'rb') as src:
+                            with open(fallback_target, 'wb') as dst:
+                                dst.write(src.read())
+                        os.unlink(tmp_target)
+                    except Exception:
+                        pass
+                if os.path.exists(fallback_target) and os.path.getsize(fallback_target) > 0:
+                    self.remote_picon_cache[source_url] = fallback_target
+                    return fallback_target
+        except Exception:
+            pass
+        try:
+            if os.path.exists(tmp_target):
+                os.unlink(tmp_target)
+        except Exception:
+            pass
+        self.remote_picon_cache[source_url] = None
+        return None
+
     def find_picon_path(self, station):
         if not station:
             return None
-        cache_key = to_text(station.get("name", u"")) + u"|" + to_text(station.get("picon", u""))
+        cache_key = u"|".join([
+            to_text(station.get("name", u"")),
+            to_text(station.get("picon", u"")),
+            to_text(station.get("picon_url", u"")),
+            to_text(station.get("homepage", u"")),
+        ])
         if cache_key in self.picon_cache:
             return self.picon_cache.get(cache_key)
         explicit = to_text(station.get("picon", u""))
         if explicit and os.path.isabs(explicit) and os.path.exists(explicit):
             self.picon_cache[cache_key] = explicit
             return explicit
+        remote = self.download_remote_picon(station)
+        if remote and is_usable_picon_image(remote):
+            self.picon_cache[cache_key] = remote
+            return remote
         dirs = self.get_picon_dirs()
         candidates = []
         bouquet_candidates = self.bouquet_picon_candidates(station)
@@ -1497,7 +1632,6 @@ class NeoRadioMain(Screen):
                     if key in filemap and is_usable_picon_image(filemap[key]):
                         self.picon_cache[cache_key] = filemap[key]
                         return filemap[key]
-                # exact filename match by normalized service reference or normalized station name
                 for fname, path in filemap.items():
                     name_only = fname[:-4] if fname.endswith('.png') else fname
                     if name_only in exact_names and is_usable_picon_image(path):

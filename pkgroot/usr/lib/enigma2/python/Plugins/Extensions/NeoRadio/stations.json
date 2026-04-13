@@ -632,7 +632,8 @@
     "homepage": "https://www.antyradio.pl/",
     "name": "Antyradio",
     "picon": "",
-    "url": "https://an.cdn.eurozet.pl/ant-waw.mp3"
+    "url": "https://an.cdn.eurozet.pl/ant-waw.mp3",
+    "picon_url": "https://www.antyradio.pl/"
   },
   {
     "bitrate": "128",
@@ -642,7 +643,8 @@
     "homepage": "https://player.radiozet.pl/",
     "name": "ChilliZET",
     "picon": "",
-    "url": "https://ch.cdn.eurozet.pl/chi-net.mp3"
+    "url": "https://ch.cdn.eurozet.pl/chi-net.mp3",
+    "picon_url": "https://player.radiozet.pl/"
   },
   {
     "bitrate": "128",
@@ -652,7 +654,8 @@
     "homepage": "https://czworka.polskieradio.pl/",
     "name": "Czwórka",
     "picon": "",
-    "url": "http://stream3.polskieradio.pl:8956"
+    "url": "http://stream3.polskieradio.pl:8956",
+    "picon_url": "https://czworka.polskieradio.pl/"
   },
   {
     "bitrate": "128",
@@ -662,7 +665,8 @@
     "homepage": "https://dwojka.polskieradio.pl/",
     "name": "Dwójka",
     "picon": "",
-    "url": "http://stream3.polskieradio.pl:8952"
+    "url": "http://stream3.polskieradio.pl:8952",
+    "picon_url": "https://dwojka.polskieradio.pl/"
   },
   {
     "bitrate": "128",
@@ -672,7 +676,8 @@
     "homepage": "https://fmstream.org/eska-impreska-live",
     "name": "Eska - Impreska",
     "picon": "",
-    "url": "http://ic1.smcdn.pl/6030-1.mp3"
+    "url": "http://ic1.smcdn.pl/6030-1.mp3",
+    "picon_url": "https://fmstream.org/eska-impreska-live"
   },
   {
     "bitrate": "128",
@@ -682,7 +687,8 @@
     "homepage": "https://fmstream.org/eska-summer-city-live",
     "name": "Eska - Summer City",
     "picon": "",
-    "url": "http://ic1.smcdn.pl/6120-1.mp3"
+    "url": "http://ic1.smcdn.pl/6120-1.mp3",
+    "picon_url": "https://fmstream.org/eska-summer-city-live"
   },
   {
     "bitrate": "128",
@@ -692,7 +698,8 @@
     "homepage": "https://fmstream.org/eska2-dla-dzieci-live",
     "name": "Eska 2 - Dla Dzieci",
     "picon": "",
-    "url": "http://waw.ic.smcdn.pl/6220-1.mp3"
+    "url": "http://waw.ic.smcdn.pl/6220-1.mp3",
+    "picon_url": "https://fmstream.org/eska2-dla-dzieci-live"
   },
   {
     "bitrate": "128",
@@ -702,7 +709,8 @@
     "homepage": "https://fmstream.org/index.php?s=eska+rock+dobrze+rockuje",
     "name": "Eska Rock - Dobrze Rockuje",
     "picon": "",
-    "url": "http://ic1.smcdn.pl/2120-1.mp3"
+    "url": "http://ic1.smcdn.pl/2120-1.mp3",
+    "picon_url": "https://fmstream.org/index.php?s=eska+rock+dobrze+rockuje"
   },
   {
     "bitrate": "128",
@@ -712,7 +720,8 @@
     "homepage": "https://jedynka.polskieradio.pl/",
     "name": "Jedynka",
     "picon": "",
-    "url": "http://stream3.polskieradio.pl:8950"
+    "url": "http://stream3.polskieradio.pl:8950",
+    "picon_url": "https://jedynka.polskieradio.pl/"
   },
   {
     "bitrate": "128",
@@ -722,7 +731,8 @@
     "homepage": "https://player.radiozet.pl/",
     "name": "Melo",
     "picon": "",
-    "url": "https://ml.cdn.eurozet.pl/mel-net.mp3"
+    "url": "https://ml.cdn.eurozet.pl/mel-net.mp3",
+    "picon_url": "https://player.radiozet.pl/"
   },
   {
     "bitrate": "128",
@@ -732,7 +742,8 @@
     "homepage": "https://www.muzyczneradio.pl/",
     "name": "Muzyczne Radio",
     "picon": "",
-    "url": "http://stream3.nadaje.com:9000/"
+    "url": "http://stream3.nadaje.com:9000/",
+    "picon_url": "https://www.muzyczneradio.pl/"
   },
   {
     "bitrate": "128",
@@ -742,7 +753,8 @@
     "homepage": "https://polskieradio24.pl/",
     "name": "Polskie Radio 24",
     "picon": "",
-    "url": "http://stream3.polskieradio.pl:8480"
+    "url": "http://stream3.polskieradio.pl:8480",
+    "picon_url": "https://polskieradio24.pl/"
   },
   {
     "bitrate": "128",
@@ -752,7 +764,8 @@
     "homepage": "https://chopin.polskieradio.pl/",
     "name": "Polskie Radio Chopin",
     "picon": "",
-    "url": "http://stream3.polskieradio.pl:8960"
+    "url": "http://stream3.polskieradio.pl:8960",
+    "picon_url": "https://chopin.polskieradio.pl/"
   },
   {
     "bitrate": "128",
@@ -762,7 +775,8 @@
     "homepage": "https://www.polskieradio.pl/",
     "name": "Polskie Radio Dzieciom",
     "picon": "",
-    "url": "http://stream3.polskieradio.pl:8966"
+    "url": "http://stream3.polskieradio.pl:8966",
+    "picon_url": "https://www.polskieradio.pl/"
   },
   {
     "bitrate": "128",
@@ -772,7 +786,8 @@
     "homepage": "https://www.polskieradio.pl/",
     "name": "Polskie Radio Kierowców",
     "picon": "",
-    "url": "http://stream3.polskieradio.pl:8968"
+    "url": "http://stream3.polskieradio.pl:8968",
+    "picon_url": "https://www.polskieradio.pl/"
   },
   {
     "bitrate": "128",
@@ -782,7 +797,8 @@
     "homepage": "https://radio357.pl/",
     "name": "Radio 357",
     "picon": "",
-    "url": "http://live.r357.eu"
+    "url": "http://live.r357.eu",
+    "picon_url": "https://radio357.pl/"
   },
   {
     "bitrate": "128",
@@ -792,7 +808,8 @@
     "homepage": "https://www.radio.bialystok.pl/",
     "name": "Radio Białystok",
     "picon": "",
-    "url": "http://stream4.nadaje.com:15476/radiobialystok"
+    "url": "http://stream4.nadaje.com:15476/radiobialystok",
+    "picon_url": "https://www.radio.bialystok.pl/"
   },
   {
     "bitrate": "128",
@@ -802,7 +819,8 @@
     "homepage": "https://player.eska.pl/",
     "name": "Radio ESKA",
     "picon": "",
-    "url": "http://ic1.smcdn.pl/2380-1.mp3"
+    "url": "http://ic1.smcdn.pl/2380-1.mp3",
+    "picon_url": "https://player.eska.pl/"
   },
   {
     "bitrate": "128",
@@ -811,7 +829,8 @@
     "genre": "Rock",
     "homepage": "https://www.eskarock.pl",
     "name": "Radio Eska Rock",
-    "url": "http://waw.ic.smcdn.pl/2070-1.mp3"
+    "url": "http://waw.ic.smcdn.pl/2070-1.mp3",
+    "picon_url": "https://www.eskarock.pl"
   },
   {
     "bitrate": "128",
@@ -820,7 +839,8 @@
     "genre": "Regional",
     "homepage": "https://radiofest.pl",
     "name": "Radio Fest",
-    "url": "http://stream4.nadaje.com:10764/fest"
+    "url": "http://stream4.nadaje.com:10764/fest",
+    "picon_url": "https://radiofest.pl"
   },
   {
     "bitrate": "128",
@@ -830,7 +850,8 @@
     "homepage": "https://radiogdansk.pl/",
     "name": "Radio Gdańsk",
     "picon": "",
-    "url": "http://stream.task.gda.pl:8000/rg1"
+    "url": "http://stream.task.gda.pl:8000/rg1",
+    "picon_url": "https://radiogdansk.pl/"
   },
   {
     "bitrate": "128",
@@ -839,7 +860,8 @@
     "genre": "Regional",
     "homepage": "https://radiojura.pl",
     "name": "Radio Jura",
-    "url": "http://stream4.nadaje.com:10786/jura"
+    "url": "http://stream4.nadaje.com:10786/jura",
+    "picon_url": "https://radiojura.pl"
   },
   {
     "bitrate": "128",
@@ -849,7 +871,8 @@
     "homepage": "https://radiokampus.fm/",
     "name": "Radio Kampus",
     "picon": "",
-    "url": "http://193.0.98.66:8002/"
+    "url": "http://193.0.98.66:8002/",
+    "picon_url": "https://radiokampus.fm/"
   },
   {
     "bitrate": "128",
@@ -859,7 +882,8 @@
     "homepage": "https://www.radio.katowice.pl/",
     "name": "Radio Katowice",
     "picon": "",
-    "url": "http://stream4.nadaje.com:9212/radiokatowice"
+    "url": "http://stream4.nadaje.com:9212/radiokatowice",
+    "picon_url": "https://www.radio.katowice.pl/"
   },
   {
     "bitrate": "128",
@@ -869,7 +893,8 @@
     "homepage": "https://radiokielce.pl/",
     "name": "Radio Kielce",
     "picon": "",
-    "url": "http://gra.radio.kielce.pl:8000/rk1"
+    "url": "http://gra.radio.kielce.pl:8000/rk1",
+    "picon_url": "https://radiokielce.pl/"
   },
   {
     "bitrate": "128",
@@ -879,7 +904,8 @@
     "homepage": "https://www.radiokrakow.pl/",
     "name": "Radio Kraków",
     "picon": "",
-    "url": "http://stream3.nadaje.com:9116/radiokrakow"
+    "url": "http://stream3.nadaje.com:9116/radiokrakow",
+    "picon_url": "https://www.radiokrakow.pl/"
   },
   {
     "bitrate": "128",
@@ -889,7 +915,8 @@
     "homepage": "https://radio.lublin.pl/",
     "name": "Radio Lublin",
     "picon": "",
-    "url": "https://streaming.radio.lublin.pl:8843/128k"
+    "url": "https://streaming.radio.lublin.pl:8843/128k",
+    "picon_url": "https://radio.lublin.pl/"
   },
   {
     "bitrate": "128",
@@ -899,7 +926,8 @@
     "homepage": "https://nowyswiat.online/",
     "name": "Radio Nowy Świat",
     "picon": "",
-    "url": "http://stream.rcs.revma.com/ypqt40u0x1zuv"
+    "url": "http://stream.rcs.revma.com/ypqt40u0x1zuv",
+    "picon_url": "https://nowyswiat.online/"
   },
   {
     "bitrate": "128",
@@ -908,7 +936,8 @@
     "genre": "Regional",
     "homepage": "https://radioolsztyn.pl",
     "name": "Radio Olsztyn",
-    "url": "http://stream4.nadaje.com:8286/olsztyn"
+    "url": "http://stream4.nadaje.com:8286/olsztyn",
+    "picon_url": "https://radioolsztyn.pl"
   },
   {
     "bitrate": "128",
@@ -917,7 +946,8 @@
     "genre": "Regional",
     "homepage": "https://radio.opole.pl",
     "name": "Radio Opole",
-    "url": "http://stream4.nadaje.com:8648/opole"
+    "url": "http://stream4.nadaje.com:8648/opole",
+    "picon_url": "https://radio.opole.pl"
   },
   {
     "bitrate": "128",
@@ -926,7 +956,8 @@
     "genre": "Regional",
     "homepage": "https://radiopik.pl",
     "name": "Radio PiK",
-    "url": "http://stream4.nadaje.com:9720/pik"
+    "url": "http://stream4.nadaje.com:9720/pik",
+    "picon_url": "https://radiopik.pl"
   },
   {
     "bitrate": "128",
@@ -936,7 +967,8 @@
     "homepage": "https://radioplus.pl/",
     "name": "Radio Plus",
     "picon": "",
-    "url": "https://pl.cdn.eurozet.pl/plu-waw.mp3"
+    "url": "https://pl.cdn.eurozet.pl/plu-waw.mp3",
+    "picon_url": "https://radioplus.pl/"
   },
   {
     "bitrate": "128",
@@ -946,7 +978,8 @@
     "homepage": "https://www.radiopogoda.pl/",
     "name": "Radio Pogoda",
     "picon": "",
-    "url": "http://stream10.radioagora.pl/tuba38-1.mp3"
+    "url": "http://stream10.radioagora.pl/tuba38-1.mp3",
+    "picon_url": "https://www.radiopogoda.pl/"
   },
   {
     "bitrate": "128",
@@ -956,7 +989,8 @@
     "homepage": "https://www.polskieradio.pl/",
     "name": "Radio Poland",
     "picon": "",
-    "url": "http://stream3.polskieradio.pl:8958"
+    "url": "http://stream3.polskieradio.pl:8958",
+    "picon_url": "https://www.polskieradio.pl/"
   },
   {
     "bitrate": "128",
@@ -966,7 +1000,8 @@
     "homepage": "https://radiopoznan.fm/",
     "name": "Radio Poznań",
     "picon": "",
-    "url": "http://stream4.nadaje.com:8578/poznan"
+    "url": "http://stream4.nadaje.com:8578/poznan",
+    "picon_url": "https://radiopoznan.fm/"
   },
   {
     "bitrate": "128",
@@ -975,7 +1010,8 @@
     "genre": "Regional",
     "homepage": "https://radiorekord.fm",
     "name": "Radio Rekord",
-    "url": "http://stream4.nadaje.com:10262/rekord"
+    "url": "http://stream4.nadaje.com:10262/rekord",
+    "picon_url": "https://radiorekord.fm"
   },
   {
     "bitrate": "128",
@@ -984,7 +1020,8 @@
     "genre": "Regional",
     "homepage": "https://radio.rzeszow.pl",
     "name": "Radio Rzeszów",
-    "url": "http://stream4.nadaje.com:9178/rzeszow"
+    "url": "http://stream4.nadaje.com:9178/rzeszow",
+    "picon_url": "https://radio.rzeszow.pl"
   },
   {
     "bitrate": "128",
@@ -993,7 +1030,8 @@
     "genre": "Regional",
     "homepage": "https://radiosilesia.pl",
     "name": "Radio Silesia",
-    "url": "http://stream4.nadaje.com:8462/silesia"
+    "url": "http://stream4.nadaje.com:8462/silesia",
+    "picon_url": "https://radiosilesia.pl"
   },
   {
     "bitrate": "128",
@@ -1003,7 +1041,8 @@
     "homepage": "https://radioszczecin.pl/",
     "name": "Radio Szczecin",
     "picon": "",
-    "url": "http://stream4.nadaje.com:11986/prs"
+    "url": "http://stream4.nadaje.com:11986/prs",
+    "picon_url": "https://radioszczecin.pl/"
   },
   {
     "bitrate": "128",
@@ -1012,7 +1051,8 @@
     "genre": "Talk",
     "homepage": "https://wnet.fm",
     "name": "Radio WNET",
-    "url": "http://stream5.nadaje.com:8096/radiownet"
+    "url": "http://stream5.nadaje.com:8096/radiownet",
+    "picon_url": "https://wnet.fm"
   },
   {
     "bitrate": "128",
@@ -1022,7 +1062,8 @@
     "homepage": "https://www.radiowroclaw.pl/",
     "name": "Radio Wrocław",
     "picon": "",
-    "url": "http://stream4.nadaje.com:9240/prw"
+    "url": "http://stream4.nadaje.com:9240/prw",
+    "picon_url": "https://www.radiowroclaw.pl/"
   },
   {
     "bitrate": "128",
@@ -1031,7 +1072,8 @@
     "genre": "Regional",
     "homepage": "https://zachod.pl",
     "name": "Radio Zachód",
-    "url": "http://stream4.nadaje.com:10626/zachod"
+    "url": "http://stream4.nadaje.com:10626/zachod",
+    "picon_url": "https://zachod.pl"
   },
   {
     "bitrate": "128",
@@ -1041,7 +1083,8 @@
     "homepage": "https://player.radiozet.pl/",
     "name": "Radio ZET",
     "picon": "",
-    "url": "https://zt.cdn.eurozet.pl/zet-net.mp3"
+    "url": "https://zt.cdn.eurozet.pl/zet-net.mp3",
+    "picon_url": "https://player.radiozet.pl/"
   },
   {
     "bitrate": "128",
@@ -1050,7 +1093,8 @@
     "genre": "Oldies",
     "homepage": "https://gold.radiozet.pl",
     "name": "Radio ZET Gold",
-    "url": "https://zg.cdn.eurozet.pl/zetgold-net.mp3"
+    "url": "https://zg.cdn.eurozet.pl/zetgold-net.mp3",
+    "picon_url": "https://gold.radiozet.pl"
   },
   {
     "bitrate": "128",
@@ -1060,7 +1104,8 @@
     "homepage": "https://fmstream.org/index.php?s=radio+zlote+przeboje",
     "name": "Radio Złote Przeboje",
     "picon": "",
-    "url": "https://radiostream.pl/tuba8938-1.mp3"
+    "url": "https://radiostream.pl/tuba8938-1.mp3",
+    "picon_url": "https://fmstream.org/index.php?s=radio+zlote+przeboje"
   },
   {
     "bitrate": "96",
@@ -1070,7 +1115,8 @@
     "homepage": "https://www.radiolodz.pl/",
     "name": "Radio Łódź",
     "picon": "",
-    "url": "https://stream.radiolodz.toya.cloud/RadioLodz-1-LQ-0935616413-web.aac"
+    "url": "https://stream.radiolodz.toya.cloud/RadioLodz-1-LQ-0935616413-web.aac",
+    "picon_url": "https://www.radiolodz.pl/"
   },
   {
     "bitrate": "128",
@@ -1080,7 +1126,8 @@
     "homepage": "https://www.rmfclassic.pl/",
     "name": "RMF Classic",
     "picon": "",
-    "url": "http://195.150.20.242:8000/rmf_classic"
+    "url": "http://195.150.20.242:8000/rmf_classic",
+    "picon_url": "https://www.rmfclassic.pl/"
   },
   {
     "bitrate": "128",
@@ -1090,7 +1137,8 @@
     "homepage": "https://www.rmf.fm/",
     "name": "RMF FM",
     "picon": "",
-    "url": "http://195.150.20.242:8000/rmf_fm"
+    "url": "http://195.150.20.242:8000/rmf_fm",
+    "picon_url": "https://www.rmf.fm/"
   },
   {
     "bitrate": "128",
@@ -1100,7 +1148,8 @@
     "homepage": "https://www.rmfmaxx.pl/",
     "name": "RMF MAXX",
     "picon": "",
-    "url": "http://195.150.20.242:8000/rmf_maxxx"
+    "url": "http://195.150.20.242:8000/rmf_maxxx",
+    "picon_url": "https://www.rmfmaxx.pl/"
   },
   {
     "bitrate": "128",
@@ -1110,7 +1159,8 @@
     "homepage": "https://audycje.tokfm.pl/",
     "name": "TOK FM",
     "picon": "",
-    "url": "http://www.radio.pionier.net.pl/stream.pls?radio=radiotok"
+    "url": "http://www.radio.pionier.net.pl/stream.pls?radio=radiotok",
+    "picon_url": "https://audycje.tokfm.pl/"
   },
   {
     "bitrate": "128",
@@ -1120,7 +1170,8 @@
     "homepage": "https://trojka.polskieradio.pl/",
     "name": "Trójka",
     "picon": "",
-    "url": "http://stream3.polskieradio.pl:8954"
+    "url": "http://stream3.polskieradio.pl:8954",
+    "picon_url": "https://trojka.polskieradio.pl/"
   },
   {
     "bitrate": "128",
@@ -1130,7 +1181,8 @@
     "homepage": "https://fmstream.org/index.php?c=POL&n=600",
     "name": "Vox - Dance",
     "picon": "",
-    "url": "http://go-audio.toya.net.pl/214"
+    "url": "http://go-audio.toya.net.pl/214",
+    "picon_url": "https://fmstream.org/index.php?c=POL&n=600"
   },
   {
     "bitrate": "128",
@@ -1140,7 +1192,8 @@
     "homepage": "https://www.voxfm.pl/",
     "name": "VOX FM",
     "picon": "",
-    "url": "http://ic1.smcdn.pl/3990-1.mp3"
+    "url": "http://ic1.smcdn.pl/3990-1.mp3",
+    "picon_url": "https://www.voxfm.pl/"
   },
   {
     "bitrate": "128",
@@ -1150,7 +1203,8 @@
     "homepage": "https://fmstream.org/index.php?s=101fm",
     "name": "Złote Przeboje Białystok 101 FM",
     "picon": "",
-    "url": "http://stream51.radiostream.pl:443/tuba8900-1.mp3"
+    "url": "http://stream51.radiostream.pl:443/tuba8900-1.mp3",
+    "picon_url": "https://fmstream.org/index.php?s=101fm"
   },
   {
     "bitrate": "128",
