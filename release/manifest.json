@@ -1,8 +1,8 @@
 {
-  "name": "NeoRadio",
-  "version": "1.2.5",
+  "changelog": "Improved local picon matching without underscores, bundled Visual Radio fallback picon, station-name-first picon lookup, safer fallback handling.",
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
+  "name": "NeoRadio",
+  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
   "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
-  "changelog": "Local picons are now checked before any remote logo, fallback art changed to a radio image, the center clock was moved into its own panel, and remote picons require explicit direct image URLs.",
-  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest"
+  "version": "1.2.6"
 }

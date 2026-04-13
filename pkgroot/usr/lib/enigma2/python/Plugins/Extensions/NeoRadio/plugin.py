@@ -46,7 +46,7 @@ except Exception:
 from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation, ePoint
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "1.2.5"
+PLUGIN_VERSION = "1.2.6"
 PLUGIN_NAME = "NeoRadio"
 PLUGIN_TITLE = "NeoRadio Online"
 PLUGIN_DESC = "NeoRadio Online"
@@ -57,7 +57,7 @@ USER_STATIONS_FILE = os.path.join(CONFIG_DIR, "neoradio_user_stations.json")
 BASE_STATIONS_FILE = os.path.join(PLUGIN_PATH, "stations.json")
 COVER_DIR = os.path.join(PLUGIN_PATH, "covers")
 DEFAULT_COVER = os.path.join(PLUGIN_PATH, "cover_default.png")
-DEFAULT_PICON = os.path.join(PLUGIN_PATH, "radio_fallback.png")
+DEFAULT_PICON = os.path.join(PLUGIN_PATH, "visualradio.png")
 DEFAULT_PICON_DIRS = [
     "/usr/share/enigma2/picon",
     "/usr/share/enigma2/piconlcd",
@@ -79,7 +79,7 @@ PICON_ALIASES = {
     "radio_zet": ["radiozet", "radio_zet"],
     "rmf_fm": ["rmffm", "rmf_fm"],
     "rmf_classic": ["rmfclassic", "rmf_classic"],
-    "rmf_maxx": ["rmfmaxx", "rmfmaxxx", "rmf_maxx"],
+    "rmf_maxx": ["rmfmaxx", "rmfmaxxx", "rmf_maxx", "rmfmax"],
     "polskie_radio_chopin": ["prchopin", "polskie_radio_chopin"],
     "polskie_radio_kierowcow": ["prkierowcow", "polskie_radio_kierowcow"],
     "polskie_radio_dzieciom": ["prdzieciom", "polskie_radio_dzieciom"],
@@ -90,9 +90,9 @@ PICON_ALIASES = {
     "radio_plus": ["radioplus", "radio_plus"],
     "radio_pogoda": ["radiopogoda", "radio_pogoda"],
     "vox_fm": ["voxfm", "vox_fm"],
-    "vox_dance": ["voxdance", "vox_dance"],
+    "vox_dance": ["voxdance", "vox_dance", "voxdancefm"],
     "tok_fm": ["tokfm", "radiotok", "tok_fm"],
-    "trojka": ["program3", "pr3", "polskieradio3", "trojka"],
+    "trojka": ["program3", "pr3", "polskieradio3", "trojka", "trujka"],
     "jedynka": ["program1", "pr1", "polskieradio1", "jedynka"],
     "dwojka": ["program2", "pr2", "polskieradio2", "dwojka"],
     "czworka": ["program4", "pr4", "polskieradio4", "czworka"],
@@ -1454,10 +1454,20 @@ class NeoRadioMain(Screen):
             if not raw:
                 continue
             base = raw.replace(".png", "")
-            items.extend([raw, base, base.replace(" ", "_"), base.replace(" ", "")])
             slug = slugify(base)
             compact = slug.replace("_", "")
-            items.extend([slug, compact])
+            dehyphen = base.replace("-", " ")
+            items.extend([
+                raw,
+                base,
+                dehyphen,
+                base.replace(" ", "_"),
+                base.replace(" ", ""),
+                base.replace("-", "_"),
+                base.replace("-", ""),
+                slug,
+                compact,
+            ])
             parts = [p for p in slug.split("_") if p]
             if len(parts) > 1:
                 items.append("_".join(parts[:2]))
@@ -1470,19 +1480,28 @@ class NeoRadioMain(Screen):
             if slug.endswith("_fm"):
                 items.append(slug[:-3] + "fm")
             for alias in PICON_ALIASES.get(slug, []):
-                items.extend([alias, alias.replace("_", "")])
-        for raw in (to_text(station.get("url", u"")), to_text(station.get("homepage", u""))):
-            raw = to_text(raw).strip().lower()
-            if not raw:
+                alias = to_text(alias).strip()
+                if not alias:
+                    continue
+                items.extend([
+                    alias,
+                    alias.replace("_", ""),
+                    alias.replace("-", "_"),
+                    alias.replace("-", ""),
+                ])
+        normalized = []
+        for x in items:
+            x = to_text(x).strip()
+            if not x:
                 continue
-            raw = re.sub(r'^https?://', '', raw)
-            raw = raw.replace('www.', '')
-            raw = raw.replace('-', '_').replace('.', '_').replace('/', '_')
-            tokens = [t for t in re.split(r'[^a-z0-9_]+', raw) if t and len(t) > 2]
-            for tok in tokens[:12]:
-                items.append(tok)
-                items.append(tok.replace('_', ''))
-        return unique_text_list([x.replace(" ", "_") for x in items if x])
+            normalized.extend([
+                x,
+                x.replace(" ", "_"),
+                x.replace(" ", ""),
+                x.replace("-", "_"),
+                x.replace("-", ""),
+            ])
+        return unique_text_list([x for x in normalized if x])
 
     def get_remote_picon_url(self, station):
         if not station:
@@ -1602,22 +1621,29 @@ class NeoRadioMain(Screen):
             return explicit
         dirs = self.get_picon_dirs()
         candidates = []
-        bouquet_candidates = self.bouquet_picon_candidates(station)
         station_candidates = self.station_picon_candidates(station)
-        candidates.extend(bouquet_candidates)
+        bouquet_candidates = self.bouquet_picon_candidates(station)
         candidates.extend(station_candidates)
+        candidates.extend(bouquet_candidates)
         candidates = unique_text_list(candidates)
         exact_names = [c.lower() for c in candidates]
         for directory in dirs:
             for candidate in candidates:
-                direct = os.path.join(directory, candidate)
-                if os.path.exists(direct) and is_usable_picon_image(direct):
-                    self.picon_cache[cache_key] = direct
-                    return direct
-                png = direct + ".png"
-                if os.path.exists(png) and is_usable_picon_image(png):
-                    self.picon_cache[cache_key] = png
-                    return png
+                direct_variants = unique_text_list([
+                    candidate,
+                    candidate.replace("_", ""),
+                    candidate.replace("-", "_"),
+                    candidate.replace("-", ""),
+                ])
+                for variant in direct_variants:
+                    direct = os.path.join(directory, variant)
+                    if os.path.exists(direct) and is_usable_picon_image(direct):
+                        self.picon_cache[cache_key] = direct
+                        return direct
+                    png = direct + ".png"
+                    if os.path.exists(png) and is_usable_picon_image(png):
+                        self.picon_cache[cache_key] = png
+                        return png
         norm_candidates = [normalize_lookup_name(c) for c in candidates if c]
         norm_candidates = [c for c in norm_candidates if c]
         for directory in dirs:
@@ -1630,14 +1656,19 @@ class NeoRadioMain(Screen):
                 for fname in filenames:
                     filemap[fname.lower()] = os.path.join(root, fname)
                 for candidate in candidates:
-                    key = (candidate + ".png").lower()
-                    if key in filemap and is_usable_picon_image(filemap[key]):
-                        self.picon_cache[cache_key] = filemap[key]
-                        return filemap[key]
+                    for variant in unique_text_list([candidate, candidate.replace("_", ""), candidate.replace("-", "_"), candidate.replace("-", "")]):
+                        key = (variant + ".png").lower()
+                        if key in filemap and is_usable_picon_image(filemap[key]):
+                            self.picon_cache[cache_key] = filemap[key]
+                            return filemap[key]
                 for fname, path in filemap.items():
                     name_only = fname[:-4] if fname.endswith('.png') else fname
                     norm_name = normalize_lookup_name(name_only)
+                    compact_name = name_only.replace('_', '').replace('-', '')
                     if name_only in exact_names and is_usable_picon_image(path):
+                        self.picon_cache[cache_key] = path
+                        return path
+                    if compact_name in exact_names and is_usable_picon_image(path):
                         self.picon_cache[cache_key] = path
                         return path
                     if norm_name and norm_name in norm_candidates and is_usable_picon_image(path):
@@ -1647,8 +1678,8 @@ class NeoRadioMain(Screen):
         if remote and is_usable_picon_image(remote):
             self.picon_cache[cache_key] = remote
             return remote
-        self.picon_cache[cache_key] = None
-        return None
+        self.picon_cache[cache_key] = DEFAULT_PICON
+        return DEFAULT_PICON
 
     def update_picon(self, station):
         try:
