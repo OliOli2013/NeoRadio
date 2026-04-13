@@ -46,7 +46,7 @@ except Exception:
 from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation, ePoint
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "1.2.7"
+PLUGIN_VERSION = "1.2.8"
 PLUGIN_NAME = "NeoRadio"
 PLUGIN_TITLE = "NeoRadio Online"
 PLUGIN_DESC = "NeoRadio Online"
@@ -65,6 +65,8 @@ DEFAULT_PICON_DIRS = [
     "/usr/share/engma2/piconlcd",
     "/user/share/enigma2/picon",
     "/user/share/enigma2/piconlcd",
+    "/user/share/engma2/picon",
+    "/user/share/engma2/piconlcd",
     "/picon",
     "/data/picon",
     "/media/hdd/picon",
@@ -664,9 +666,11 @@ def is_usable_picon_image(path):
     if width <= 0 or height <= 0:
         return True
     ratio = float(width) / float(height)
-    if ratio > 2.9 or ratio < 0.45:
+    if ratio > 2.35 or ratio < 0.45:
         return False
     if width < 60 or height < 30:
+        return False
+    if width > 900 or height > 600:
         return False
     return True
 
@@ -710,7 +714,7 @@ def get_skin():
             <widget name="station_desc_title" position="570,244" size="240,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="station_desc" position="570,282" size="820,264" font="Regular;24" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="station_extra" position="570,548" size="820,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-            <widget name="hero_clock" position="700,350" size="600,90" font="Regular;82" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
+            <widget name="hero_clock" position="690,372" size="620,92" font="Regular;80" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
             <widget name="hero_date" position="700,446" size="600,36" font="Regular;26" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
             <widget name="cover" position="1414,170" size="220,220" alphatest="blend" zPosition="2" />
             <widget name="spectrum_title" position="1432,410" size="184,28" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
@@ -777,7 +781,7 @@ def get_skin():
         <widget name="station_desc_title" position="486,172" size="160,24" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
         <widget name="station_desc" position="486,204" size="414,178" font="Regular;18" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
         <widget name="station_extra" position="486,384" size="414,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-        <widget name="hero_clock" position="632,250" size="300,52" font="Regular;42" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
+        <widget name="hero_clock" position="615,266" size="334,56" font="Regular;44" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
         <widget name="hero_date" position="610,286" size="348,24" font="Regular;18" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
         <widget name="cover" position="920,110" size="220,220" alphatest="blend" zPosition="2" />
         <widget name="spectrum_title" position="942,344" size="176,16" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
@@ -1616,7 +1620,6 @@ class NeoRadioMain(Screen):
             to_text(station.get("name", u"")),
             to_text(station.get("picon", u"")),
             to_text(station.get("picon_url", u"")),
-            to_text(station.get("homepage", u"")),
         ])
         if cache_key in self.picon_cache:
             return self.picon_cache.get(cache_key)
@@ -1625,7 +1628,7 @@ class NeoRadioMain(Screen):
             self.picon_cache[cache_key] = explicit
             return explicit
         dirs = self.get_picon_dirs()
-        candidates = unique_text_list(self.station_picon_candidates(station) + self.bouquet_picon_candidates(station))
+        candidates = unique_text_list(self.station_picon_candidates(station))
         exact_variants = []
         for candidate in candidates:
             candidate = to_text(candidate).strip()
@@ -1633,12 +1636,14 @@ class NeoRadioMain(Screen):
                 continue
             exact_variants.extend(unique_text_list([
                 candidate,
+                candidate.lower(),
                 candidate.replace(" ", "_"),
                 candidate.replace(" ", ""),
                 candidate.replace("_", ""),
                 candidate.replace("-", "_"),
                 candidate.replace("-", ""),
                 candidate.replace("_", "-") if "_" in candidate else candidate,
+                candidate.replace("_", "").replace("-", ""),
             ]))
         exact_variants = unique_text_list(exact_variants)
         for directory in dirs:
