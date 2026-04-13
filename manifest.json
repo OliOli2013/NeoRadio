@@ -1,8 +1,8 @@
 {
   "name": "NeoRadio",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
-  "changelog": "Screensaver timer init fix, remote picon-by-URL support, Polish station homepage logo URLs, improved fallback image and more visible main-screen clock.",
+  "changelog": "Local picons are now checked before any remote logo, fallback art changed to a radio image, the center clock was moved into its own panel, and remote picons require explicit direct image URLs.",
   "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest"
 }
