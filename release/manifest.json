@@ -1,6 +1,6 @@
 {
   "name": "NeoRadio",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
   "changelog": "Fixed screensaver activation, added moving elegant clock overlay, hidden GitHub URL in settings, tightened picon matching and added new Polish fallback radio graphics.",

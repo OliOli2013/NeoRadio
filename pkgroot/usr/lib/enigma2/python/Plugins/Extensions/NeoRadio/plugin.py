@@ -9,6 +9,10 @@ import time
 import unicodedata
 import glob
 try:
+    from PIL import Image
+except Exception:
+    Image = None
+try:
     from urllib2 import Request, urlopen
     from urlparse import urlparse
 except Exception:
@@ -41,7 +45,7 @@ except Exception:
 from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation, ePoint
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "1.2.2"
+PLUGIN_VERSION = "1.2.3"
 PLUGIN_NAME = "NeoRadio"
 PLUGIN_TITLE = "NeoRadio Online"
 PLUGIN_DESC = "NeoRadio Online"
@@ -629,6 +633,28 @@ def service_ref_to_picon_key(service_ref):
     return ref
 
 
+def image_size_tuple(path):
+    if not Image:
+        return (0, 0)
+    try:
+        img = Image.open(path)
+        return img.size
+    except Exception:
+        return (0, 0)
+
+
+def is_usable_picon_image(path):
+    width, height = image_size_tuple(path)
+    if width <= 0 or height <= 0:
+        return True
+    ratio = float(width) / float(height)
+    if ratio > 2.9 or ratio < 0.45:
+        return False
+    if width < 60 or height < 30:
+        return False
+    return True
+
+
 def get_skin():
     width = getDesktop(0).size().width()
     if width >= 1920:
@@ -637,7 +663,7 @@ def get_skin():
             <eLabel position="0,0" size="1680,940" backgroundColor="#00081418" zPosition="0" />
             <eLabel position="22,20" size="500,840" backgroundColor="#00101a2d" zPosition="0" />
             <eLabel position="542,20" size="1116,600" backgroundColor="#00101a2d" zPosition="0" />
-            <eLabel position="760,346" size="472,170" backgroundColor="#00111d31" zPosition="1" />
+            <eLabel position="734,330" size="528,198" backgroundColor="#00111d31" zPosition="1" />
             <eLabel position="542,640" size="1116,220" backgroundColor="#000d1626" zPosition="0" />
             <eLabel position="1412,168" size="224,224" backgroundColor="#00121f36" zPosition="1" />
             <eLabel position="1412,404" size="224,92" backgroundColor="#00121f36" zPosition="1" />
@@ -659,8 +685,8 @@ def get_skin():
             <widget name="clock_label" position="1120,34" size="310,34" font="Regular;24" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
             <widget name="status_label" position="570,82" size="640,32" font="Regular;26" foregroundColor="#001eff6b" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="visualizer_label" position="1212,82" size="208,32" font="Regular;24" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
-            <eLabel position="1428,22" size="202,94" backgroundColor="#00131d2f" zPosition="1" />
-            <widget name="picon" position="1436,28" size="186,82" alphatest="blend" zPosition="2" />
+            <eLabel position="1378,22" size="252,94" backgroundColor="#00131d2f" zPosition="1" />
+            <widget name="picon" position="1388,28" size="232,82" alphatest="blend" zPosition="2" />
 
             <widget name="station_name" position="570,138" size="820,50" font="Regular;40" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="station_meta" position="570,196" size="820,34" font="Regular;26" foregroundColor="#008fd3ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
@@ -668,8 +694,8 @@ def get_skin():
             <widget name="station_desc_title" position="570,244" size="240,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="station_desc" position="570,282" size="820,264" font="Regular;24" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="station_extra" position="570,548" size="820,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-            <widget name="hero_clock" position="792,374" size="408,68" font="Regular;58" foregroundColor="#00d8ecff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
-            <widget name="hero_date" position="792,448" size="408,32" font="Regular;24" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
+            <widget name="hero_clock" position="764,364" size="468,84" font="Regular;66" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
+            <widget name="hero_date" position="754,456" size="488,40" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
             <widget name="cover" position="1414,170" size="220,220" alphatest="blend" zPosition="2" />
             <widget name="spectrum_title" position="1432,410" size="184,28" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
             <widget name="spectrum_label" position="1426,444" size="196,44" font="Regular;34" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
@@ -704,7 +730,7 @@ def get_skin():
         <eLabel position="0,0" size="1180,660" backgroundColor="#00081418" zPosition="0" />
         <eLabel position="20,20" size="420,560" backgroundColor="#00101a2d" zPosition="0" />
         <eLabel position="460,20" size="700,400" backgroundColor="#00101a2d" zPosition="0" />
-        <eLabel position="662,248" size="240,88" backgroundColor="#00111d31" zPosition="1" />
+        <eLabel position="618,230" size="328,124" backgroundColor="#00111d31" zPosition="1" />
         <eLabel position="920,110" size="220,220" backgroundColor="#00121f36" zPosition="1" />
         <eLabel position="920,340" size="220,60" backgroundColor="#00121f36" zPosition="1" />
         <eLabel position="898,438" size="264,140" backgroundColor="#00121f36" zPosition="1" />
@@ -727,7 +753,7 @@ def get_skin():
         <widget name="status_label" position="486,58" size="320,24" font="Regular;20" foregroundColor="#001eff6b" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
         <widget name="visualizer_label" position="820,58" size="120,24" font="Regular;18" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
         <eLabel position="934,16" size="126,72" backgroundColor="#00131d2f" zPosition="1" />
-        <widget name="picon" position="938,21" size="118,62" alphatest="blend" zPosition="2" />
+        <widget name="picon" position="904,21" size="152,62" alphatest="blend" zPosition="2" />
 
         <widget name="station_name" position="486,96" size="414,34" font="Regular;30" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
         <widget name="station_meta" position="486,136" size="414,24" font="Regular;20" foregroundColor="#008fd3ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
@@ -735,8 +761,8 @@ def get_skin():
         <widget name="station_desc_title" position="486,172" size="160,24" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
         <widget name="station_desc" position="486,204" size="414,178" font="Regular;18" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
         <widget name="station_extra" position="486,384" size="414,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-        <widget name="hero_clock" position="682,258" size="200,34" font="Regular;30" foregroundColor="#00d8ecff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
-        <widget name="hero_date" position="682,296" size="200,18" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
+        <widget name="hero_clock" position="644,248" size="280,44" font="Regular;36" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
+        <widget name="hero_date" position="630,296" size="308,24" font="Regular;18" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
         <widget name="cover" position="920,110" size="220,220" alphatest="blend" zPosition="2" />
         <widget name="spectrum_title" position="942,344" size="176,16" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
         <widget name="spectrum_label" position="934,364" size="192,28" font="Regular;24" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
@@ -817,6 +843,11 @@ class NeoRadioSaver(Screen):
             self.timer.callback.append(self.on_timer)
         except Exception:
             self.timer_conn = self.timer.timeout.connect(self.on_timer)
+        self.saver_timer = eTimer()
+        try:
+            self.saver_timer.callback.append(self.on_screensaver_timeout)
+        except Exception:
+            self.saver_timer_conn = self.saver_timer.timeout.connect(self.on_screensaver_timeout)
         self.last_activity_ts = time.time()
         self.saver_open = False
         self.saver_deadline = 0
@@ -1082,6 +1113,8 @@ class NeoRadioMain(Screen):
         self.set_pixmap_file("saver_picon", self.current_picon_path or DEFAULT_PICON)
         self.move_widget_to("saver_clock", self.saver_clock_x, self.saver_clock_y)
         self.move_widget_to("saver_date", self.saver_clock_x, self.saver_clock_y + (92 if self.is_fhd else 46))
+        self.move_widget_to("saver_station", self.saver_clock_x, self.saver_clock_y + (138 if self.is_fhd else 70))
+        self.move_widget_to("saver_hint", self.saver_clock_x, self.saver_clock_y + (194 if self.is_fhd else 96))
 
     def consume_screensaver_key(self):
         if not self.saver_visible:
@@ -1095,18 +1128,33 @@ class NeoRadioMain(Screen):
 
     def schedule_screensaver(self):
         timeout_min = get_screensaver_timeout_minutes()
+        self.saver_deadline = 0
+        try:
+            self.saver_timer.stop()
+        except Exception:
+            pass
         if timeout_min <= 0:
-            self.saver_deadline = 0
             return
+        timeout_ms = int(timeout_min * 60 * 1000)
         self.saver_deadline = time.time() + (timeout_min * 60)
+        try:
+            self.saver_timer.start(timeout_ms, True)
+        except TypeError:
+            self.saver_timer.start(timeout_ms)
 
     def touch_activity(self):
         self.last_activity_ts = time.time()
-        self.schedule_screensaver()
         if self.saver_visible:
             self.hide_screensaver_overlay()
         if self.saver_open:
             self.saver_open = False
+        self.schedule_screensaver()
+
+    def on_screensaver_timeout(self):
+        timeout_min = get_screensaver_timeout_minutes()
+        if timeout_min <= 0 or self.saver_visible:
+            return
+        self.show_screensaver_overlay()
 
     def maybe_open_screensaver(self):
         timeout_min = get_screensaver_timeout_minutes()
@@ -1115,9 +1163,8 @@ class NeoRadioMain(Screen):
         if not self.saver_deadline:
             self.schedule_screensaver()
             return
-        if time.time() < self.saver_deadline:
-            return
-        self.show_screensaver_overlay()
+        if time.time() >= self.saver_deadline:
+            self.show_screensaver_overlay()
 
     def screensaver_closed(self, *args, **kwargs):
         self.hide_screensaver_overlay()
@@ -1141,8 +1188,8 @@ class NeoRadioMain(Screen):
         now_full = time.strftime("%Y-%m-%d  %H:%M:%S")
         now_date = time.strftime("%Y-%m-%d")
         self["clock_label"].setText(to_text(now_full))
-        self["hero_clock"].setText(to_text(time.strftime("%H:%M")))
-        self["hero_date"].setText(to_text(time.strftime("%d.%m.%Y")))
+        self["hero_clock"].setText(to_text(time.strftime("%H:%M:%S")))
+        self["hero_date"].setText(to_text(time.strftime("%A | %d.%m.%Y")))
         self["footer_label"].setText(u"| email: aio-iptv@wp.pl | %s" % to_text(now_date))
         self.visualizer_idx = (self.visualizer_idx + 1) % len(self.visualizer_frames)
         self["visualizer_label"].setText(u"EQ %s" % self.visualizer_frames[self.visualizer_idx])
@@ -1429,11 +1476,11 @@ class NeoRadioMain(Screen):
         for directory in dirs:
             for candidate in candidates:
                 direct = os.path.join(directory, candidate)
-                if os.path.exists(direct):
+                if os.path.exists(direct) and is_usable_picon_image(direct):
                     self.picon_cache[cache_key] = direct
                     return direct
                 png = direct + ".png"
-                if os.path.exists(png):
+                if os.path.exists(png) and is_usable_picon_image(png):
                     self.picon_cache[cache_key] = png
                     return png
         for directory in dirs:
@@ -1447,13 +1494,13 @@ class NeoRadioMain(Screen):
                     filemap[fname.lower()] = os.path.join(root, fname)
                 for candidate in candidates:
                     key = (candidate + ".png").lower()
-                    if key in filemap:
+                    if key in filemap and is_usable_picon_image(filemap[key]):
                         self.picon_cache[cache_key] = filemap[key]
                         return filemap[key]
                 # exact filename match by normalized service reference or normalized station name
                 for fname, path in filemap.items():
                     name_only = fname[:-4] if fname.endswith('.png') else fname
-                    if name_only in exact_names:
+                    if name_only in exact_names and is_usable_picon_image(path):
                         self.picon_cache[cache_key] = path
                         return path
         self.picon_cache[cache_key] = None

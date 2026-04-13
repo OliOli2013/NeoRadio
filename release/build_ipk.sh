@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-VERSION="${1:-1.2.2}"
+VERSION="${1:-1.2.3}"
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PKGROOT="$ROOT_DIR/pkgroot"
 WORKDIR="$ROOT_DIR/release/out/build_${VERSION}"
