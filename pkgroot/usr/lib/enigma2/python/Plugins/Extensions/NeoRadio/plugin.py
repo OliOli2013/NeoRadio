@@ -46,7 +46,7 @@ except Exception:
 from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation, ePoint
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "1.2.6"
+PLUGIN_VERSION = "1.2.7"
 PLUGIN_NAME = "NeoRadio"
 PLUGIN_TITLE = "NeoRadio Online"
 PLUGIN_DESC = "NeoRadio Online"
@@ -61,6 +61,10 @@ DEFAULT_PICON = os.path.join(PLUGIN_PATH, "visualradio.png")
 DEFAULT_PICON_DIRS = [
     "/usr/share/enigma2/picon",
     "/usr/share/enigma2/piconlcd",
+    "/usr/share/engma2/picon",
+    "/usr/share/engma2/piconlcd",
+    "/user/share/enigma2/picon",
+    "/user/share/enigma2/piconlcd",
     "/picon",
     "/data/picon",
     "/media/hdd/picon",
@@ -204,6 +208,7 @@ def normalize_station(entry):
         "homepage": to_text(entry.get("homepage", "")),
         "picon": to_text(entry.get("picon", "")),
         "picon_url": to_text(entry.get("picon_url", "")),
+        "group": to_text(entry.get("group", entry.get("genre", ""))),
     }
 
 
@@ -220,7 +225,7 @@ def load_stations():
                     seen[key] = True
             except Exception:
                 pass
-    stations.sort(key=lambda x: (to_text(x.get("country", "")).lower(), to_text(x.get("name", "")).lower()))
+    stations.sort(key=lambda x: (to_text(x.get("country", "")).lower(), to_text(x.get("group", x.get("genre", ""))).lower(), to_text(x.get("name", "")).lower()))
     return stations
 
 
@@ -705,8 +710,8 @@ def get_skin():
             <widget name="station_desc_title" position="570,244" size="240,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="station_desc" position="570,282" size="820,264" font="Regular;24" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="station_extra" position="570,548" size="820,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-            <widget name="hero_clock" position="760,368" size="480,76" font="Regular;72" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
-            <widget name="hero_date" position="760,454" size="480,34" font="Regular;24" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
+            <widget name="hero_clock" position="700,350" size="600,90" font="Regular;82" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
+            <widget name="hero_date" position="700,446" size="600,36" font="Regular;26" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
             <widget name="cover" position="1414,170" size="220,220" alphatest="blend" zPosition="2" />
             <widget name="spectrum_title" position="1432,410" size="184,28" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
             <widget name="spectrum_label" position="1426,444" size="196,44" font="Regular;34" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
@@ -1616,62 +1621,31 @@ class NeoRadioMain(Screen):
         if cache_key in self.picon_cache:
             return self.picon_cache.get(cache_key)
         explicit = to_text(station.get("picon", u""))
-        if explicit and os.path.isabs(explicit) and os.path.exists(explicit):
+        if explicit and os.path.isabs(explicit) and os.path.exists(explicit) and is_usable_picon_image(explicit):
             self.picon_cache[cache_key] = explicit
             return explicit
         dirs = self.get_picon_dirs()
-        candidates = []
-        station_candidates = self.station_picon_candidates(station)
-        bouquet_candidates = self.bouquet_picon_candidates(station)
-        candidates.extend(station_candidates)
-        candidates.extend(bouquet_candidates)
-        candidates = unique_text_list(candidates)
-        exact_names = [c.lower() for c in candidates]
+        candidates = unique_text_list(self.station_picon_candidates(station) + self.bouquet_picon_candidates(station))
+        exact_variants = []
+        for candidate in candidates:
+            candidate = to_text(candidate).strip()
+            if not candidate:
+                continue
+            exact_variants.extend(unique_text_list([
+                candidate,
+                candidate.replace(" ", "_"),
+                candidate.replace(" ", ""),
+                candidate.replace("_", ""),
+                candidate.replace("-", "_"),
+                candidate.replace("-", ""),
+                candidate.replace("_", "-") if "_" in candidate else candidate,
+            ]))
+        exact_variants = unique_text_list(exact_variants)
         for directory in dirs:
-            for candidate in candidates:
-                direct_variants = unique_text_list([
-                    candidate,
-                    candidate.replace("_", ""),
-                    candidate.replace("-", "_"),
-                    candidate.replace("-", ""),
-                ])
-                for variant in direct_variants:
-                    direct = os.path.join(directory, variant)
-                    if os.path.exists(direct) and is_usable_picon_image(direct):
-                        self.picon_cache[cache_key] = direct
-                        return direct
-                    png = direct + ".png"
-                    if os.path.exists(png) and is_usable_picon_image(png):
-                        self.picon_cache[cache_key] = png
-                        return png
-        norm_candidates = [normalize_lookup_name(c) for c in candidates if c]
-        norm_candidates = [c for c in norm_candidates if c]
-        for directory in dirs:
-            base_depth = directory.rstrip("/").count(os.sep)
-            for root, dirnames, filenames in os.walk(directory):
-                if root.count(os.sep) - base_depth > 2:
-                    dirnames[:] = []
-                    continue
-                filemap = {}
-                for fname in filenames:
-                    filemap[fname.lower()] = os.path.join(root, fname)
-                for candidate in candidates:
-                    for variant in unique_text_list([candidate, candidate.replace("_", ""), candidate.replace("-", "_"), candidate.replace("-", "")]):
-                        key = (variant + ".png").lower()
-                        if key in filemap and is_usable_picon_image(filemap[key]):
-                            self.picon_cache[cache_key] = filemap[key]
-                            return filemap[key]
-                for fname, path in filemap.items():
-                    name_only = fname[:-4] if fname.endswith('.png') else fname
-                    norm_name = normalize_lookup_name(name_only)
-                    compact_name = name_only.replace('_', '').replace('-', '')
-                    if name_only in exact_names and is_usable_picon_image(path):
-                        self.picon_cache[cache_key] = path
-                        return path
-                    if compact_name in exact_names and is_usable_picon_image(path):
-                        self.picon_cache[cache_key] = path
-                        return path
-                    if norm_name and norm_name in norm_candidates and is_usable_picon_image(path):
+            for variant in exact_variants:
+                for ext in ("", ".png", ".jpg", ".jpeg", ".webp"):
+                    path = os.path.join(directory, variant + ext)
+                    if os.path.exists(path) and is_usable_picon_image(path):
                         self.picon_cache[cache_key] = path
                         return path
         remote = self.download_remote_picon(station)
