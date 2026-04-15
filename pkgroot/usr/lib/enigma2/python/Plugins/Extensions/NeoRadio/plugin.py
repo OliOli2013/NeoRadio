@@ -46,7 +46,7 @@ except Exception:
 from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation, ePoint
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "1.2.8"
+PLUGIN_VERSION = "1.2.9"
 PLUGIN_NAME = "NeoRadio"
 PLUGIN_TITLE = "NeoRadio Online"
 PLUGIN_DESC = "NeoRadio Online"
@@ -317,7 +317,13 @@ I18N = {
         "info_details": u"Info: Details",
         "picon_title": u"Station logo",
         "all": u"All",
-        "favorites": u"Favorites",
+        "favorites": u"Ulubione",
+    "online": u"Online",
+    "other": u"Inne",
+    "equalizer_visual": u"Wizualny EQ",
+        "online": u"Online",
+        "other": u"Other",
+        "equalizer_visual": u"Visual EQ",
         "country_filter": u"Country: %s",
         "genre_filter": u"Genre: %s",
         "main_country": u"Main country",
@@ -424,7 +430,10 @@ I18N["pl"] = {
     "info_details": u"Info: Szczegóły",
     "picon_title": u"Logo stacji",
     "all": u"All",
-    "favorites": u"Favorites",
+    "favorites": u"Ulubione",
+    "online": u"Online",
+    "other": u"Inne",
+    "equalizer_visual": u"Wizualny EQ",
     "country_filter": u"Kraj: %s",
     "genre_filter": u"Gatunek: %s",
     "main_country": u"Kraj główny",
@@ -524,6 +533,39 @@ def get_active_language():
         return value
     return detect_system_language()
 
+
+WEEKDAY_NAMES = {
+    'en': [u'Monday', u'Tuesday', u'Wednesday', u'Thursday', u'Friday', u'Saturday', u'Sunday'],
+    'pl': [u'poniedziałek', u'wtorek', u'środa', u'czwartek', u'piątek', u'sobota', u'niedziela'],
+}
+
+def localized_weekday_name(ts=None):
+    if ts is None:
+        ts = time.localtime()
+    try:
+        idx = int(time.strftime('%w', ts))
+    except Exception:
+        idx = 0
+    # Python strftime %w => Sunday=0
+    idx = (idx - 1) % 7
+    lang = get_active_language()
+    return WEEKDAY_NAMES.get(lang, WEEKDAY_NAMES['en'])[idx]
+
+
+def format_ui_date(ts=None, with_weekday=True):
+    if ts is None:
+        ts = time.localtime()
+    base = to_text(time.strftime('%d.%m.%Y', ts))
+    if with_weekday:
+        return u'%s  •  %s' % (base, localized_weekday_name(ts))
+    return base
+
+
+def format_ui_stamp(ts=None):
+    if ts is None:
+        ts = time.localtime()
+    return to_text(time.strftime('%Y-%m-%d  %H:%M:%S', ts))
+
 def tr(key, *args):
     lang = get_active_language()
     payload = I18N.get(lang, {}).get(key, I18N['en'].get(key, key))
@@ -536,11 +578,11 @@ def tr(key, *args):
 
 def format_country_filter(country):
     country = to_text(country).strip()
-    return tr('country_filter', country if country else u'Online')
+    return tr('country_filter', country if country else tr('online'))
 
 def format_genre_filter(genre):
     genre = to_text(genre).strip()
-    return tr('genre_filter', genre if genre else u'Other')
+    return tr('genre_filter', genre if genre else tr('other'))
 
 def language_label(value):
     value = to_text(value).strip().lower()
@@ -683,11 +725,11 @@ def get_skin():
             <eLabel position="0,0" size="1680,940" backgroundColor="#00081418" zPosition="0" />
             <eLabel position="22,20" size="500,840" backgroundColor="#00101a2d" zPosition="0" />
             <eLabel position="542,20" size="1116,600" backgroundColor="#00101a2d" zPosition="0" />
-            <eLabel position="734,330" size="528,198" backgroundColor="#00111d31" zPosition="1" />
-            <eLabel position="542,640" size="1116,220" backgroundColor="#000d1626" zPosition="0" />
-            <eLabel position="1412,168" size="224,224" backgroundColor="#00121f36" zPosition="1" />
-            <eLabel position="1412,404" size="224,92" backgroundColor="#00121f36" zPosition="1" />
-            <eLabel position="1306,662" size="328,170" backgroundColor="#00121f36" zPosition="1" />
+            <eLabel position="754,336" size="500,160" backgroundColor="#00111d31" zPosition="1" />
+            <eLabel position="1412,164" size="224,224" backgroundColor="#00121f36" zPosition="1" />
+            <eLabel position="1412,402" size="224,96" backgroundColor="#00121f36" zPosition="1" />
+            <eLabel position="1344,664" size="292,164" backgroundColor="#00121f36" zPosition="1" />
+            <eLabel position="1460,22" size="162,76" backgroundColor="#00131d2f" zPosition="1" />
             <eLabel position="22,880" size="240,34" backgroundColor="#00a32020" zPosition="0" />
             <eLabel position="282,880" size="240,34" backgroundColor="#001c7f39" zPosition="0" />
             <eLabel position="542,880" size="240,34" backgroundColor="#00b99211" zPosition="0" />
@@ -696,39 +738,38 @@ def get_skin():
             <eLabel position="1362,880" size="296,34" backgroundColor="#00434b5b" zPosition="0" />
 
             <widget name="list_title" position="42,34" size="440,38" font="Regular;30" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="station_list" position="42,82" size="460,660" scrollbarMode="showOnDemand" itemHeight="40" font="Regular;30" foregroundColor="#00ffffff" foregroundColorSelected="#00081418" backgroundColor="#00101a2d" backgroundColorSelected="#0065c4ff" transparent="0" zPosition="2" />
-            <widget name="filter_label" position="42,754" size="460,30" font="Regular;24" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="search_label" position="42,788" size="460,30" font="Regular;24" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="help_label" position="42,822" size="460,36" font="Regular;22" foregroundColor="#00d7deeb" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="station_list" position="42,82" size="460,656" scrollbarMode="showOnDemand" itemHeight="40" font="Regular;30" foregroundColor="#00ffffff" foregroundColorSelected="#00081418" backgroundColor="#00101a2d" backgroundColorSelected="#0065c4ff" transparent="0" zPosition="2" />
+            <widget name="filter_label" position="42,748" size="460,28" font="Regular;22" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="search_label" position="42,778" size="460,26" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="help_label" position="42,808" size="460,44" font="Regular;20" foregroundColor="#00d7deeb" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
 
-            <widget name="header_title" position="570,34" size="440,40" font="Regular;34" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="clock_label" position="1120,34" size="310,34" font="Regular;24" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
-            <widget name="status_label" position="570,82" size="640,32" font="Regular;26" foregroundColor="#001eff6b" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="visualizer_label" position="1212,82" size="208,32" font="Regular;24" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
-            <eLabel position="1378,22" size="252,94" backgroundColor="#00131d2f" zPosition="1" />
-            <widget name="picon" position="1388,28" size="232,82" alphatest="blend" zPosition="2" />
+            <widget name="header_title" position="570,34" size="360,40" font="Regular;34" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="clock_label" position="1100,34" size="330,34" font="Regular;24" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
+            <widget name="status_label" position="570,82" size="650,32" font="Regular;26" foregroundColor="#001eff6b" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="visualizer_label" position="1228,82" size="196,32" font="Regular;24" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
+            <widget name="picon" position="1468,28" size="146,64" alphatest="blend" zPosition="2" />
 
-            <widget name="station_name" position="570,138" size="820,50" font="Regular;40" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="station_meta" position="570,196" size="820,34" font="Regular;26" foregroundColor="#008fd3ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="station_url" position="570,236" size="820,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-            <widget name="station_desc_title" position="570,244" size="240,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="station_desc" position="570,282" size="820,264" font="Regular;24" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="station_extra" position="570,548" size="820,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-            <widget name="hero_clock" position="690,372" size="620,92" font="Regular;80" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
-            <widget name="hero_date" position="700,446" size="600,36" font="Regular;26" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
-            <widget name="cover" position="1414,170" size="220,220" alphatest="blend" zPosition="2" />
-            <widget name="spectrum_title" position="1432,410" size="184,28" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
-            <widget name="spectrum_label" position="1426,444" size="196,44" font="Regular;34" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+            <widget name="station_name" position="570,136" size="770,48" font="Regular;40" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="station_meta" position="570,192" size="770,34" font="Regular;26" foregroundColor="#008fd3ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="station_url" position="570,232" size="770,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
+            <widget name="station_desc_title" position="570,240" size="220,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="station_desc" position="570,278" size="760,136" font="Regular;24" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="station_extra" position="570,420" size="760,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
+            <widget name="hero_clock" position="770,356" size="468,74" font="Regular;72" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
+            <widget name="hero_date" position="770,436" size="468,34" font="Regular;24" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
+            <widget name="cover" position="1418,170" size="212,206" alphatest="blend" zPosition="2" />
+            <widget name="spectrum_title" position="1434,406" size="180,24" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+            <widget name="spectrum_label" position="1428,438" size="192,46" font="Regular;36" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
 
             <widget name="np_header" position="570,654" size="260,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-            <widget name="np_title" position="570,694" size="700,36" font="Regular;26" foregroundColor="#00ffffff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-            <widget name="np_artist" position="570,734" size="700,34" font="Regular;24" foregroundColor="#008fd3ff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-            <widget name="np_album" position="570,772" size="700,34" font="Regular;24" foregroundColor="#00c4d5ee" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-            <widget name="np_status" position="570,810" size="700,30" font="Regular;22" foregroundColor="#001eff6b" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-            <widget name="picon_large_title" position="1324,670" size="292,28" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
-            <widget name="picon_large" position="1336,704" size="268,160" alphatest="blend" zPosition="2" />
-            <widget name="footer_brand" position="570,844" size="260,24" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-            <widget name="footer_label" position="834,844" size="776,24" font="Regular;20" foregroundColor="#00b5bfd1" backgroundColor="#000d1626" halign="right" transparent="0" zPosition="2" />
+            <widget name="np_title" position="570,694" size="700,34" font="Regular;26" foregroundColor="#00ffffff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+            <widget name="np_artist" position="570,730" size="700,32" font="Regular;24" foregroundColor="#008fd3ff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+            <widget name="np_album" position="570,766" size="700,32" font="Regular;24" foregroundColor="#00c4d5ee" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+            <widget name="np_status" position="570,802" size="700,28" font="Regular;22" foregroundColor="#001eff6b" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+            <widget name="picon_large_title" position="1362,670" size="256,24" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+            <widget name="picon_large" position="1376,700" size="228,118" alphatest="blend" zPosition="2" />
+            <widget name="footer_brand" position="570,836" size="220,24" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+            <widget name="footer_label" position="804,836" size="808,24" font="Regular;18" foregroundColor="#00b5bfd1" backgroundColor="#000d1626" halign="right" transparent="0" zPosition="2" />
 
             <widget name="key_red" position="22,882" size="240,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#00a32020" halign="center" valign="center" zPosition="2" />
             <widget name="key_green" position="282,882" size="240,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#001c7f39" halign="center" valign="center" zPosition="2" />
@@ -738,7 +779,7 @@ def get_skin():
             <widget name="key_info" position="1362,882" size="296,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#00434b5b" halign="center" valign="center" zPosition="2" />
 
             <widget name="saver_bg" position="0,0" size="1680,940" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00060d16" transparent="0" zPosition="10" />
-            <widget name="saver_picon" position="1210,620" size="340,200" alphatest="blend" zPosition="12" />
+            <widget name="saver_picon" position="1260,690" size="260,120" alphatest="blend" zPosition="12" />
             <widget name="saver_station" position="160,764" size="1040,52" font="Regular;40" foregroundColor="#00ffffff" backgroundColor="#00060d16" halign="left" transparent="0" zPosition="12" />
             <widget name="saver_hint" position="160,822" size="1040,28" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00060d16" halign="left" transparent="0" zPosition="12" />
             <widget name="saver_clock" position="620,250" size="460,86" font="Regular;72" foregroundColor="#00d8ecff" backgroundColor="#00060d16" halign="center" transparent="0" zPosition="12" />
@@ -750,11 +791,11 @@ def get_skin():
         <eLabel position="0,0" size="1180,660" backgroundColor="#00081418" zPosition="0" />
         <eLabel position="20,20" size="420,560" backgroundColor="#00101a2d" zPosition="0" />
         <eLabel position="460,20" size="700,400" backgroundColor="#00101a2d" zPosition="0" />
-        <eLabel position="620,214" size="336,156" backgroundColor="#00111d31" zPosition="1" />
-        <eLabel position="920,110" size="220,220" backgroundColor="#00121f36" zPosition="1" />
-        <eLabel position="920,340" size="220,60" backgroundColor="#00121f36" zPosition="1" />
-        <eLabel position="898,438" size="264,140" backgroundColor="#00121f36" zPosition="1" />
-        <eLabel position="460,430" size="700,150" backgroundColor="#000d1626" zPosition="0" />
+        <eLabel position="606,220" size="340,110" backgroundColor="#00111d31" zPosition="1" />
+        <eLabel position="934,104" size="176,176" backgroundColor="#00121f36" zPosition="1" />
+        <eLabel position="934,294" size="176,74" backgroundColor="#00121f36" zPosition="1" />
+        <eLabel position="882,444" size="258,134" backgroundColor="#00121f36" zPosition="1" />
+        <eLabel position="962,16" size="138,62" backgroundColor="#00131d2f" zPosition="1" />
         <eLabel position="20,614" size="140,24" backgroundColor="#00a32020" zPosition="0" />
         <eLabel position="170,614" size="140,24" backgroundColor="#001c7f39" zPosition="0" />
         <eLabel position="320,614" size="140,24" backgroundColor="#00b99211" zPosition="0" />
@@ -764,38 +805,37 @@ def get_skin():
 
         <widget name="list_title" position="36,28" size="320,24" font="Regular;22" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
         <widget name="station_list" position="36,64" size="388,430" scrollbarMode="showOnDemand" itemHeight="28" font="Regular;22" foregroundColor="#00ffffff" foregroundColorSelected="#00081418" backgroundColor="#00101a2d" backgroundColorSelected="#0065c4ff" transparent="0" zPosition="2" />
-        <widget name="filter_label" position="36,506" size="388,22" font="Regular;18" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="search_label" position="36,530" size="388,22" font="Regular;18" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="help_label" position="36,554" size="388,22" font="Regular;16" foregroundColor="#00d7deeb" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="filter_label" position="36,500" size="388,20" font="Regular;17" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="search_label" position="36,522" size="388,20" font="Regular;17" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="help_label" position="36,544" size="388,30" font="Regular;15" foregroundColor="#00d7deeb" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
 
-        <widget name="header_title" position="486,26" size="300,28" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="clock_label" position="820,26" size="200,24" font="Regular;18" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
-        <widget name="status_label" position="486,58" size="320,24" font="Regular;20" foregroundColor="#001eff6b" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="visualizer_label" position="820,58" size="120,24" font="Regular;18" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
-        <eLabel position="934,16" size="126,72" backgroundColor="#00131d2f" zPosition="1" />
-        <widget name="picon" position="904,21" size="152,62" alphatest="blend" zPosition="2" />
+        <widget name="header_title" position="486,26" size="250,28" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="clock_label" position="786,26" size="210,24" font="Regular;18" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
+        <widget name="status_label" position="486,56" size="360,24" font="Regular;20" foregroundColor="#001eff6b" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="visualizer_label" position="832,56" size="122,24" font="Regular;18" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
+        <widget name="picon" position="972,20" size="118,50" alphatest="blend" zPosition="2" />
 
-        <widget name="station_name" position="486,96" size="414,34" font="Regular;30" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="station_meta" position="486,136" size="414,24" font="Regular;20" foregroundColor="#008fd3ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="station_url" position="486,164" size="414,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-        <widget name="station_desc_title" position="486,172" size="160,24" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="station_desc" position="486,204" size="414,178" font="Regular;18" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="station_extra" position="486,384" size="414,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-        <widget name="hero_clock" position="615,266" size="334,56" font="Regular;44" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
-        <widget name="hero_date" position="610,286" size="348,24" font="Regular;18" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="2" />
-        <widget name="cover" position="920,110" size="220,220" alphatest="blend" zPosition="2" />
-        <widget name="spectrum_title" position="942,344" size="176,16" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
-        <widget name="spectrum_label" position="934,364" size="192,28" font="Regular;24" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+        <widget name="station_name" position="486,92" size="404,32" font="Regular;28" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="station_meta" position="486,126" size="404,22" font="Regular;20" foregroundColor="#008fd3ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="station_url" position="486,152" size="404,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
+        <widget name="station_desc_title" position="486,160" size="160,22" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="station_desc" position="486,188" size="404,82" font="Regular;18" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="station_extra" position="486,274" size="404,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
+        <widget name="hero_clock" position="622,230" size="308,46" font="Regular;44" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
+        <widget name="hero_date" position="616,278" size="320,22" font="Regular;17" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
+        <widget name="cover" position="940,112" size="164,160" alphatest="blend" zPosition="2" />
+        <widget name="spectrum_title" position="954,304" size="136,16" font="Regular;15" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+        <widget name="spectrum_label" position="946,326" size="152,28" font="Regular;24" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
 
         <widget name="np_header" position="486,446" size="180,22" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-        <widget name="np_title" position="486,474" size="400,22" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-        <widget name="np_artist" position="486,500" size="400,22" font="Regular;18" foregroundColor="#008fd3ff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-        <widget name="np_album" position="486,526" size="400,22" font="Regular;18" foregroundColor="#00c4d5ee" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-        <widget name="np_status" position="486,552" size="400,18" font="Regular;16" foregroundColor="#001eff6b" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-        <widget name="picon_large_title" position="920,442" size="220,18" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
-        <widget name="picon_large" position="920,468" size="220,132" alphatest="blend" zPosition="2" />
-        <widget name="footer_brand" position="486,578" size="180,18" font="Regular;15" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-        <widget name="footer_label" position="670,578" size="470,18" font="Regular;14" foregroundColor="#00b5bfd1" backgroundColor="#000d1626" halign="right" transparent="0" zPosition="2" />
+        <widget name="np_title" position="486,474" size="380,22" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+        <widget name="np_artist" position="486,498" size="380,22" font="Regular;18" foregroundColor="#008fd3ff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+        <widget name="np_album" position="486,522" size="380,22" font="Regular;18" foregroundColor="#00c4d5ee" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+        <widget name="np_status" position="486,546" size="380,18" font="Regular;16" foregroundColor="#001eff6b" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+        <widget name="picon_large_title" position="904,444" size="214,18" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+        <widget name="picon_large" position="922,470" size="178,94" alphatest="blend" zPosition="2" />
+        <widget name="footer_brand" position="486,576" size="164,18" font="Regular;14" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+        <widget name="footer_label" position="654,576" size="486,18" font="Regular;13" foregroundColor="#00b5bfd1" backgroundColor="#000d1626" halign="right" transparent="0" zPosition="2" />
 
         <widget name="key_red" position="20,614" size="140,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#00a32020" halign="center" valign="center" zPosition="2" />
         <widget name="key_green" position="170,614" size="140,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#001c7f39" halign="center" valign="center" zPosition="2" />
@@ -805,9 +845,9 @@ def get_skin():
         <widget name="key_info" position="850,614" size="220,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#00434b5b" halign="center" valign="center" zPosition="2" />
 
         <widget name="saver_bg" position="0,0" size="1180,660" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00060d16" transparent="0" zPosition="10" />
-        <widget name="saver_picon" position="840,392" size="280,168" alphatest="blend" zPosition="12" />
-        <widget name="saver_station" position="60,546" size="720,28" font="Regular;22" foregroundColor="#00ffffff" backgroundColor="#00060d16" halign="left" transparent="0" zPosition="12" />
-        <widget name="saver_hint" position="60,580" size="720,20" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00060d16" halign="left" transparent="0" zPosition="12" />
+        <widget name="saver_picon" position="870,476" size="180,90" alphatest="blend" zPosition="12" />
+        <widget name="saver_station" position="80,544" size="720,28" font="Regular;22" foregroundColor="#00ffffff" backgroundColor="#00060d16" halign="left" transparent="0" zPosition="12" />
+        <widget name="saver_hint" position="80,576" size="720,20" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00060d16" halign="left" transparent="0" zPosition="12" />
         <widget name="saver_clock" position="368,176" size="300,40" font="Regular;34" foregroundColor="#00d8ecff" backgroundColor="#00060d16" halign="center" transparent="0" zPosition="12" />
         <widget name="saver_date" position="368,222" size="300,18" font="Regular;16" foregroundColor="#00ffffff" backgroundColor="#00060d16" halign="center" transparent="0" zPosition="12" />
     </screen>
@@ -931,8 +971,8 @@ class NeoRadioMain(Screen):
         self.filtered_stations = []
         self.previous_service = self.session.nav.getCurrentlyPlayingServiceReference()
         self.current_service = None
-        self.visualizer_frames = [u"[▁▂▃▄]", u"[▂▄▆▃]", u"[▄▇▅▂]", u"[▆▃▇▅]", u"[▇▅▃▆]", u"[▅▂▄▇]", u"[▃▄▂▅]", u"[▂▅▇▄]"]
-        self.spectrum_frames = [u"▁▃▆▂▅", u"▂▄▇▃▆", u"▄▆▃▇▅", u"▆▂▅▄▇", u"▇▄▂▆▃", u"▅▇▄▃▂", u"▃▅▇▂▄", u"▂▃▅▇▆"]
+        self.visualizer_frames = [u"[▁▂▃▄▅]", u"[▂▄▆▃▅]", u"[▄▇▅▂▆]", u"[▆▃▇▅▂]", u"[▇▅▃▆▂]", u"[▅▂▄▇▆]", u"[▃▄▂▅▇]", u"[▂▅▇▄▃]"]
+        self.spectrum_frames = [u"▁▃▆▂▅▇", u"▂▄▇▃▆▅", u"▄▆▃▇▅▂", u"▆▂▅▄▇▃", u"▇▄▂▆▃▅", u"▅▇▄▃▂▆", u"▃▅▇▂▄▆", u"▂▃▅▇▆▁"]
         self.visualizer_idx = 0
         self.current_cover_path = DEFAULT_COVER
         self.current_picon_path = DEFAULT_PICON
@@ -1134,7 +1174,7 @@ class NeoRadioMain(Screen):
         station = self.get_screensaver_station()
         station_name = to_text(station.get("name", u"NeoRadio")) if station else u"NeoRadio"
         self["saver_clock"].setText(to_text(time.strftime("%H:%M:%S")))
-        self["saver_date"].setText(to_text(time.strftime("%d.%m.%Y")))
+        self["saver_date"].setText(format_ui_date(with_weekday=True))
         self["saver_station"].setText(station_name)
         self["saver_hint"].setText(tr("screensaver_hint"))
         self.set_pixmap_file("saver_picon", self.current_picon_path or DEFAULT_PICON)
@@ -1205,19 +1245,19 @@ class NeoRadioMain(Screen):
                 pass
 
     def set_pixmap_file(self, widget_name, path):
+        fallback = DEFAULT_PICON if widget_name in ("picon", "picon_large", "saver_picon") else DEFAULT_COVER
+        final_path = path if path and os.path.exists(path) else fallback
         try:
-            self[widget_name].instance.setPixmapFromFile(path)
+            self[widget_name].instance.setPixmapFromFile(final_path)
             return True
         except Exception:
             return False
 
     def on_timer(self):
-        now_full = time.strftime("%Y-%m-%d  %H:%M:%S")
-        now_date = time.strftime("%Y-%m-%d")
-        self["clock_label"].setText(to_text(now_full))
+        self["clock_label"].setText(format_ui_stamp())
         self["hero_clock"].setText(to_text(time.strftime("%H:%M:%S")))
-        self["hero_date"].setText(to_text(time.strftime("%d.%m.%Y  •  %A")))
-        self["footer_label"].setText(u"| email: aio-iptv@wp.pl | %s" % to_text(now_date))
+        self["hero_date"].setText(format_ui_date(with_weekday=True))
+        self["footer_label"].setText(u"| email: aio-iptv@wp.pl | %s" % to_text(time.strftime("%Y-%m-%d")))
         self.visualizer_idx = (self.visualizer_idx + 1) % len(self.visualizer_frames)
         self["visualizer_label"].setText(u"EQ %s" % self.visualizer_frames[self.visualizer_idx])
         self["spectrum_label"].setText(self.spectrum_frames[self.visualizer_idx % len(self.spectrum_frames)])
@@ -1648,6 +1688,14 @@ class NeoRadioMain(Screen):
         exact_variants = unique_text_list(exact_variants)
         for directory in dirs:
             for variant in exact_variants:
+                for ext in ("", ".png", ".jpg", ".jpeg", ".webp"):
+                    path = os.path.join(directory, variant + ext)
+                    if os.path.exists(path) and is_usable_picon_image(path):
+                        self.picon_cache[cache_key] = path
+                        return path
+        bouquet_variants = self.bouquet_picon_candidates(station)
+        for directory in dirs:
+            for variant in bouquet_variants:
                 for ext in ("", ".png", ".jpg", ".jpeg", ".webp"):
                     path = os.path.join(directory, variant + ext)
                     if os.path.exists(path) and is_usable_picon_image(path):

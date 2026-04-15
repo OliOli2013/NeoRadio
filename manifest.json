@@ -1,8 +1,8 @@
 {
-  "changelog": "Imported full bouquet radio list with section grouping, stricter local picon matching, Visual Radio fallback for missing picons, improved center clock.",
+  "changelog": "Layout fixes, stronger fallback logic for missing picons, improved FHD/HD skin layout, better EN translation, and enhanced visual equalizer panel",
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "name": "NeoRadio",
   "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
   "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
-  "version": "1.2.8"
+  "version": "1.2.9"
 }
