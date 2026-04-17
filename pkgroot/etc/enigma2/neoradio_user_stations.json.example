@@ -1,12 +1,20 @@
 [
   {
     "name": "Moja stacja",
-    "url": "http://example.com:8000/stream",
+    "url": "https://radio.example.com/live.mp3",
     "genre": "Custom",
     "country": "Polska",
     "bitrate": "128",
-    "description": "Przykładowa własna stacja użytkownika.",
-    "homepage": "https://example.com",
-    "picon": "/usr/share/enigma2/picon/moja_stacja.png"
+    "description": "Przykładowa własna stacja użytkownika z dodatkowymi metadanymi.",
+    "homepage": "https://radio.example.com",
+    "picon": "/usr/share/enigma2/picon/moja_stacja.png",
+    "metadata_url": "https://radio.example.com/api/nowplaying",
+    "metadata_type": "json",
+    "metadata_title_key": "now_playing.song.title",
+    "metadata_artist_key": "now_playing.song.artist",
+    "metadata_album_key": "now_playing.song.album",
+    "metadata_text_key": "now_playing.song.text",
+    "metadata_program_key": "live.show.name",
+    "metadata_cover_key": "now_playing.song.art"
   }
 ]

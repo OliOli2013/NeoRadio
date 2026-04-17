@@ -1,109 +1,85 @@
-# NeoRadio
+# NeoRadio 1.3.3
 
-**NeoRadio** is a modern **Enigma2 internet radio plugin** focused on fast online radio playback, country-based browsing, SAT/IPTV picon support, bilingual Polish/English UI and GitHub-based updates.
+NeoRadio is a modern Enigma2 internet radio plugin focused on fast playback, readable metadata, SAT/IPTV picon support, bilingual Polish/English UI, and GitHub-based updates.
 
-![NeoRadio screenshot](docs/images/neoradio-main.jpg)
+## What's new in 1.3.3
 
-## Overview
+- cleaned up the main screen layout so the clock, station description, and live metadata no longer overlap
+- moved the live metadata into a dedicated lower information block for better readability
+- shortened overly long footer/source lines to keep RDS / ICY details visible on screen
+- kept station description stable instead of mixing it with now-playing text near the clock
+- retained the stronger **ICY metadata** parsing and optional station endpoint support from 1.3.x
 
-NeoRadio was created for users who want a clean and practical internet radio experience directly on Enigma2 receivers.  
-The plugin combines a modern interface, large station database, picon support, metadata display and a built-in update mechanism.
+## Metadata model
 
-It is designed for everyday use on real receivers, with emphasis on:
-- speed,
-- readability,
-- remote control navigation,
-- country-based station browsing,
-- compatibility with Enigma2 images.
+NeoRadio now uses the following priority chain:
 
-## Main features
+1. Enigma2 service tags (`sTagTitle`, `sTagArtist`, `sTagAlbum`, `sTagComment`)
+2. direct stream metadata via `Icy-MetaData: 1`
+3. optional station endpoint defined per station in JSON
 
-- online radio playback inside Enigma2
-- country-based station list
-- main country selection for default startup view
-- bilingual interface: **Polish / English**
-- automatic language mode:
-  - Polish when Enigma2 system language is Polish
-  - English in all other cases
-- manual language switch in plugin settings
-- favorites support
-- station search
-- metadata display:
-  - RDS / ICY / Now Playing
-- SAT/IPTV picon support
-- picon matching by:
-  - station name
-  - aliases
-  - bouquet service reference
-- custom fallback radio icon when no picon is found
-- elegant central clock in the main screen
-- built-in screensaver with moving clock
-- GitHub update support using remote `manifest.json`
-- `.ipk` package build support
-- repository structure ready for further development and releases
+This gives much better results on streams that do not fully expose metadata through Enigma2 alone.
 
-## User interface
+## Custom station example with external metadata endpoint
 
-NeoRadio provides:
-- clear station list on the left side
-- station details panel
-- metadata section
-- picon / fallback preview
-- visual audio spectrum
-- central clock widget
-- color-button based navigation for Enigma2 remote control
+The plugin supports additional optional fields in `neoradio_user_stations.json`:
 
-The layout was prepared to work independently from the currently used Enigma2 skin as much as possible.
+```json
+[
+  {
+    "name": "Moja stacja",
+    "url": "https://radio.example.com/live.mp3",
+    "genre": "Custom",
+    "country": "Polska",
+    "bitrate": "128",
+    "description": "Przykładowa stacja z zewnętrznymi metadanymi.",
+    "homepage": "https://radio.example.com",
+    "picon": "/usr/share/enigma2/picon/moja_stacja.png",
+    "metadata_url": "https://radio.example.com/api/nowplaying",
+    "metadata_type": "json",
+    "metadata_title_key": "now_playing.song.title",
+    "metadata_artist_key": "now_playing.song.artist",
+    "metadata_album_key": "now_playing.song.album",
+    "metadata_text_key": "now_playing.song.text",
+    "metadata_program_key": "live.show.name",
+    "metadata_cover_key": "now_playing.song.art"
+  }
+]
+```
 
-## Picon support
+### Supported metadata fields
 
-NeoRadio can load picons from local Enigma2 paths and bouquet-related references.
+- `metadata_url`
+- `metadata_type` = `auto`, `json`, `text`
+- `metadata_title_key`
+- `metadata_artist_key`
+- `metadata_album_key`
+- `metadata_text_key`
+- `metadata_program_key`
+- `metadata_cover_key`
 
-Supported matching methods include:
-- exact station name
-- name variants with and without separators
-- aliases
-- bouquet service references
-- local picon paths
-- optional direct image-based picon URL
-
-If no correct picon is found, the plugin displays its built-in fallback radio graphic.
-
-## Language support
-
-NeoRadio supports two interface languages:
-- **Polish**
-- **English**
-
-Language behavior:
-- system Polish → plugin starts in Polish
-- any other system language → plugin starts in English
-- user can override this manually in plugin settings
-
-## Screensaver
-
-NeoRadio includes an optional built-in screensaver with:
-- moving clock
-- current station name
-- clean dark overlay
-- safe display for radio playback mode
+Nested JSON paths are supported with dot notation.
 
 ## GitHub updates
 
-The plugin supports update checking from a remote GitHub manifest.
+The plugin checks `manifest.json` and expects a payload like this:
 
-Features:
-- built-in manifest support
-- update check from plugin menu
-- version comparison
-- download and installation of new `.ipk`
-- GUI restart prompt after update
+```json
+{
+  "name": "NeoRadio",
+  "version": "1.3.3",
+  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
+  "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
+  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
+  "changelog": "Added stronger ICY metadata parsing, optional per-station JSON/text metadata endpoints, improved Now Playing fallback logic, refreshed default artwork, and cleaner metadata presentation in the UI."
+}
+```
 
 ## Repository layout
 
 ```text
 pkgroot/                                 Files installed on the Enigma2 receiver
-release/CONTROL/control                  Package metadata template
-release/build_ipk.sh                     Helper script to build the .ipk package
+release/CONTROL/control                  Package metadata
+release/build_ipk.sh                     Build helper for .ipk output
 manifest.json                            GitHub update manifest
-docs/images/                             Screenshots and README images
+```

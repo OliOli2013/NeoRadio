@@ -10,6 +10,18 @@ import unicodedata
 import glob
 import hashlib
 try:
+    import socket
+except Exception:
+    socket = None
+try:
+    import ssl
+except Exception:
+    ssl = None
+try:
+    import threading
+except Exception:
+    threading = None
+try:
     from PIL import Image
 except Exception:
     Image = None
@@ -46,7 +58,7 @@ except Exception:
 from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation, ePoint
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "1.2.9"
+PLUGIN_VERSION = "1.3.3"
 PLUGIN_NAME = "NeoRadio"
 PLUGIN_TITLE = "NeoRadio Online"
 PLUGIN_DESC = "NeoRadio Online"
@@ -77,6 +89,9 @@ DEFAULT_PICON_DIRS = [
     "/media/mmc/piconlcd",
 ]
 REMOTE_PICON_CACHE_DIR = os.path.join(CONFIG_DIR, "neoradio_picon_cache")
+NETWORK_META_POLL_SECS = 18
+NETWORK_META_TIMEOUT = 7
+NETWORK_META_READ_LIMIT = 262144
 
 
 PICON_ALIASES = {
@@ -210,6 +225,14 @@ def normalize_station(entry):
         "homepage": to_text(entry.get("homepage", "")),
         "picon": to_text(entry.get("picon", "")),
         "picon_url": to_text(entry.get("picon_url", "")),
+        "metadata_url": to_text(entry.get("metadata_url", "")),
+        "metadata_type": to_text(entry.get("metadata_type", "auto")),
+        "metadata_title_key": to_text(entry.get("metadata_title_key", "")),
+        "metadata_artist_key": to_text(entry.get("metadata_artist_key", "")),
+        "metadata_album_key": to_text(entry.get("metadata_album_key", "")),
+        "metadata_text_key": to_text(entry.get("metadata_text_key", "")),
+        "metadata_program_key": to_text(entry.get("metadata_program_key", "")),
+        "metadata_cover_key": to_text(entry.get("metadata_cover_key", "")),
         "group": to_text(entry.get("group", entry.get("genre", ""))),
     }
 
@@ -351,6 +374,11 @@ I18N = {
         "album_fmt": u"Album/Source: %s",
         "metadata_active": u"Metadata: active (ICY/RDS from stream)",
         "metadata_missing": u"Metadata: not available in this stream or image does not expose it",
+        "metadata_network_active": u"Metadata: active (Enigma2/network)",
+        "metadata_source_service": u"Source: Enigma2 service",
+        "metadata_source_icy": u"Source: ICY stream",
+        "metadata_source_endpoint": u"Source: station endpoint",
+        "metadata_source_hybrid": u"Source: ICY + endpoint",
         "details_title": u"Details",
         "details_text": u"NeoRadio Online %s\n\nName: %s\nGenre: %s\nCountry: %s\nBitrate: %s kbps\n\nDescription:\n%s\n\nURL:\n%s\n\nWWW:\n%s",
         "menu_title": u"NeoRadio - Menu",
@@ -461,6 +489,11 @@ I18N["pl"] = {
     "album_fmt": u"Album/Źródło: %s",
     "metadata_active": u"Metadane: aktywne (ICY/RDS ze streamu)",
     "metadata_missing": u"Metadane: brak w tym strumieniu lub image ich nie udostępnia",
+    "metadata_network_active": u"Metadane: aktywne (Enigma2/sieć)",
+    "metadata_source_service": u"Źródło: usługa Enigma2",
+    "metadata_source_icy": u"Źródło: strumień ICY",
+    "metadata_source_endpoint": u"Źródło: endpoint stacji",
+    "metadata_source_hybrid": u"Źródło: ICY + endpoint",
     "details_title": u"Szczegóły",
     "details_text": u"NeoRadio Online %s\n\nNazwa: %s\nGatunek: %s\nKraj: %s\nBitrate: %s kbps\n\nOpis:\n%s\n\nURL:\n%s\n\nWWW:\n%s",
     "menu_title": u"NeoRadio - Menu",
@@ -683,6 +716,359 @@ def parse_playlist_content(text):
         return to_text(match.group(1)).strip()
     return None
 
+def shorten_text(value, limit):
+    value = to_text(value).strip()
+    if len(value) <= int(limit):
+        return value
+    return value[:max(0, int(limit) - 3)].rstrip() + u"..."
+
+
+def safe_int(value, default=0):
+    try:
+        return int(to_text(value).strip())
+    except Exception:
+        return default
+
+
+def bytes_to_text(payload):
+    if payload is None:
+        return text_type("")
+    try:
+        if isinstance(payload, binary_type):
+            try:
+                return payload.decode('utf-8')
+            except Exception:
+                return payload.decode('latin-1', 'ignore')
+    except Exception:
+        pass
+    return to_text(payload)
+
+
+def first_byte_value(payload):
+    if payload is None:
+        return 0
+    try:
+        if isinstance(payload, int):
+            return int(payload)
+    except Exception:
+        pass
+    try:
+        return ord(payload[:1])
+    except Exception:
+        return 0
+
+
+def read_exact_bytes(handle, size):
+    size = max(0, safe_int(size, 0))
+    if size <= 0:
+        return b''
+    chunks = []
+    remaining = size
+    while remaining > 0:
+        chunk = handle.read(remaining)
+        if not chunk:
+            break
+        chunks.append(chunk)
+        remaining -= len(chunk)
+    if not chunks:
+        return b''
+    try:
+        return b''.join(chunks)
+    except Exception:
+        output = b''
+        for item in chunks:
+            output += item
+        return output
+
+
+def parse_icy_metadata_blob(blob):
+    text = bytes_to_text(blob).replace(u'\x00', u' ').strip()
+    if not text:
+        return {}
+    result = {}
+    for key, value in re.findall(r"([A-Za-z0-9_]+)='([^']*)'", text):
+        result[to_text(key).strip().lower()] = to_text(value).strip()
+    if not result and u'StreamTitle=' in text:
+        match = re.search(r"StreamTitle='([^']*)'", text)
+        if match:
+            result['streamtitle'] = to_text(match.group(1)).strip()
+    return result
+
+
+def split_artist_title(value):
+    value = to_text(value).strip()
+    if not value:
+        return text_type(''), text_type('')
+    separators = [u' - ', u' – ', u' — ', u' | ']
+    for sep in separators:
+        if sep in value:
+            left, right = value.split(sep, 1)
+            left = left.strip()
+            right = right.strip()
+            if left and right:
+                return left, right
+    return text_type(''), value
+
+
+def extract_nested_value(data, key_path):
+    key_path = to_text(key_path).strip()
+    if not key_path or data is None:
+        return text_type('')
+    current = data
+    for part in [p for p in key_path.split('.') if p]:
+        if isinstance(current, dict):
+            if part in current:
+                current = current.get(part)
+                continue
+            lowered = {}
+            try:
+                lowered = dict((to_text(k).lower(), v) for k, v in current.items())
+            except Exception:
+                lowered = {}
+            current = lowered.get(part.lower())
+        elif isinstance(current, list):
+            idx = safe_int(part, -1)
+            if idx < 0 or idx >= len(current):
+                return text_type('')
+            current = current[idx]
+        else:
+            return text_type('')
+    if isinstance(current, (dict, list)):
+        try:
+            return to_text(json.dumps(current, ensure_ascii=False))
+        except Exception:
+            return text_type('')
+    return to_text(current).strip()
+
+
+def first_present_value(data, keys):
+    for key in keys:
+        value = extract_nested_value(data, key)
+        if value:
+            return value
+    return text_type('')
+
+
+def open_stream_request(url, timeout=NETWORK_META_TIMEOUT):
+    if socket is None:
+        raise Exception('socket unavailable')
+    parsed = urlparse(to_text(url))
+    scheme = to_text(parsed.scheme or 'http').lower()
+    host = to_text(parsed.hostname or '')
+    if not host:
+        raise Exception('missing host')
+    port = parsed.port or (443 if scheme == 'https' else 80)
+    path = to_text(parsed.path or '/')
+    if parsed.query:
+        path += '?' + to_text(parsed.query)
+    sock = socket.create_connection((host, port), timeout)
+    try:
+        if scheme == 'https':
+            if ssl is None:
+                raise Exception('ssl unavailable')
+            try:
+                context = ssl.create_default_context()
+                sock = context.wrap_socket(sock, server_hostname=host)
+            except Exception:
+                sock = ssl.wrap_socket(sock)
+        request = (
+            'GET %s HTTP/1.0\r\n'
+            'Host: %s\r\n'
+            'User-Agent: NeoRadio/%s\r\n'
+            'Icy-MetaData: 1\r\n'
+            'Accept: */*\r\n'
+            'Connection: close\r\n\r\n'
+        ) % (path, host, PLUGIN_VERSION)
+        try:
+            sock.sendall(request.encode('utf-8'))
+        except Exception:
+            sock.sendall(binary_type(request))
+        handle = sock.makefile('rb')
+        status_line = bytes_to_text(handle.readline()).strip()
+        headers = {}
+        while True:
+            raw_line = handle.readline()
+            if not raw_line or raw_line in (b'\r\n', b'\n'):
+                break
+            line = bytes_to_text(raw_line).strip()
+            if ':' not in line:
+                continue
+            key, value = line.split(':', 1)
+            headers[to_text(key).strip().lower()] = to_text(value).strip()
+        return sock, handle, status_line, headers
+    except Exception:
+        try:
+            sock.close()
+        except Exception:
+            pass
+        raise
+
+
+def parse_status_code(status_line):
+    match = re.search(r'(\d{3})', to_text(status_line))
+    if match:
+        return safe_int(match.group(1), 0)
+    return 0
+
+
+def fetch_icy_stream_metadata(url, timeout=NETWORK_META_TIMEOUT, redirects=2):
+    current_url = to_text(url).strip()
+    attempt = 0
+    while current_url and attempt <= redirects:
+        attempt += 1
+        sock = None
+        handle = None
+        try:
+            sock, handle, status_line, headers = open_stream_request(current_url, timeout=timeout)
+            status_code = parse_status_code(status_line)
+            if status_code in (301, 302, 303, 307, 308):
+                redirect_url = to_text(headers.get('location', '')).strip()
+                if redirect_url:
+                    current_url = urljoin(current_url, redirect_url)
+                    try:
+                        handle.close()
+                    except Exception:
+                        pass
+                    try:
+                        sock.close()
+                    except Exception:
+                        pass
+                    continue
+            meta = {
+                'source_kind': 'icy',
+                'stream_name': to_text(headers.get('icy-name', '')).strip(),
+                'stream_description': to_text(headers.get('icy-description', '')).strip(),
+                'stream_genre': to_text(headers.get('icy-genre', '')).strip(),
+                'stream_homepage': to_text(headers.get('icy-url', '')).strip(),
+                'stream_bitrate': to_text(headers.get('icy-br', '')).strip(),
+                'metaint': safe_int(headers.get('icy-metaint', '0'), 0),
+                'stream_url': current_url,
+            }
+            metaint = meta.get('metaint', 0)
+            if metaint > 0 and metaint <= NETWORK_META_READ_LIMIT:
+                read_exact_bytes(handle, metaint)
+                size_byte = handle.read(1)
+                block_len = first_byte_value(size_byte) * 16
+                if block_len > 0 and block_len <= NETWORK_META_READ_LIMIT:
+                    payload = parse_icy_metadata_blob(read_exact_bytes(handle, block_len))
+                    raw_title = to_text(payload.get('streamtitle', '')).strip()
+                    raw_url = to_text(payload.get('streamurl', '')).strip()
+                    if raw_title:
+                        artist, title = split_artist_title(raw_title)
+                        meta['raw_title'] = raw_title
+                        meta['radio_text'] = raw_title
+                        meta['title'] = title or raw_title
+                        meta['artist'] = artist
+                    if raw_url:
+                        meta['info_url'] = raw_url
+            try:
+                handle.close()
+            except Exception:
+                pass
+            try:
+                sock.close()
+            except Exception:
+                pass
+            if meta.get('title') or meta.get('radio_text') or meta.get('stream_name') or meta.get('stream_description'):
+                return meta
+            return None
+        except Exception:
+            try:
+                if handle is not None:
+                    handle.close()
+            except Exception:
+                pass
+            try:
+                if sock is not None:
+                    sock.close()
+            except Exception:
+                pass
+            return None
+    return None
+
+
+def fetch_station_endpoint_metadata(station, timeout=NETWORK_META_TIMEOUT):
+    if not station:
+        return None
+    metadata_url = to_text(station.get('metadata_url', '')).strip()
+    if not metadata_url:
+        return None
+    try:
+        request = Request(metadata_url, headers={'User-Agent': 'NeoRadio/%s' % PLUGIN_VERSION, 'Accept': 'application/json,text/plain,*/*'})
+        handle = urlopen(request, timeout=timeout)
+        payload = handle.read(65535)
+        content_type = to_text(handle.info().get('Content-Type', '')).lower()
+        try:
+            handle.close()
+        except Exception:
+            pass
+    except Exception:
+        return None
+    metadata_type = to_text(station.get('metadata_type', 'auto')).strip().lower()
+    text_payload = bytes_to_text(payload).strip()
+    info = {
+        'source_kind': 'endpoint',
+        'stream_url': metadata_url,
+    }
+    if metadata_type in ('json', 'auto') or 'json' in content_type:
+        try:
+            data = json.loads(text_payload)
+            title = extract_nested_value(data, station.get('metadata_title_key', '')) or first_present_value(data, ['title', 'song.title', 'song.name', 'song', 'now_playing.song.title', 'now_playing.song.text', 'now_playing.title', 'currentSong.title', 'current.title'])
+            artist = extract_nested_value(data, station.get('metadata_artist_key', '')) or first_present_value(data, ['artist', 'song.artist', 'now_playing.song.artist', 'currentSong.artist', 'current.artist'])
+            album = extract_nested_value(data, station.get('metadata_album_key', '')) or first_present_value(data, ['album', 'song.album', 'now_playing.song.album', 'currentSong.album'])
+            radio_text = extract_nested_value(data, station.get('metadata_text_key', '')) or first_present_value(data, ['text', 'radio_text', 'now_playing.song.text', 'song.text', 'message'])
+            program = extract_nested_value(data, station.get('metadata_program_key', '')) or first_present_value(data, ['program', 'show', 'audycja', 'current_show', 'now_playing.show'])
+            cover_url = extract_nested_value(data, station.get('metadata_cover_key', '')) or first_present_value(data, ['art', 'artwork', 'cover', 'cover_url', 'image', 'song.art'])
+            if title:
+                info['title'] = title
+            if artist:
+                info['artist'] = artist
+            if album:
+                info['album'] = album
+            if radio_text:
+                info['radio_text'] = radio_text
+            if program:
+                info['program'] = program
+            if cover_url:
+                info['cover_url'] = cover_url
+            if info.get('title') or info.get('artist') or info.get('program') or info.get('radio_text'):
+                return info
+        except Exception:
+            pass
+    cleaned = re.sub(r'\s+', ' ', text_payload).strip()
+    if cleaned:
+        artist, title = split_artist_title(cleaned)
+        info['raw_title'] = cleaned
+        info['radio_text'] = cleaned
+        info['title'] = title or cleaned
+        if artist:
+            info['artist'] = artist
+        return info
+    return None
+
+
+def merge_metadata_payloads(primary, secondary):
+    primary = dict(primary or {})
+    secondary = dict(secondary or {})
+    merged = {}
+    for key in set(list(primary.keys()) + list(secondary.keys())):
+        merged[key] = primary.get(key) or secondary.get(key)
+    return merged
+
+
+def fetch_station_network_metadata(station, stream_url):
+    endpoint_meta = fetch_station_endpoint_metadata(station, timeout=NETWORK_META_TIMEOUT) or {}
+    icy_meta = fetch_icy_stream_metadata(stream_url, timeout=NETWORK_META_TIMEOUT) or {}
+    if endpoint_meta and icy_meta:
+        merged = merge_metadata_payloads(endpoint_meta, icy_meta)
+        merged['source_kind'] = 'hybrid'
+        return merged
+    if endpoint_meta:
+        return endpoint_meta
+    if icy_meta:
+        return icy_meta
+    return None
+
 
 def service_ref_to_picon_key(service_ref):
     ref = to_text(service_ref).strip()
@@ -725,10 +1111,11 @@ def get_skin():
             <eLabel position="0,0" size="1680,940" backgroundColor="#00081418" zPosition="0" />
             <eLabel position="22,20" size="500,840" backgroundColor="#00101a2d" zPosition="0" />
             <eLabel position="542,20" size="1116,600" backgroundColor="#00101a2d" zPosition="0" />
-            <eLabel position="754,336" size="500,160" backgroundColor="#00111d31" zPosition="1" />
+            <eLabel position="736,404" size="520,132" backgroundColor="#00111d31" zPosition="1" />
             <eLabel position="1412,164" size="224,224" backgroundColor="#00121f36" zPosition="1" />
             <eLabel position="1412,402" size="224,96" backgroundColor="#00121f36" zPosition="1" />
-            <eLabel position="1344,664" size="292,164" backgroundColor="#00121f36" zPosition="1" />
+            <eLabel position="542,644" size="790,196" backgroundColor="#000d1626" zPosition="1" />
+            <eLabel position="1344,644" size="292,196" backgroundColor="#00121f36" zPosition="1" />
             <eLabel position="1460,22" size="162,76" backgroundColor="#00131d2f" zPosition="1" />
             <eLabel position="22,880" size="240,34" backgroundColor="#00a32020" zPosition="0" />
             <eLabel position="282,880" size="240,34" backgroundColor="#001c7f39" zPosition="0" />
@@ -744,32 +1131,32 @@ def get_skin():
             <widget name="help_label" position="42,808" size="460,44" font="Regular;20" foregroundColor="#00d7deeb" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
 
             <widget name="header_title" position="570,34" size="360,40" font="Regular;34" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="clock_label" position="1100,34" size="330,34" font="Regular;24" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
-            <widget name="status_label" position="570,82" size="650,32" font="Regular;26" foregroundColor="#001eff6b" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="visualizer_label" position="1228,82" size="196,32" font="Regular;24" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
+            <widget name="clock_label" position="1090,34" size="340,34" font="Regular;24" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
+            <widget name="status_label" position="570,82" size="620,32" font="Regular;26" foregroundColor="#001eff6b" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="visualizer_label" position="1200,82" size="224,32" font="Regular;24" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
             <widget name="picon" position="1468,28" size="146,64" alphatest="blend" zPosition="2" />
 
             <widget name="station_name" position="570,136" size="770,48" font="Regular;40" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
             <widget name="station_meta" position="570,192" size="770,34" font="Regular;26" foregroundColor="#008fd3ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="station_url" position="570,232" size="770,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-            <widget name="station_desc_title" position="570,240" size="220,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="station_desc" position="570,278" size="760,136" font="Regular;24" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-            <widget name="station_extra" position="570,420" size="760,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-            <widget name="hero_clock" position="770,356" size="468,74" font="Regular;72" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
-            <widget name="hero_date" position="770,436" size="468,34" font="Regular;24" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
+            <widget name="station_url" position="570,232" size="770,28" font="Regular;20" foregroundColor="#00b5bfd1" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="station_desc_title" position="570,270" size="220,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="station_desc" position="570,308" size="760,78" font="Regular;22" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="station_extra" position="570,390" size="760,24" font="Regular;18" foregroundColor="#008fd3ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="hero_clock" position="752,426" size="488,70" font="Regular;68" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
+            <widget name="hero_date" position="752,500" size="488,30" font="Regular;23" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
             <widget name="cover" position="1418,170" size="212,206" alphatest="blend" zPosition="2" />
             <widget name="spectrum_title" position="1434,406" size="180,24" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
             <widget name="spectrum_label" position="1428,438" size="192,46" font="Regular;36" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
 
-            <widget name="np_header" position="570,654" size="260,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-            <widget name="np_title" position="570,694" size="700,34" font="Regular;26" foregroundColor="#00ffffff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-            <widget name="np_artist" position="570,730" size="700,32" font="Regular;24" foregroundColor="#008fd3ff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-            <widget name="np_album" position="570,766" size="700,32" font="Regular;24" foregroundColor="#00c4d5ee" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-            <widget name="np_status" position="570,802" size="700,28" font="Regular;22" foregroundColor="#001eff6b" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-            <widget name="picon_large_title" position="1362,670" size="256,24" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
-            <widget name="picon_large" position="1376,700" size="228,118" alphatest="blend" zPosition="2" />
-            <widget name="footer_brand" position="570,836" size="220,24" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-            <widget name="footer_label" position="804,836" size="808,24" font="Regular;18" foregroundColor="#00b5bfd1" backgroundColor="#000d1626" halign="right" transparent="0" zPosition="2" />
+            <widget name="np_header" position="570,660" size="300,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+            <widget name="np_title" position="570,700" size="730,32" font="Regular;25" foregroundColor="#00ffffff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+            <widget name="np_artist" position="570,734" size="730,30" font="Regular;23" foregroundColor="#008fd3ff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+            <widget name="np_album" position="570,768" size="730,30" font="Regular;23" foregroundColor="#00c4d5ee" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+            <widget name="np_status" position="570,802" size="730,26" font="Regular;21" foregroundColor="#001eff6b" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+            <widget name="footer_brand" position="570,832" size="230,24" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+            <widget name="footer_label" position="808,832" size="492,24" font="Regular;18" foregroundColor="#00b5bfd1" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+            <widget name="picon_large_title" position="1362,660" size="256,24" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+            <widget name="picon_large" position="1372,696" size="236,128" alphatest="blend" zPosition="2" />
 
             <widget name="key_red" position="22,882" size="240,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#00a32020" halign="center" valign="center" zPosition="2" />
             <widget name="key_green" position="282,882" size="240,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#001c7f39" halign="center" valign="center" zPosition="2" />
@@ -810,32 +1197,32 @@ def get_skin():
         <widget name="help_label" position="36,544" size="388,30" font="Regular;15" foregroundColor="#00d7deeb" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
 
         <widget name="header_title" position="486,26" size="250,28" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="clock_label" position="786,26" size="210,24" font="Regular;18" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
-        <widget name="status_label" position="486,56" size="360,24" font="Regular;20" foregroundColor="#001eff6b" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="visualizer_label" position="832,56" size="122,24" font="Regular;18" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
+        <widget name="clock_label" position="780,26" size="216,24" font="Regular;18" foregroundColor="#0065c4ff" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
+        <widget name="status_label" position="486,56" size="346,24" font="Regular;20" foregroundColor="#001eff6b" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="visualizer_label" position="834,56" size="120,24" font="Regular;18" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" halign="right" transparent="0" zPosition="2" />
         <widget name="picon" position="972,20" size="118,50" alphatest="blend" zPosition="2" />
 
         <widget name="station_name" position="486,92" size="404,32" font="Regular;28" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
         <widget name="station_meta" position="486,126" size="404,22" font="Regular;20" foregroundColor="#008fd3ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="station_url" position="486,152" size="404,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-        <widget name="station_desc_title" position="486,160" size="160,22" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="station_desc" position="486,188" size="404,82" font="Regular;18" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
-        <widget name="station_extra" position="486,274" size="404,1" font="Regular;1" foregroundColor="#00081418" backgroundColor="#00101a2d" transparent="0" zPosition="1" />
-        <widget name="hero_clock" position="622,230" size="308,46" font="Regular;44" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
-        <widget name="hero_date" position="616,278" size="320,22" font="Regular;17" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
+        <widget name="station_url" position="486,152" size="404,18" font="Regular;14" foregroundColor="#00b5bfd1" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="station_desc_title" position="486,176" size="160,22" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="station_desc" position="486,202" size="404,48" font="Regular;16" foregroundColor="#00edf2fa" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="station_extra" position="486,254" size="404,18" font="Regular;13" foregroundColor="#008fd3ff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="hero_clock" position="590,266" size="344,38" font="Regular;40" foregroundColor="#00f3fbff" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
+        <widget name="hero_date" position="590,306" size="344,18" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00111d31" halign="center" transparent="0" zPosition="3" />
         <widget name="cover" position="940,112" size="164,160" alphatest="blend" zPosition="2" />
         <widget name="spectrum_title" position="954,304" size="136,16" font="Regular;15" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
         <widget name="spectrum_label" position="946,326" size="152,28" font="Regular;24" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
 
-        <widget name="np_header" position="486,446" size="180,22" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-        <widget name="np_title" position="486,474" size="380,22" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-        <widget name="np_artist" position="486,498" size="380,22" font="Regular;18" foregroundColor="#008fd3ff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-        <widget name="np_album" position="486,522" size="380,22" font="Regular;18" foregroundColor="#00c4d5ee" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-        <widget name="np_status" position="486,546" size="380,18" font="Regular;16" foregroundColor="#001eff6b" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-        <widget name="picon_large_title" position="904,444" size="214,18" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
-        <widget name="picon_large" position="922,470" size="178,94" alphatest="blend" zPosition="2" />
-        <widget name="footer_brand" position="486,576" size="164,18" font="Regular;14" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
-        <widget name="footer_label" position="654,576" size="486,18" font="Regular;13" foregroundColor="#00b5bfd1" backgroundColor="#000d1626" halign="right" transparent="0" zPosition="2" />
+        <widget name="np_header" position="486,440" size="220,20" font="Regular;19" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+        <widget name="np_title" position="486,468" size="396,20" font="Regular;17" foregroundColor="#00ffffff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+        <widget name="np_artist" position="486,492" size="396,20" font="Regular;17" foregroundColor="#008fd3ff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+        <widget name="np_album" position="486,516" size="396,20" font="Regular;17" foregroundColor="#00c4d5ee" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+        <widget name="np_status" position="486,540" size="396,18" font="Regular;15" foregroundColor="#001eff6b" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+        <widget name="footer_brand" position="486,560" size="136,16" font="Regular;13" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+        <widget name="footer_label" position="626,560" size="256,16" font="Regular;12" foregroundColor="#00b5bfd1" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+        <widget name="picon_large_title" position="904,440" size="214,16" font="Regular;16" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+        <widget name="picon_large" position="918,466" size="186,100" alphatest="blend" zPosition="2" />
 
         <widget name="key_red" position="20,614" size="140,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#00a32020" halign="center" valign="center" zPosition="2" />
         <widget name="key_green" position="170,614" size="140,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#001c7f39" halign="center" valign="center" zPosition="2" />
@@ -914,6 +1301,67 @@ class NeoRadioSaver(Screen):
         self.onLayoutFinish.append(self.on_layout_ready)
         self.apply_language()
 
+    def set_footer_default(self):
+        self.footer_mode = 'default'
+        self["footer_brand"].setText(tr('by_author'))
+        self["footer_label"].setText(u"")
+
+    def source_label_from_kind(self, kind):
+        kind = to_text(kind).strip().lower()
+        if kind == 'icy':
+            return tr('metadata_source_icy')
+        if kind == 'endpoint':
+            return tr('metadata_source_endpoint')
+        if kind == 'hybrid':
+            return tr('metadata_source_hybrid')
+        return tr('metadata_source_service')
+
+    def set_footer_metadata(self, kind, detail_text):
+        detail_text = shorten_text(detail_text, 94 if self.is_fhd else 54)
+        self.footer_mode = 'metadata'
+        self["footer_brand"].setText(self.source_label_from_kind(kind))
+        self["footer_label"].setText(detail_text)
+
+    def reset_network_metadata(self):
+        self.network_meta = {}
+        self.network_meta_last_update = 0
+        self.network_meta_worker_id += 1
+        self.set_footer_default()
+
+    def start_network_metadata_worker(self, station, stream_url):
+        self.reset_network_metadata()
+        if threading is None:
+            return
+        worker_id = self.network_meta_worker_id
+        safe_station = dict(station or {})
+        safe_stream_url = to_text(stream_url).strip()
+        if not safe_stream_url:
+            return
+        try:
+            worker = threading.Thread(target=self.network_metadata_worker, args=(worker_id, safe_station, safe_stream_url))
+            worker.setDaemon(True)
+            worker.start()
+        except Exception:
+            pass
+
+    def network_metadata_worker(self, worker_id, station, stream_url):
+        for _ in range(120):
+            if self.network_meta_worker_id != worker_id:
+                return
+            payload = fetch_station_network_metadata(station, stream_url)
+            if self.network_meta_worker_id != worker_id:
+                return
+            if payload:
+                payload['updated_at'] = format_ui_stamp()
+                self.network_meta = payload
+                self.network_meta_last_update = time.time()
+            sleep_left = NETWORK_META_POLL_SECS
+            while sleep_left > 0:
+                if self.network_meta_worker_id != worker_id:
+                    return
+                time.sleep(1)
+                sleep_left -= 1
+
     def on_layout_ready(self):
         try:
             self['picon'].instance.setScale(1)
@@ -987,6 +1435,10 @@ class NeoRadioMain(Screen):
         self.remote_picon_discovery_cache = {}
         self.github_console = None
         self.github_update_info = {}
+        self.network_meta = {}
+        self.network_meta_worker_id = 0
+        self.network_meta_last_update = 0
+        self.footer_mode = "default"
         self.saver_visible = False
         self.saver_clock_x = 0
         self.saver_clock_y = 0
@@ -1076,6 +1528,67 @@ class NeoRadioMain(Screen):
         self.onLayoutFinish.append(self.on_layout_ready)
         self.apply_language()
 
+    def set_footer_default(self):
+        self.footer_mode = 'default'
+        self["footer_brand"].setText(tr('by_author'))
+        self["footer_label"].setText(u"")
+
+    def source_label_from_kind(self, kind):
+        kind = to_text(kind).strip().lower()
+        if kind == 'icy':
+            return tr('metadata_source_icy')
+        if kind == 'endpoint':
+            return tr('metadata_source_endpoint')
+        if kind == 'hybrid':
+            return tr('metadata_source_hybrid')
+        return tr('metadata_source_service')
+
+    def set_footer_metadata(self, kind, detail_text):
+        detail_text = shorten_text(detail_text, 94 if self.is_fhd else 54)
+        self.footer_mode = 'metadata'
+        self["footer_brand"].setText(self.source_label_from_kind(kind))
+        self["footer_label"].setText(detail_text)
+
+    def reset_network_metadata(self):
+        self.network_meta = {}
+        self.network_meta_last_update = 0
+        self.network_meta_worker_id += 1
+        self.set_footer_default()
+
+    def start_network_metadata_worker(self, station, stream_url):
+        self.reset_network_metadata()
+        if threading is None:
+            return
+        worker_id = self.network_meta_worker_id
+        safe_station = dict(station or {})
+        safe_stream_url = to_text(stream_url).strip()
+        if not safe_stream_url:
+            return
+        try:
+            worker = threading.Thread(target=self.network_metadata_worker, args=(worker_id, safe_station, safe_stream_url))
+            worker.setDaemon(True)
+            worker.start()
+        except Exception:
+            pass
+
+    def network_metadata_worker(self, worker_id, station, stream_url):
+        for _ in range(120):
+            if self.network_meta_worker_id != worker_id:
+                return
+            payload = fetch_station_network_metadata(station, stream_url)
+            if self.network_meta_worker_id != worker_id:
+                return
+            if payload:
+                payload['updated_at'] = format_ui_stamp()
+                self.network_meta = payload
+                self.network_meta_last_update = time.time()
+            sleep_left = NETWORK_META_POLL_SECS
+            while sleep_left > 0:
+                if self.network_meta_worker_id != worker_id:
+                    return
+                time.sleep(1)
+                sleep_left -= 1
+
     def on_layout_ready(self):
         self.touch_activity()
         self.prepare_pixmaps()
@@ -1109,6 +1622,7 @@ class NeoRadioMain(Screen):
         self["key_menu"].setText(tr('menu_cfg'))
         self["key_info"].setText(tr('info_details'))
         self["picon_large_title"].setText(tr('picon_title'))
+        self.set_footer_default()
 
     def setup_screensaver_overlay(self):
         for widget_name in ("saver_bg", "saver_clock", "saver_date", "saver_station", "saver_hint", "saver_picon"):
@@ -1257,7 +1771,8 @@ class NeoRadioMain(Screen):
         self["clock_label"].setText(format_ui_stamp())
         self["hero_clock"].setText(to_text(time.strftime("%H:%M:%S")))
         self["hero_date"].setText(format_ui_date(with_weekday=True))
-        self["footer_label"].setText(u"| email: aio-iptv@wp.pl | %s" % to_text(time.strftime("%Y-%m-%d")))
+        if self.footer_mode == "default":
+            self.set_footer_default()
         self.visualizer_idx = (self.visualizer_idx + 1) % len(self.visualizer_frames)
         self["visualizer_label"].setText(u"EQ %s" % self.visualizer_frames[self.visualizer_idx])
         self["spectrum_label"].setText(self.spectrum_frames[self.visualizer_idx % len(self.spectrum_frames)])
@@ -1731,6 +2246,7 @@ class NeoRadioMain(Screen):
             self["station_extra"].setText(text_type(""))
             self.update_cover(None)
             self.update_picon(self.get_picon_station())
+            self.set_footer_default()
             return
         name = to_text(station.get("name", u"Unknown"))
         genre = to_text(station.get("genre", u"Other"))
@@ -1741,11 +2257,18 @@ class NeoRadioMain(Screen):
         desc = to_text(station.get("description", u""))
         if not desc:
             desc = tr("metadata_waiting")
+        url_line = to_text(station.get("homepage", u"")).strip() or to_text(station.get("url", u"")).strip()
         self["station_name"].setText(name)
         self["station_meta"].setText(meta)
-        self["station_url"].setText(text_type(""))
-        self["station_desc"].setText(desc)
-        self["station_extra"].setText(text_type(""))
+        self["station_url"].setText(shorten_text(url_line, 74 if self.is_fhd else 38))
+        self["station_desc"].setText(shorten_text(desc, 168 if self.is_fhd else 82))
+        extra_items = []
+        metadata_url = to_text(station.get("metadata_url", u"")).strip()
+        if metadata_url:
+            extra_items.append(u"META API")
+        if to_text(station.get("picon_url", u"")).strip():
+            extra_items.append(u"REMOTE PICON")
+        self["station_extra"].setText(u" | ".join(extra_items))
         self.update_cover(station)
         self.update_picon(self.get_picon_station())
         config.plugins.neoradio.last_station.value = name
@@ -1828,6 +2351,7 @@ class NeoRadioMain(Screen):
         else:
             self["np_status"].setText(tr("metadata_waiting"))
         self.update_picon(station)
+        self.start_network_metadata_worker(station, stream_url)
         self["spectrum_label"].setText(self.spectrum_frames[self.visualizer_idx % len(self.spectrum_frames)])
 
     def toggle_favorite(self):
@@ -1874,7 +2398,7 @@ class NeoRadioMain(Screen):
             return text_type("")
 
     def update_now_playing(self):
-        station = self.get_current_station()
+        station = self.playing_station_data or self.get_current_station()
         fallback_name = to_text(station.get("name", u"-")) if station else u"-"
         title = text_type("")
         artist = text_type("")
@@ -1899,22 +2423,68 @@ class NeoRadioMain(Screen):
             if len(parts) == 2:
                 artist = artist or parts[0].strip()
                 title = parts[1].strip()
+        network = dict(self.network_meta or {})
+        used_network = False
+        if not title:
+            network_title = to_text(network.get('title', '')).strip()
+            if network_title:
+                title = network_title
+                used_network = True
+        if (not artist or artist == u'-'):
+            network_artist = to_text(network.get('artist', '')).strip()
+            if network_artist:
+                artist = network_artist
+                used_network = True
+        if not album:
+            network_album = to_text(network.get('album', '')).strip() or to_text(network.get('program', '')).strip() or to_text(network.get('stream_name', '')).strip()
+            if network_album:
+                album = network_album
+                used_network = True
+        if not raw:
+            raw = to_text(network.get('radio_text', '')).strip() or to_text(network.get('raw_title', '')).strip()
         if not title:
             title = fallback_name
         if not artist:
             artist = u"-"
         if not album:
-            album = organization or u"-"
+            album = organization or to_text(network.get('stream_description', '')).strip() or u"-"
         meta_blob = u"%s|%s|%s" % (title, artist, album)
         if meta_blob != self.last_meta_blob:
             self.last_meta_blob = meta_blob
             self["np_title"].setText(tr("title_fmt", title))
             self["np_artist"].setText(tr("artist_fmt", artist))
             self["np_album"].setText(tr("album_fmt", album))
-        if title != fallback_name or artist != u"-" or album != u"-":
+        has_service_meta = bool((title and title != fallback_name) or (artist and artist != u'-') or (organization and organization != u'-'))
+        has_network_meta = bool(network.get('title') or network.get('artist') or network.get('radio_text') or network.get('program') or network.get('stream_name'))
+        if has_network_meta or used_network:
+            self["np_status"].setText(tr("metadata_network_active") if has_service_meta else tr("metadata_active"))
+            detail_parts = []
+            radio_text = to_text(network.get('radio_text', '')).strip() or to_text(network.get('raw_title', '')).strip() or raw
+            stream_name = to_text(network.get('stream_name', '')).strip()
+            if radio_text:
+                detail_parts.append(shorten_text(radio_text, 42 if self.is_fhd else 22))
+            elif stream_name:
+                detail_parts.append(shorten_text(stream_name, 42 if self.is_fhd else 22))
+            updated_at = to_text(network.get('updated_at', '')).strip()
+            if updated_at:
+                detail_parts.append(updated_at)
+            self.set_footer_metadata(network.get('source_kind', 'service'), u" • ".join([x for x in detail_parts if x]))
+            current = self.get_current_station()
+            if current and station and to_text(current.get('name')) == to_text(station.get('name')) and to_text(current.get('url')) == to_text(station.get('url')):
+                desc_parts = []
+                base_desc = to_text(station.get('description', u'')).strip()
+                if base_desc and base_desc != u'-':
+                    desc_parts.append(base_desc)
+                if radio_text and radio_text != base_desc:
+                    desc_parts.append(radio_text)
+                self["station_desc"].setText(shorten_text(u"\n\n".join(desc_parts), 280 if self.is_fhd else 150))
+        elif has_service_meta:
             self["np_status"].setText(tr("metadata_active"))
+            self.set_footer_metadata('service', shorten_text(u"%s • %s" % (artist, title) if artist != u'-' else title, 62 if self.is_fhd else 34))
         else:
             self["np_status"].setText(tr("metadata_missing"))
+            if self.footer_mode != 'default':
+                self.set_footer_default()
 
     def show_details(self):
         if self.consume_screensaver_key():
@@ -2156,6 +2726,7 @@ class NeoRadioMain(Screen):
         if self.consume_screensaver_key():
             return
         self.touch_activity()
+        self.network_meta_worker_id += 1
         try:
             self.timer.stop()
         except Exception:
