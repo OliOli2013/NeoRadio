@@ -1,6 +1,15 @@
-# NeoRadio 1.3.3
+# NeoRadio 1.3.4
 
 NeoRadio is a modern Enigma2 internet radio plugin focused on fast playback, readable metadata, SAT/IPTV picon support, bilingual Polish/English UI, and GitHub-based updates.
+
+## What's new in 1.3.4
+
+- normalized duplicate country/bouquet naming such as `Polska`, `Poland`, and `Polen`
+- added station language filters: Polish, Arabic, French, German, Italian, and Other
+- added a separate Blue-button filters/bouquets screen so the Menu button opens settings immediately
+- restored the last selected filter and last station URL on startup
+- added persistent recently played history in `/etc/enigma2/neoradio_history.json`
+- kept existing options such as keep-playing, autoplay, picons, screensaver, and GitHub update URL persistent through Enigma2 config
 
 ## What's new in 1.3.3
 
