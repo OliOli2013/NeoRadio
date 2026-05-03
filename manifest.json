@@ -1,8 +1,8 @@
 {
   "name": "NeoRadio",
-  "version": "1.3.3",
+  "version": "1.3.9",
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
   "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
-  "changelog": "Reworked the main screen layout: clock and station description no longer clash, the lower RDS/ICY block is cleaner and easier to read, footer metadata is shorter, and live metadata stays in its own area."
+  "changelog": "Przebudowano premium audio na duże gałki Hi-Fi bez suwaków, wzmocniono animację glow, dodano przełączanie motywu klawiszem 0 na pilocie i zaktualizowano listę stacji radiowych z bukietu userbouquet.iptv_radio.radio."
 }

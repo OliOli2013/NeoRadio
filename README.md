@@ -1,146 +1,102 @@
-# NeoRadio
+# NeoRadio 1.3.9
 
-![NeoRadio - główny ekran](docs/images/neoradio-main.jpg)
+NeoRadio is a modern Enigma2 internet radio plugin focused on fast playback, readable metadata, SAT/IPTV picon support, bilingual Polish/English UI, and GitHub-based updates.
 
-**NeoRadio** to wtyczka dla Enigma2 umożliwiająca słuchanie internetowych stacji radiowych z poziomu dekodera. Wtyczka zawiera uporządkowaną listę stacji, obsługę filtrów językowych oraz zapamiętywanie ostatnio używanych ustawień.
 
-## Najważniejsze funkcje
+## What's new in 1.3.9
 
-- odtwarzanie internetowych stacji radiowych,
-- uporządkowana lista stacji bez powtarzania tych samych kanałów w wielu bukietach,
-- ujednolicone kategorie, np. `Polska` zamiast osobnych `Polska`, `Poland`, `Polen`,
-- wybór stacji oddzielony od menu ustawień,
-- osobny przycisk do wyboru bukietu / języka,
-- osobny przycisk `Menu` do ustawień,
-- zapamiętywanie ostatnio odtwarzanej stacji,
-- zapamiętywanie ostatnio wybranego filtra,
-- historia ostatnio odtwarzanych stacji,
-- możliwość dodania własnych stacji użytkownika.
+- added three audio potentiometers on the main radio screen: left/right balance, treble, and bass
+- added direct remote control shortcuts: `1/3` balance, `4/6` treble, `7/9` bass, `5` reset
+- added persistent audio settings in Enigma2 config while keeping the existing station list, metadata, picons, screensaver, and GitHub update behavior unchanged
 
-## Kategorie językowe
+## What's new in 1.3.4
 
-W wersji 1.3.4 dodano i uporządkowano filtry językowe:
+- imported stations from the supplied `userbouquet.iptv_radio.radio` bouquet
+- normalized duplicate country/bouquet naming such as `Polska`, `Poland`, and `Polen`
+- added station language filters: Polish, Arabic, French, German, Italian, and Other
+- added a separate Blue-button filters/bouquets screen so the Menu button opens settings immediately
+- restored the last selected filter and last station URL on startup
+- added persistent recently played history in `/etc/enigma2/neoradio_history.json`
+- kept existing options such as keep-playing, autoplay, picons, screensaver, and GitHub update URL persistent through Enigma2 config
 
-- Polski,
-- Arabski,
-- Francuski,
-- Niemiecki,
-- Włoski,
-- Inne.
+## What's new in 1.3.3
 
-Dzięki temu stacje nie są dublowane w podobnych kategoriach, np. `Polska` i `Poland`.
+- cleaned up the main screen layout so the clock, station description, and live metadata no longer overlap
+- moved the live metadata into a dedicated lower information block for better readability
+- shortened overly long footer/source lines to keep RDS / ICY details visible on screen
+- kept station description stable instead of mixing it with now-playing text near the clock
+- retained the stronger **ICY metadata** parsing and optional station endpoint support from 1.3.x
 
-## Obsługa przycisków
+## Metadata model
 
-- `OK` — uruchomienie wybranej stacji,
-- `Niebieski` — wybór bukietu / języka / filtra stacji,
-- `Menu` — ustawienia wtyczki,
-- `Exit` — wyjście z wtyczki.
+NeoRadio now uses the following priority chain:
 
-Menu nie znajduje się już na końcu listy stacji, więc nie trzeba przewijać całej listy, aby wejść do ustawień.
+1. Enigma2 service tags (`sTagTitle`, `sTagArtist`, `sTagAlbum`, `sTagComment`)
+2. direct stream metadata via `Icy-MetaData: 1`
+3. optional station endpoint defined per station in JSON
 
-## Zapamiętywanie ustawień
+This gives much better results on streams that do not fully expose metadata through Enigma2 alone.
 
-NeoRadio zapamiętuje:
+## Custom station example with external metadata endpoint
 
-- ostatnio odtwarzaną stację,
-- adres URL ostatnio odtwarzanej stacji,
-- ostatnio użyty filtr,
-- historię ostatnio odtwarzanych stacji.
-
-Historia odtwarzania zapisywana jest w pliku:
-
-```text
-/etc/enigma2/neoradio_history.json
-```
-
-## Własne stacje użytkownika
-
-Przykładowy plik własnych stacji znajduje się w repozytorium:
-
-```text
-pkgroot/etc/enigma2/neoradio_user_stations.json.example
-```
-
-Aby dodać własne stacje, można utworzyć plik:
-
-```text
-/etc/enigma2/neoradio_user_stations.json
-```
-
-Format przykładowy:
+The plugin supports additional optional fields in `neoradio_user_stations.json`:
 
 ```json
 [
   {
     "name": "Moja stacja",
-    "url": "https://example.com/radio.mp3",
-    "language": "Polski"
+    "url": "https://radio.example.com/live.mp3",
+    "genre": "Custom",
+    "country": "Polska",
+    "bitrate": "128",
+    "description": "Przykładowa stacja z zewnętrznymi metadanymi.",
+    "homepage": "https://radio.example.com",
+    "picon": "/usr/share/enigma2/picon/moja_stacja.png",
+    "metadata_url": "https://radio.example.com/api/nowplaying",
+    "metadata_type": "json",
+    "metadata_title_key": "now_playing.song.title",
+    "metadata_artist_key": "now_playing.song.artist",
+    "metadata_album_key": "now_playing.song.album",
+    "metadata_text_key": "now_playing.song.text",
+    "metadata_program_key": "live.show.name",
+    "metadata_cover_key": "now_playing.song.art"
   }
 ]
 ```
 
-## Instalacja z pliku IPK
+### Supported metadata fields
 
-Skopiuj plik `.ipk` do katalogu `/tmp` na dekoderze, a następnie wykonaj:
+- `metadata_url`
+- `metadata_type` = `auto`, `json`, `text`
+- `metadata_title_key`
+- `metadata_artist_key`
+- `metadata_album_key`
+- `metadata_text_key`
+- `metadata_program_key`
+- `metadata_cover_key`
 
-```sh
-opkg install --force-reinstall /tmp/enigma2-plugin-extensions-neoradio_1.3.4_all.ipk
+Nested JSON paths are supported with dot notation.
+
+## GitHub updates
+
+The plugin checks `manifest.json` and expects a payload like this:
+
+```json
+{
+  "name": "NeoRadio",
+  "version": "1.3.3",
+  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
+  "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
+  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
+  "changelog": "Added stronger ICY metadata parsing, optional per-station JSON/text metadata endpoints, improved Now Playing fallback logic, refreshed default artwork, and cleaner metadata presentation in the UI."
+}
 ```
 
-Po instalacji zrestartuj GUI Enigma2:
-
-```sh
-init 4
-sleep 3
-init 3
-```
-
-Można też wykonać restart GUI z menu dekodera.
-
-## Struktura repozytorium
-
-Najważniejsze katalogi i pliki:
+## Repository layout
 
 ```text
-pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/plugin.py
-pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/stations.json
-pkgroot/etc/enigma2/neoradio_user_stations.json.example
-docs/images/neoradio-main.jpg
-release/CONTROL/control
-build_ipk.sh
+pkgroot/                                 Files installed on the Enigma2 receiver
+release/CONTROL/control                  Package metadata
+release/build_ipk.sh                     Build helper for .ipk output
+manifest.json                            GitHub update manifest
 ```
-
-## Budowanie paczki IPK z repozytorium
-
-Jeżeli w repozytorium znajduje się skrypt `build_ipk.sh`, nadaj mu uprawnienia wykonywania:
-
-```sh
-chmod +x build_ipk.sh
-```
-
-Następnie uruchom:
-
-```sh
-./build_ipk.sh
-```
-
-Gotowa paczka `.ipk` powinna zostać utworzona zgodnie z ustawieniami skryptu budowania.
-
-## Wersja
-
-Aktualna wersja: **1.3.4**
-
-Zmiany w wersji 1.3.4:
-
-- dodano stacje z bukietu IPTV Radio,
-- usunięto lub pominięto duplikaty stacji,
-- ujednolicono nazwy kategorii językowych,
-- dodano filtry językowe: Arabski, Francuski, Niemiecki, Włoski oraz Inne,
-- poprawiono zapamiętywanie ostatniej stacji i ustawień,
-- dodano historię ostatnio odtwarzanych stacji,
-- rozdzielono wybór stacji od menu ustawień.
-
-## Licencja
-
-Projekt jest udostępniany zgodnie z licencją znajdującą się w pliku `LICENSE` lub `LICENSE.md`.

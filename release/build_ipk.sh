@@ -1,37 +1,15 @@
-#!/usr/bin/env bash
-set -euo pipefail
-VERSION="${1:-1.3.3}"
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PKGROOT="$ROOT_DIR/pkgroot"
-WORKDIR="$ROOT_DIR/release/out/build_${VERSION}"
-OUTDIR="$ROOT_DIR/release/out"
-OUTIPK="$OUTDIR/enigma2-plugin-extensions-neoradio_${VERSION}_all.ipk"
-LATESTIPK="$OUTDIR/enigma2-plugin-extensions-neoradio_all.ipk"
-LATESTSRC="$OUTDIR/neoradio_repo.tar.gz"
-
-mkdir -p "$OUTDIR"
-rm -rf "$WORKDIR"
-mkdir -p "$WORKDIR/control"
-cp "$ROOT_DIR/release/CONTROL/control" "$WORKDIR/control/control"
-sed -i "s/^Version: .*/Version: ${VERSION}/" "$WORKDIR/control/control"
-(
-  cd "$WORKDIR/control"
-  tar -czf "$WORKDIR/control.tar.gz" ./control
-)
-(
-  cd "$PKGROOT"
-  find . -name '__pycache__' -type d -prune -exec rm -rf {} +
-  tar -czf "$WORKDIR/data.tar.gz" .
-)
-printf '2.0\n' > "$WORKDIR/debian-binary"
-rm -f "$OUTIPK" "$LATESTIPK"
-(
-  cd "$WORKDIR"
-  ar r "$OUTIPK" debian-binary control.tar.gz data.tar.gz >/dev/null 2>&1
-)
-cp -f "$OUTIPK" "$LATESTIPK"
-tar --exclude="release/out" --exclude="pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/__pycache__" -czf "$LATESTSRC" -C "$ROOT_DIR" pkgroot README.md manifest.json release
-
-echo "Built versioned IPK: $OUTIPK"
-echo "Built latest IPK: $LATESTIPK"
-echo "Built latest source: $LATESTSRC"
+#!/bin/sh
+set -e
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+OUT_VERSIONED="$ROOT/enigma2-plugin-extensions-neoradio_1.3.9_all.ipk"
+OUT_LATEST="$ROOT/enigma2-plugin-extensions-neoradio_all.ipk"
+BUILD_DIR="$ROOT/build"
+rm -rf "$BUILD_DIR"
+mkdir -p "$BUILD_DIR"
+tar --numeric-owner --owner=0 --group=0 -C "$ROOT/release/CONTROL" -czf "$BUILD_DIR/control.tar.gz" .
+tar --numeric-owner --owner=0 --group=0 -C "$ROOT/pkgroot" -czf "$BUILD_DIR/data.tar.gz" .
+printf '2.0\n' > "$BUILD_DIR/debian-binary"
+( cd "$BUILD_DIR" && ar r "$OUT_VERSIONED" debian-binary control.tar.gz data.tar.gz )
+cp "$OUT_VERSIONED" "$OUT_LATEST"
+echo "Built: $OUT_VERSIONED"
+echo "Built: $OUT_LATEST"

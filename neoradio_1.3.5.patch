@@ -1,0 +1,418 @@
+--- /mnt/data/neoradio_work_original/data/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/plugin.py	2026-04-25 18:13:53.000000000 +0000
++++ /mnt/data/neoradio_work/data/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/plugin.py	2026-05-03 19:12:44.201690953 +0000
+@@ -10,6 +10,10 @@
+ import glob
+ import hashlib
+ try:
++    import subprocess
++except Exception:
++    subprocess = None
++try:
+     import socket
+ except Exception:
+     socket = None
+@@ -56,9 +60,13 @@
+ except Exception:
+     language = None
+ from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation, ePoint
++try:
++    from enigma import eDVBVolumecontrol
++except Exception:
++    eDVBVolumecontrol = None
+ from Tools.Directories import resolveFilename, SCOPE_CONFIG
+ 
+-PLUGIN_VERSION = "1.3.4"
++PLUGIN_VERSION = "1.3.5"
+ PLUGIN_NAME = "NeoRadio"
+ PLUGIN_TITLE = "NeoRadio Online"
+ PLUGIN_DESC = "NeoRadio Online"
+@@ -150,6 +158,12 @@
+     config.plugins.neoradio.screensaver_timeout = ConfigText(default="0", fixed_size=False)
+ if not hasattr(config.plugins.neoradio, "github_manifest_url"):
+     config.plugins.neoradio.github_manifest_url = ConfigText(default="https://raw.githubusercontent.com/OliOli2013/NeoRadio/main/manifest.json", fixed_size=False)
++if not hasattr(config.plugins.neoradio, "audio_balance"):
++    config.plugins.neoradio.audio_balance = ConfigText(default="0", fixed_size=False)
++if not hasattr(config.plugins.neoradio, "audio_treble"):
++    config.plugins.neoradio.audio_treble = ConfigText(default="0", fixed_size=False)
++if not hasattr(config.plugins.neoradio, "audio_bass"):
++    config.plugins.neoradio.audio_bass = ConfigText(default="0", fixed_size=False)
+ 
+ DEFAULT_GITHUB_MANIFEST_URL = "https://raw.githubusercontent.com/OliOli2013/NeoRadio/main/manifest.json"
+ UPDATE_TEMP_IPK = "/tmp/neoradio_update.ipk"
+@@ -591,6 +605,13 @@
+         "github_restarting": u"restarting Enigma2 GUI...",
+         "github_restart_later": u"update installed - restart GUI later",
+         "github_error": u"Could not check GitHub updates.",
++        "audio_title": u"Audio controls",
++        "audio_balance": u"Bal",
++        "audio_treble": u"Treble",
++        "audio_bass": u"Bass",
++        "audio_help": u"1/3=balance  4/6=treble  7/9=bass  5=reset",
++        "audio_status": u"Audio: %s",
++        "audio_reset_status": u"audio controls reset",
+         "screensaver_hint": u"Press any key to return",
+         "screensaver_title": u"NeoRadio screensaver",
+     },
+@@ -715,6 +736,13 @@
+     "github_restarting": u"restart GUI Enigma2...",
+     "github_restart_later": u"aktualizacja zainstalowana - zrestartuj GUI później",
+     "github_error": u"Nie udało się sprawdzić aktualizacji GitHub.",
++    "audio_title": u"Potencjometry audio",
++    "audio_balance": u"Bal",
++    "audio_treble": u"Wysokie",
++    "audio_bass": u"Niskie",
++    "audio_help": u"1/3=balans  4/6=wysokie  7/9=niskie  5=reset",
++    "audio_status": u"Audio: %s",
++    "audio_reset_status": u"potencjometry audio wyzerowane",
+     "screensaver_hint": u"Naciśnij dowolny klawisz, aby wrócić",
+     "screensaver_title": u"Wygaszacz NeoRadio",
+ }
+@@ -1321,6 +1349,12 @@
+             <widget name="spectrum_title" position="1434,406" size="180,24" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+             <widget name="spectrum_label" position="1428,438" size="192,46" font="Regular;36" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+ 
++            <widget name="audio_title" position="570,548" size="170,26" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
++            <widget name="audio_balance" position="750,548" size="260,26" font="Regular;21" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
++            <widget name="audio_treble" position="1020,548" size="260,26" font="Regular;21" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
++            <widget name="audio_bass" position="1290,548" size="330,26" font="Regular;21" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
++            <widget name="audio_help" position="570,580" size="1040,24" font="Regular;18" foregroundColor="#00b5bfd1" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
++
+             <widget name="np_header" position="570,660" size="300,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+             <widget name="np_title" position="570,700" size="730,32" font="Regular;25" foregroundColor="#00ffffff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+             <widget name="np_artist" position="570,734" size="730,30" font="Regular;23" foregroundColor="#008fd3ff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+@@ -1387,6 +1421,12 @@
+         <widget name="spectrum_title" position="954,304" size="136,16" font="Regular;15" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+         <widget name="spectrum_label" position="946,326" size="152,28" font="Regular;24" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+ 
++        <widget name="audio_title" position="486,374" size="112,18" font="Regular;15" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
++        <widget name="audio_balance" position="604,374" size="180,18" font="Regular;14" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
++        <widget name="audio_treble" position="790,374" size="172,18" font="Regular;14" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
++        <widget name="audio_bass" position="968,374" size="168,18" font="Regular;14" foregroundColor="#00ffffff" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
++        <widget name="audio_help" position="486,398" size="636,16" font="Regular;12" foregroundColor="#00b5bfd1" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
++
+         <widget name="np_header" position="486,440" size="220,20" font="Regular;19" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+         <widget name="np_title" position="486,468" size="396,20" font="Regular;17" foregroundColor="#00ffffff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+         <widget name="np_artist" position="486,492" size="396,20" font="Regular;17" foregroundColor="#008fd3ff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
+@@ -1617,6 +1657,12 @@
+         self.saver_clock_y = 0
+         self.saver_dx = 18 if self.is_fhd else 12
+         self.saver_dy = 14 if self.is_fhd else 10
++        self.audio_balance_value = self.get_config_audio_value("audio_balance", 0)
++        self.audio_treble_value = self.get_config_audio_value("audio_treble", 0)
++        self.audio_bass_value = self.get_config_audio_value("audio_bass", 0)
++        self.audio_master_volume = None
++        self.audio_last_left = None
++        self.audio_last_right = None
+ 
+         self["list_title"] = Label(text_type(""))
+         self["header_title"] = Label(text_type(""))
+@@ -1628,6 +1674,11 @@
+         self["hero_clock"] = Label(text_type(""))
+         self["hero_date"] = Label(text_type(""))
+         self["visualizer_label"] = Label(text_type(""))
++        self["audio_title"] = Label(text_type(""))
++        self["audio_balance"] = Label(text_type(""))
++        self["audio_treble"] = Label(text_type(""))
++        self["audio_bass"] = Label(text_type(""))
++        self["audio_help"] = Label(text_type(""))
+         self["footer_brand"] = Label(text_type(""))
+         self["footer_label"] = Label(text_type(""))
+         self["station_name"] = Label(u"-")
+@@ -1667,7 +1718,7 @@
+             pass
+ 
+         self["actions"] = ActionMap(
+-            ["OkCancelActions", "ColorActions", "DirectionActions", "MenuActions", "InfobarActions"],
++            ["OkCancelActions", "ColorActions", "DirectionActions", "MenuActions", "InfobarActions", "NumberActions"],
+             {
+                 "ok": self.play_current,
+                 "cancel": self.close_plugin,
+@@ -1681,6 +1732,13 @@
+                 "down": self.move_down,
+                 "left": self.page_up,
+                 "right": self.page_down,
++                "1": self.audio_balance_left,
++                "3": self.audio_balance_right,
++                "4": self.audio_treble_down,
++                "6": self.audio_treble_up,
++                "7": self.audio_bass_down,
++                "9": self.audio_bass_up,
++                "5": self.audio_reset,
+             },
+             -1,
+         )
+@@ -1771,6 +1829,7 @@
+         self.update_cover(self.get_current_station())
+         self.update_picon(self.get_picon_station())
+         self.schedule_screensaver()
++        self.apply_audio_controls()
+         self.timer.start(1000)
+         if config.plugins.neoradio.autoplay_last.value and (config.plugins.neoradio.last_station.value or getattr(config.plugins.neoradio, "last_url", "").value):
+             self.play_current()
+@@ -1780,6 +1839,9 @@
+         self["header_title"].setText(tr('header_title'))
+         self["help_label"].setText(tr('help'))
+         self["status_label"].setText(tr('status_ready'))
++        self["audio_title"].setText(tr('audio_title'))
++        self["audio_help"].setText(tr('audio_help'))
++        self.update_audio_controls_labels()
+         self["footer_brand"].setText(tr('by_author'))
+         self["station_desc_title"].setText(tr('station_desc_title'))
+         self["spectrum_title"].setText(tr('spectrum_title'))
+@@ -2603,6 +2665,7 @@
+         except Exception:
+             pass
+         self.session.nav.playService(ref)
++        self.apply_audio_controls()
+         self.schedule_screensaver()
+         self.last_meta_blob = text_type("")
+         self["status_label"].setText(tr("status_prefix", tr("playing", to_text(station.get("name", u"")))))
+@@ -2614,6 +2677,248 @@
+         self.start_network_metadata_worker(station, stream_url)
+         self["spectrum_label"].setText(self.spectrum_frames[self.visualizer_idx % len(self.spectrum_frames)])
+ 
++    def clamp_audio_value(self, value, min_value=-10, max_value=10):
++        try:
++            value = int(to_text(value).strip())
++        except Exception:
++            value = 0
++        return max(int(min_value), min(int(max_value), value))
++
++    def get_config_audio_value(self, name, default_value=0):
++        try:
++            item = getattr(config.plugins.neoradio, name)
++            return self.clamp_audio_value(getattr(item, 'value', default_value))
++        except Exception:
++            return self.clamp_audio_value(default_value)
++
++    def save_audio_config_value(self, name, value):
++        try:
++            item = getattr(config.plugins.neoradio, name)
++            item.value = to_text(self.clamp_audio_value(value))
++            item.save()
++            return True
++        except Exception:
++            return False
++
++    def save_audio_controls(self):
++        self.save_audio_config_value("audio_balance", self.audio_balance_value)
++        self.save_audio_config_value("audio_treble", self.audio_treble_value)
++        self.save_audio_config_value("audio_bass", self.audio_bass_value)
++        try:
++            configfile.save()
++        except Exception:
++            pass
++
++    def signed_audio_value(self, value):
++        value = self.clamp_audio_value(value)
++        if value > 0:
++            return u"+%d" % value
++        return u"%d" % value
++
++    def make_audio_pot_bar(self, value, min_value=-10, max_value=10, width=None):
++        width = width or (11 if self.is_fhd else 9)
++        value = self.clamp_audio_value(value, min_value, max_value)
++        try:
++            pos = int(round(float(value - min_value) / float(max_value - min_value) * float(width - 1)))
++        except Exception:
++            pos = width // 2
++        pos = max(0, min(width - 1, pos))
++        center = width // 2
++        chars = [u"-"] * width
++        if 0 <= center < width:
++            chars[center] = u"|"
++        chars[pos] = u"o"
++        return u"[" + u"".join(chars) + u"]"
++
++    def update_audio_controls_labels(self):
++        try:
++            bal_value = self.clamp_audio_value(self.audio_balance_value)
++            bal_side = u"C"
++            if bal_value < 0:
++                bal_side = u"L%d" % abs(bal_value)
++            elif bal_value > 0:
++                bal_side = u"R%d" % bal_value
++            self["audio_balance"].setText(u"%s %s %s" % (tr('audio_balance'), self.make_audio_pot_bar(bal_value), bal_side))
++            self["audio_treble"].setText(u"%s %s %s" % (tr('audio_treble'), self.make_audio_pot_bar(self.audio_treble_value), self.signed_audio_value(self.audio_treble_value)))
++            self["audio_bass"].setText(u"%s %s %s" % (tr('audio_bass'), self.make_audio_pot_bar(self.audio_bass_value), self.signed_audio_value(self.audio_bass_value)))
++        except Exception:
++            pass
++
++    def audio_summary_text(self):
++        bal = self.clamp_audio_value(self.audio_balance_value)
++        if bal < 0:
++            bal_text = u"L%d" % abs(bal)
++        elif bal > 0:
++            bal_text = u"R%d" % bal
++        else:
++            bal_text = u"C"
++        return u"%s %s | %s %s | %s %s" % (tr('audio_balance'), bal_text, tr('audio_treble'), self.signed_audio_value(self.audio_treble_value), tr('audio_bass'), self.signed_audio_value(self.audio_bass_value))
++
++    def get_audio_volume_controller(self):
++        if eDVBVolumecontrol is None:
++            return None
++        try:
++            return eDVBVolumecontrol.getInstance()
++        except Exception:
++            return None
++
++    def get_current_audio_volume(self):
++        controller = self.get_audio_volume_controller()
++        if controller is None:
++            return None
++        try:
++            value = int(controller.getVolume())
++            return max(0, min(100, value))
++        except Exception:
++            return None
++
++    def apply_audio_balance(self):
++        controller = self.get_audio_volume_controller()
++        if controller is None:
++            return False
++        current_volume = self.get_current_audio_volume()
++        if self.audio_master_volume is None:
++            self.audio_master_volume = current_volume if current_volume is not None else 50
++        volume = self.audio_master_volume
++        if current_volume is not None and self.clamp_audio_value(self.audio_balance_value) == 0:
++            volume = current_volume
++            self.audio_master_volume = current_volume
++        volume = max(0, min(100, int(volume)))
++        balance = self.clamp_audio_value(self.audio_balance_value)
++        left = volume
++        right = volume
++        if balance < 0:
++            right = int(round(float(volume) * float(10 + balance) / 10.0))
++        elif balance > 0:
++            left = int(round(float(volume) * float(10 - balance) / 10.0))
++        left = max(0, min(100, left))
++        right = max(0, min(100, right))
++        try:
++            controller.setVolume(left, right)
++            self.audio_last_left = left
++            self.audio_last_right = right
++            return True
++        except Exception:
++            return False
++
++    def write_audio_proc_value(self, paths, value, percent):
++        for path in paths:
++            try:
++                if not os.path.exists(path):
++                    continue
++            except Exception:
++                continue
++            for payload in (to_text(value), to_text(percent)):
++                try:
++                    handle = open(path, 'w')
++                    handle.write(payload)
++                    handle.close()
++                    return True
++                except Exception:
++                    try:
++                        handle.close()
++                    except Exception:
++                        pass
++        return False
++
++    def run_amixer_control(self, control_name, percent):
++        if subprocess is None:
++            return False
++        devnull = None
++        try:
++            devnull = open(os.devnull, 'w')
++            for args in (
++                ['amixer', '-q', 'sset', control_name, '%d%%' % int(percent)],
++                ['amixer', '-q', '-c', '0', 'sset', control_name, '%d%%' % int(percent)],
++            ):
++                try:
++                    if subprocess.call(args, stdout=devnull, stderr=devnull) == 0:
++                        return True
++                except Exception:
++                    pass
++        finally:
++            try:
++                if devnull:
++                    devnull.close()
++            except Exception:
++                pass
++        return False
++
++    def apply_audio_tone(self, tone_name):
++        tone_name = to_text(tone_name).strip().lower()
++        value = self.audio_bass_value if tone_name == 'bass' else self.audio_treble_value
++        value = self.clamp_audio_value(value)
++        percent = int(round(float(value + 10) * 5.0))
++        percent = max(0, min(100, percent))
++        if tone_name == 'bass':
++            if self.write_audio_proc_value(['/proc/stb/audio/bass', '/proc/stb/audio/bass_level'], value, percent):
++                return True
++            controls = ['Bass', 'bass', 'Bass Playback Volume', 'Tone Control - Bass']
++        else:
++            if self.write_audio_proc_value(['/proc/stb/audio/treble', '/proc/stb/audio/treble_level'], value, percent):
++                return True
++            controls = ['Treble', 'treble', 'Treble Playback Volume', 'Tone Control - Treble']
++        for control in controls:
++            if self.run_amixer_control(control, percent):
++                return True
++        return False
++
++    def apply_audio_controls(self):
++        self.apply_audio_balance()
++        self.apply_audio_tone('treble')
++        self.apply_audio_tone('bass')
++        self.update_audio_controls_labels()
++
++    def adjust_audio_control(self, control_name, delta):
++        if self.consume_screensaver_key():
++            return
++        self.touch_activity()
++        control_name = to_text(control_name).strip().lower()
++        if control_name == 'balance':
++            self.audio_balance_value = self.clamp_audio_value(self.audio_balance_value + int(delta))
++            self.apply_audio_balance()
++        elif control_name == 'treble':
++            self.audio_treble_value = self.clamp_audio_value(self.audio_treble_value + int(delta))
++            self.apply_audio_tone('treble')
++        elif control_name == 'bass':
++            self.audio_bass_value = self.clamp_audio_value(self.audio_bass_value + int(delta))
++            self.apply_audio_tone('bass')
++        self.save_audio_controls()
++        self.update_audio_controls_labels()
++        self["status_label"].setText(tr("status_prefix", tr("audio_status", self.audio_summary_text())))
++
++    def audio_balance_left(self):
++        self.adjust_audio_control('balance', -1)
++
++    def audio_balance_right(self):
++        self.adjust_audio_control('balance', 1)
++
++    def audio_treble_down(self):
++        self.adjust_audio_control('treble', -1)
++
++    def audio_treble_up(self):
++        self.adjust_audio_control('treble', 1)
++
++    def audio_bass_down(self):
++        self.adjust_audio_control('bass', -1)
++
++    def audio_bass_up(self):
++        self.adjust_audio_control('bass', 1)
++
++    def audio_reset(self):
++        if self.consume_screensaver_key():
++            return
++        self.touch_activity()
++        self.audio_balance_value = 0
++        self.audio_treble_value = 0
++        self.audio_bass_value = 0
++        current_volume = self.get_current_audio_volume()
++        if current_volume is not None:
++            self.audio_master_volume = current_volume
++        self.apply_audio_controls()
++        self.save_audio_controls()
++        self["status_label"].setText(tr("status_prefix", tr("audio_reset_status")))
++
+     def toggle_favorite(self):
+         if self.consume_screensaver_key():
+             return
