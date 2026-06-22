@@ -1,5 +1,14 @@
-UWAGA: to jest paczka aktualizacyjna PATCH ONLY.
+UWAGA
 
-Nie usuwaj całego repozytorium przed wgraniem tych plików.
-Skopiuj zawartość tej paczki do repo NeoRadio i nadpisz istniejące pliki.
-Jeżeli GitKraken pokazuje czerwone usunięcia plików, szczególnie README.txt, LICENSE, .gitignore, docs/ albo build/, nie commituj tego jako usunięcia.
+Ta paczka jest do NADPISANIA wybranych plików w istniejącym repozytorium.
+Nie usuwaj katalogów i plików, których nie ma w paczce.
+
+W paczce są oba foldery:
+- release/
+- releases/
+
+Jeżeli Twoje repo używa `release`, użyj `release`.
+Jeżeli Twoje repo używa `releases`, użyj `releases`.
+
+Zakładka GitHub Releases nie tworzy się automatycznie po wrzuceniu plików do repo.
+Jeżeli chcesz mieć plik w zakładce Releases, utwórz Release v2.0 na GitHubie i ręcznie dodaj IPK jako asset.
