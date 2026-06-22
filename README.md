@@ -6,9 +6,8 @@ NeoRadio is a modern Enigma2 internet radio plugin focused on fast playback, rea
 ## What's new in 2.0
 
 - rebuilt from the full NeoRadio 1.3.9 package, preserving the expanded audio controls and UI assets
-- updated the built-in radio database using the supplied `userbouquet.iptv_radio.radio` bouquet from HDF Radio Streams
+- updated the built-in radio database using the supplied  Radio Streams
 - added installer cleanup for temporary NeoRadio installation/update files in `/tmp`
-- removed technical placeholder streams such as `127.0.0.1/hdfradio` from the packaged station database
 
 ## What's new in 1.3.9
 
