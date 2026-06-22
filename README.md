@@ -1,83 +1,29 @@
-## What's new in 1.3.4
+# NeoRadio 2.0
 
-- imported stations from the supplied
-- normalized duplicate country/bouquet naming such as `Polska`, `Poland`, and `Polen`
-- added station language filters: Polish, Arabic, French, German, Italian, and Other
-- added a separate Blue-button filters/bouquets screen so the Menu button opens settings immediately
-- restored the last selected filter and last station URL on startup
-- added persistent recently played history in `/etc/enigma2/neoradio_history.json`
-- kept existing options such as keep-playing, autoplay, picons, screensaver, and GitHub update URL persistent through Enigma2 config
+NeoRadio is a modern Enigma2 internet radio plugin for Python 2/3 images.
 
-## What's new in 1.3.3
+## What's new in 2.0
 
-- cleaned up the main screen layout so the clock, station description, and live metadata no longer overlap
-- moved the live metadata into a dedicated lower information block for better readability
-- shortened overly long footer/source lines to keep RDS / ICY details visible on screen
-- kept station description stable instead of mixing it with now-playing text near the clock
-- retained the stronger **ICY metadata** parsing and optional station endpoint support from 1.3.x
+- refreshed station database from the supplied `userbouquet.iptv_radio.radio` file,
+- added 565 new unique stations,
+- removed invalid local/placeholder technical entries,
+- added post-install cleanup of NeoRadio installation files from `/tmp`,
+- hardened GitHub IPK update cleanup before and after installation,
+- corrected minor translation and picon-path issues,
+- kept the existing NeoRadio logic and layout unchanged from the prepared 2.0 package.
 
-## Metadata model
+## GitHub update manifest
 
-NeoRadio now uses the following priority chain:
-
-1. Enigma2 service tags (`sTagTitle`, `sTagArtist`, `sTagAlbum`, `sTagComment`)
-2. direct stream metadata via `Icy-MetaData: 1`
-3. optional station endpoint defined per station in JSON
-
-This gives much better results on streams that do not fully expose metadata through Enigma2 alone.
-
-## Custom station example with external metadata endpoint
-
-The plugin supports additional optional fields in `neoradio_user_stations.json`:
-
-```json
-[
-  {
-    "name": "Moja stacja",
-    "url": "https://radio.example.com/live.mp3",
-    "genre": "Custom",
-    "country": "Polska",
-    "bitrate": "128",
-    "description": "Przykładowa stacja z zewnętrznymi metadanymi.",
-    "homepage": "https://radio.example.com",
-    "picon": "/usr/share/enigma2/picon/moja_stacja.png",
-    "metadata_url": "https://radio.example.com/api/nowplaying",
-    "metadata_type": "json",
-    "metadata_title_key": "now_playing.song.title",
-    "metadata_artist_key": "now_playing.song.artist",
-    "metadata_album_key": "now_playing.song.album",
-    "metadata_text_key": "now_playing.song.text",
-    "metadata_program_key": "live.show.name",
-    "metadata_cover_key": "now_playing.song.art"
-  }
-]
-```
-
-### Supported metadata fields
-
-- `metadata_url`
-- `metadata_type` = `auto`, `json`, `text`
-- `metadata_title_key`
-- `metadata_artist_key`
-- `metadata_album_key`
-- `metadata_text_key`
-- `metadata_program_key`
-- `metadata_cover_key`
-
-Nested JSON paths are supported with dot notation.
-
-## GitHub updates
-
-The plugin checks `manifest.json` and expects a payload like this:
+The plugin checks:
 
 ```json
 {
   "name": "NeoRadio",
-  "version": "1.3.3",
+  "version": "2.0",
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
   "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
-  "changelog": "Added stronger ICY metadata parsing, optional per-station JSON/text metadata endpoints, improved Now Playing fallback logic, refreshed default artwork, and cleaner metadata presentation in the UI."
+  "changelog": "Station database refreshed from HDF radio bouquet update 20.06.2026, added 565 new stations, removed invalid local placeholder entries, added post-install /tmp cleanup, hardened GitHub IPK update cleanup, and minor translation/path cleanup fixes."
 }
 ```
 
@@ -86,6 +32,20 @@ The plugin checks `manifest.json` and expects a payload like this:
 ```text
 pkgroot/                                 Files installed on the Enigma2 receiver
 release/CONTROL/control                  Package metadata
-release/build_ipk.sh                     Build helper for .ipk output
+release/CONTROL/postinst                 Post-install cleanup script
+release/*.ipk                            IPK packages
 manifest.json                            GitHub update manifest
 ```
+
+## Installation from shell
+
+```sh
+wget -O /tmp/enigma2-plugin-extensions-neoradio_all.ipk https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk
+opkg install /tmp/enigma2-plugin-extensions-neoradio_all.ipk
+```
+
+After installation, NeoRadio removes its temporary installation files from `/tmp`.
+
+## Author
+
+by Paweł Pawełek

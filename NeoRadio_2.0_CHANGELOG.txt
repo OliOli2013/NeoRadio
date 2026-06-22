@@ -1,0 +1,40 @@
+NeoRadio 2.0 - zmiany wykonane
+
+1. Stacje radiowe
+- Wczytano plik: userbouquet.iptv_radio.radio
+- Plik bukietu: HDF Radio Streams, Update 20.06.2026 09:57
+- Przetworzono 5329 wpisów #SERVICE z opisami.
+- Pominięto 75 wpisów technicznych/placeholderów z adresem 127.0.0.1/hdfradio.
+- Dodano 565 nowych unikalnych stacji do stations.json.
+- Usunięto 70 starych nieprawidłowych wpisów lokalnych/testowych z bazy stacji.
+- Usunięto 1 duplikat, zachowując bogatszy wpis z lepszym opisem/metadanymi.
+- Finalna baza: 5759 unikalnych stacji, 0 pustych/lokalnych URL-i.
+
+2. Czyszczenie /tmp po instalacji
+- Dodano release/CONTROL/postinst.
+- Po instalacji usuwane są:
+  /tmp/neoradio_update.ipk
+  /tmp/enigma2-plugin-extensions-neoradio*.ipk
+  /tmp/neoradio*.ipk
+  /tmp/NeoRadio*.ipk
+  /tmp/neoradio
+  /tmp/NeoRadio
+  /tmp/neoradio_tmp
+  /tmp/neoradio_install
+
+3. Poprawki we wtyczce
+- Wersja podniesiona do 2.0.
+- Wewnętrzna aktualizacja z GitHub czyści pliki tymczasowe przed i po instalacji IPK.
+- Zabezpieczono komendę instalacji aktualizacji przez bezpieczne cytowanie URL.
+- Poprawiono angielski napis Favorites.
+- Usunięto błędne ścieżki piconów /usr/share/engma2 i /user/share/... z domyślnego skanowania.
+
+4. Walidacja
+- IPK ma poprawną strukturę: debian-binary, control.tar.gz, data.tar.gz.
+- control ma Version: 2.0.
+- postinst ma prawa wykonywania 755.
+- plugin.py przechodzi kompilację Python 3: OK.
+- stations.json jest poprawnym JSON: OK.
+- Finalna baza nie zawiera pustych ani lokalnych URL-i: OK.
+
+Uwaga: nie wykonałem testu na fizycznym tunerze Enigma2; sprawdzenie obejmuje analizę paczki, strukturę IPK, składnię Python 3 i poprawność JSON.

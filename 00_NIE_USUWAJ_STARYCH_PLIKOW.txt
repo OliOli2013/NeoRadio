@@ -1,0 +1,5 @@
+UWAGA: to jest paczka aktualizacyjna PATCH ONLY.
+
+Nie usuwaj całego repozytorium przed wgraniem tych plików.
+Skopiuj zawartość tej paczki do repo NeoRadio i nadpisz istniejące pliki.
+Jeżeli GitKraken pokazuje czerwone usunięcia plików, szczególnie README.txt, LICENSE, .gitignore, docs/ albo build/, nie commituj tego jako usunięcia.

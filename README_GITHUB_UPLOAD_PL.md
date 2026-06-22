@@ -1,15 +1,46 @@
-# NeoRadio 1.3.4 — pliki do wgrania na GitHub
+# NeoRadio 2.0 — instrukcja aktualizacji GitHub
 
-Wgraj pliki do głównego katalogu repozytorium, zachowując strukturę katalogów.
+To jest paczka typu PATCH ONLY. Nie kasuj całego repozytorium.
 
-Najważniejsze ścieżki w Twoim repozytorium:
+## Co zrobić
 
+1. Rozpakuj ZIP.
+2. Skopiuj pliki do lokalnego repozytorium NeoRadio z nadpisaniem istniejących plików.
+3. Nie usuwaj plików, których nie ma w tej paczce, np. `LICENSE`, `.gitignore`, `docs/`, `build/`, stare changelogi albo inne pliki pomocnicze.
+4. W GitKraken sprawdź, czy nie ma czerwonych usunięć plików typu `README.txt`.
+5. Jeżeli GitKraken pokazuje usunięcie `README.txt`, przywróć plik przed commitem.
+6. Commit: `NeoRadio 2.0 update`.
+7. Push na `main`.
+8. Do GitHub Releases wrzuć jako assety:
+   - `enigma2-plugin-extensions-neoradio_all.ipk`
+   - `enigma2-plugin-extensions-neoradio_2.0_all.ipk`
+   - `neoradio_repo.tar.gz`
+   - `neoradio_repo_2.0.tar.gz`
+
+## Najważniejsze pliki w repo
+
+- `manifest.json`
 - `pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/plugin.py`
 - `pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/stations.json`
-- `pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/README.md`
-- `pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/README.txt`
-- `pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/github_manifest_example.json`
 - `release/CONTROL/control`
-- `CHANGELOG_1.3.4.md`
+- `release/CONTROL/postinst`
+- `release/enigma2-plugin-extensions-neoradio_all.ipk`
+- `release/enigma2-plugin-extensions-neoradio_2.0_all.ipk`
+- `README.md`
+- `README.txt`
 
-Uwaga: pliku `enigma2-plugin-extensions-neoradio_1.3.4_all.ipk` nie trzeba dodawać do drzewa kodu, chyba że chcesz trzymać gotowe paczki w repozytorium. Najlepiej dodać go jako asset w zakładce GitHub Releases.
+## Naprawa, jeśli GitKraken pokazuje usunięcie README.txt
+
+W terminalu w katalogu repo:
+
+```sh
+git restore README.txt
+```
+
+albo, jeśli plik został już usunięty i nie wraca:
+
+```sh
+git checkout origin/main -- README.txt
+```
+
+Potem ponownie skopiuj `README.txt` z tej paczki.
