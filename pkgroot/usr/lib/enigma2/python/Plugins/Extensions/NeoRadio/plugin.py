@@ -58,7 +58,7 @@ except Exception:
 from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation, ePoint
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "1.3.4"
+PLUGIN_VERSION = "2.0"
 PLUGIN_NAME = "NeoRadio"
 PLUGIN_TITLE = "NeoRadio Online"
 PLUGIN_DESC = "NeoRadio Online"

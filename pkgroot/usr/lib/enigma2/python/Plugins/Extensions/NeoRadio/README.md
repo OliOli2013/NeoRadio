@@ -1,8 +1,8 @@
-# NeoRadio 1.3.4
+# NeoRadio 2.0
 
 NeoRadio is a modern Enigma2 internet radio plugin focused on fast playback, readable metadata, SAT/IPTV picon support, bilingual Polish/English UI, and GitHub-based updates.
 
-## What's new in 1.3.4
+## What's new in 2.0
 
 - refreshed the built-in station database using `userbouquet.iptv_radio.radio` update from 20.06.2026
 - added 565 new unique station entries from the supplied HDF radio bouquet
@@ -76,7 +76,7 @@ The plugin checks `manifest.json` and expects a payload like this:
 ```json
 {
   "name": "NeoRadio",
-  "version": "1.3.4",
+  "version": "2.0",
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
   "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
