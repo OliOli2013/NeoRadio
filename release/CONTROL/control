@@ -1,8 +1,8 @@
 Package: enigma2-plugin-extensions-neoradio
-Version: 1.3.9
+Version: 1.3.4
 Architecture: all
 Maintainer: Paweł Pawełek <aio-iptv@wp.pl>
 Section: base
 Priority: optional
 Depends: enigma2
-Description: NeoRadio internet radio plugin for Enigma2
+Description: NeoRadio internet radio plugin for Enigma2 with refreshed station database

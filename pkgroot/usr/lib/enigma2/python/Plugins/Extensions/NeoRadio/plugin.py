@@ -65,7 +65,6 @@ PLUGIN_DESC = "NeoRadio Online"
 PLUGIN_PATH = "/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio"
 CONFIG_DIR = resolveFilename(SCOPE_CONFIG)
 FAV_FILE = os.path.join(CONFIG_DIR, "neoradio_favorites.json")
-HISTORY_FILE = os.path.join(CONFIG_DIR, "neoradio_history.json")
 USER_STATIONS_FILE = os.path.join(CONFIG_DIR, "neoradio_user_stations.json")
 BASE_STATIONS_FILE = os.path.join(PLUGIN_PATH, "stations.json")
 COVER_DIR = os.path.join(PLUGIN_PATH, "covers")
@@ -74,12 +73,6 @@ DEFAULT_PICON = os.path.join(PLUGIN_PATH, "visualradio.png")
 DEFAULT_PICON_DIRS = [
     "/usr/share/enigma2/picon",
     "/usr/share/enigma2/piconlcd",
-    "/usr/share/engma2/picon",
-    "/usr/share/engma2/piconlcd",
-    "/user/share/enigma2/picon",
-    "/user/share/enigma2/piconlcd",
-    "/user/share/engma2/picon",
-    "/user/share/engma2/piconlcd",
     "/picon",
     "/data/picon",
     "/media/hdd/picon",
@@ -134,8 +127,6 @@ if not hasattr(config.plugins.neoradio, "last_filter"):
     config.plugins.neoradio.last_filter = ConfigText(default="All", fixed_size=False)
 if not hasattr(config.plugins.neoradio, "last_station"):
     config.plugins.neoradio.last_station = ConfigText(default="", fixed_size=False)
-if not hasattr(config.plugins.neoradio, "last_url"):
-    config.plugins.neoradio.last_url = ConfigText(default="", fixed_size=False)
 if not hasattr(config.plugins.neoradio, "keep_playing"):
     config.plugins.neoradio.keep_playing = ConfigYesNo(default=False)
 if not hasattr(config.plugins.neoradio, "autoplay_last"):
@@ -153,6 +144,18 @@ if not hasattr(config.plugins.neoradio, "github_manifest_url"):
 
 DEFAULT_GITHUB_MANIFEST_URL = "https://raw.githubusercontent.com/OliOli2013/NeoRadio/main/manifest.json"
 UPDATE_TEMP_IPK = "/tmp/neoradio_update.ipk"
+TMP_INSTALL_PATTERNS = [
+    "/tmp/neoradio_update.ipk",
+    "/tmp/enigma2-plugin-extensions-neoradio*.ipk",
+    "/tmp/neoradio*.ipk",
+    "/tmp/NeoRadio*.ipk",
+]
+TMP_INSTALL_DIRS = [
+    "/tmp/neoradio",
+    "/tmp/NeoRadio",
+    "/tmp/neoradio_tmp",
+    "/tmp/neoradio_install",
+]
 
 
 def to_text(value):
@@ -217,108 +220,12 @@ def save_json_file(path, data):
         return False
 
 
-
-COUNTRY_ALIASES = {
-    "polska": u"Polska", "poland": u"Polska", "polen": u"Polska",
-    "niemcy": u"Niemcy", "germany": u"Niemcy", "deutschland": u"Niemcy",
-    "francja": u"Francja", "france": u"Francja", "frankreich": u"Francja",
-    "wlochy": u"Włochy", "włochy": u"Włochy", "italy": u"Włochy", "italien": u"Włochy", "italia": u"Włochy",
-    "arabic": u"Arabskie", "arab": u"Arabskie", "arabskie": u"Arabskie",
-    "hiszpania": u"Hiszpania", "spain": u"Hiszpania", "spanien": u"Hiszpania",
-    "szwajcaria": u"Szwajcaria", "switzerland": u"Szwajcaria", "schweiz": u"Szwajcaria",
-    "austria": u"Austria", "osterreich": u"Austria", "oesterreich": u"Austria",
-    "czechy": u"Czechy", "czechia": u"Czechy", "tschechien": u"Czechy",
-    "usa": u"USA", "niederlande": u"Holandia", "netherlands": u"Holandia", "holandia": u"Holandia",
-    "belgien": u"Belgia", "belgia": u"Belgia", "griechenland": u"Grecja", "grecja": u"Grecja",
-    "slowakei": u"Słowacja", "slowacja": u"Słowacja", "portugal": u"Portugalia", "portugalia": u"Portugalia",
-    "mexiko": u"Meksyk", "meksyk": u"Meksyk", "finland": u"Finlandia", "finlandia": u"Finlandia",
-    "turkey": u"Turcja", "turcja": u"Turcja", "grossbritannien": u"Wielka Brytania", "gro_britannien": u"Wielka Brytania", "united_kingdom": u"Wielka Brytania", "uk": u"Wielka Brytania", "schottland": u"Wielka Brytania",
-    "online": u"Online", "other": u"Inne", "inne": u"Inne",
-}
-STATION_LANGUAGE_ORDER = [u"Polski", u"Arabski", u"Francuski", u"Niemiecki", u"Włoski", u"Inne"]
-LANGUAGE_BY_COUNTRY = {
-    u"Polska": u"Polski",
-    u"Arabskie": u"Arabski",
-    u"Francja": u"Francuski",
-    u"Niemcy": u"Niemiecki",
-    u"Austria": u"Niemiecki",
-    u"Szwajcaria": u"Niemiecki",
-    u"Włochy": u"Włoski",
-}
-LANGUAGE_ALIASES = {
-    "polski": u"Polski", "polish": u"Polski", "pl": u"Polski",
-    "arabski": u"Arabski", "arabic": u"Arabski", "arab": u"Arabski", "ar": u"Arabski",
-    "francuski": u"Francuski", "french": u"Francuski", "fr": u"Francuski",
-    "niemiecki": u"Niemiecki", "german": u"Niemiecki", "de": u"Niemiecki",
-    "wloski": u"Włoski", "wlochy": u"Włoski", "italian": u"Włoski", "it": u"Włoski",
-    "inne": u"Inne", "other": u"Inne", "misc": u"Inne",
-}
-
-
-def normalize_country(value):
-    raw = to_text(value).strip()
-    if not raw:
-        return u"Online"
-    key = slugify(raw)
-    return COUNTRY_ALIASES.get(key, raw)
-
-
-def normalize_station_language(value, country=None, name=None, group=None, url=None):
-    raw = to_text(value).strip()
-    if raw:
-        key = slugify(raw)
-        if key in LANGUAGE_ALIASES:
-            return LANGUAGE_ALIASES[key]
-        if raw in STATION_LANGUAGE_ORDER:
-            return raw
-    country = normalize_country(country or u"")
-    if country in LANGUAGE_BY_COUNTRY:
-        return LANGUAGE_BY_COUNTRY[country]
-    blob = u" %s %s %s " % (slugify(group or u""), slugify(name or u""), to_text(url or u"").lower())
-    if u"arabic" in blob or u" arab " in blob or u"quran" in blob or u"koran" in blob:
-        return u"Arabski"
-    if u"france" in blob or u"frankreich" in blob or u"hotmix" in blob or u"prysm" in blob or u".fr/" in blob:
-        return u"Francuski"
-    if u"italy" in blob or u"italien" in blob or u"italia" in blob or u".it/" in blob:
-        return u"Włoski"
-    if u"deutschland" in blob or u"germany" in blob or u"antenne" in blob or u"hitradio" in blob or u"radio_bob" in blob or u"schlager" in blob or u".de/" in blob:
-        return u"Niemiecki"
-    if u"polska" in blob or u"poland" in blob or u"polen" in blob or u" rmf" in blob or u"radio_zet" in blob or u"polskie_radio" in blob or u"eska" in blob:
-        return u"Polski"
-    return u"Inne"
-
-
-def normalize_stream_url_key(url):
-    url = to_text(url).strip().lower()
-    url = url.replace(u"%3a", u":").replace(u"%3A", u":").replace(u"%2f", u"/").replace(u"%2F", u"/")
-    try:
-        url = re.sub(r"[\?#].*$", "", url)
-    except Exception:
-        pass
-    return url.rstrip(u"/")
-
-
-def station_identity_key(station):
-    if not station:
-        return text_type("")
-    url_key = normalize_stream_url_key(station.get("url", u""))
-    if url_key:
-        return u"url:" + url_key
-    return u"name:" + slugify(station.get("name", u"")) + u"|" + normalize_station_language(station.get("language", u""), station.get("country", u""))
-
 def normalize_station(entry):
-    name = to_text(entry.get("name", "Unknown")).strip()
-    url = to_text(entry.get("url", "")).strip()
-    genre = to_text(entry.get("genre", "Other")).strip() or u"Other"
-    group = to_text(entry.get("group", entry.get("genre", ""))).strip() or genre
-    country = normalize_country(entry.get("country", "Online"))
-    lang = normalize_station_language(entry.get("language", ""), country, name, group, url)
     return {
-        "name": name,
-        "url": url,
-        "genre": genre,
-        "country": country,
-        "language": lang,
+        "name": to_text(entry.get("name", "Unknown")),
+        "url": to_text(entry.get("url", "")),
+        "genre": to_text(entry.get("genre", "Other")),
+        "country": to_text(entry.get("country", "Online")),
         "bitrate": to_text(entry.get("bitrate", "?")),
         "description": to_text(entry.get("description", "")),
         "homepage": to_text(entry.get("homepage", "")),
@@ -332,82 +239,30 @@ def normalize_station(entry):
         "metadata_text_key": to_text(entry.get("metadata_text_key", "")),
         "metadata_program_key": to_text(entry.get("metadata_program_key", "")),
         "metadata_cover_key": to_text(entry.get("metadata_cover_key", "")),
-        "group": group,
+        "group": to_text(entry.get("group", entry.get("genre", ""))),
     }
 
 
 def load_stations():
     stations = []
-    seen_urls = {}
-    seen_names = {}
+    seen = {}
     for src in (BASE_STATIONS_FILE, USER_STATIONS_FILE):
         for item in load_json_file(src, []):
             try:
                 norm = normalize_station(item)
-                if not norm.get("url"):
-                    continue
-                url_key = normalize_stream_url_key(norm.get("url", ""))
-                name_key = slugify(norm.get("name", "")) + u"|" + normalize_station_language(norm.get("language", ""), norm.get("country", ""))
-                if (url_key and url_key in seen_urls) or (name_key and name_key in seen_names):
-                    continue
-                stations.append(norm)
-                if url_key:
-                    seen_urls[url_key] = True
-                if name_key:
-                    seen_names[name_key] = True
+                key = norm.get("name", "") + "|" + norm.get("url", "")
+                if norm.get("url") and key not in seen:
+                    stations.append(norm)
+                    seen[key] = True
             except Exception:
                 pass
-    def sort_key(item):
-        lang = normalize_station_language(item.get("language", ""), item.get("country", ""))
-        try:
-            lang_idx = STATION_LANGUAGE_ORDER.index(lang)
-        except Exception:
-            lang_idx = 99
-        return (lang_idx, to_text(item.get("country", "")).lower(), to_text(item.get("group", item.get("genre", ""))).lower(), to_text(item.get("name", "")).lower())
-    stations.sort(key=sort_key)
+    stations.sort(key=lambda x: (to_text(x.get("country", "")).lower(), to_text(x.get("group", x.get("genre", ""))).lower(), to_text(x.get("name", "")).lower()))
     return stations
 
 
 def load_favorites():
     return [to_text(x) for x in load_json_file(FAV_FILE, []) if to_text(x)]
 
-
-
-
-def load_history():
-    result = []
-    seen = {}
-    for item in load_json_file(HISTORY_FILE, []):
-        try:
-            norm = normalize_station(item)
-            key = station_identity_key(norm)
-            if key and key not in seen:
-                result.append(norm)
-                seen[key] = True
-        except Exception:
-            pass
-    return result[:30]
-
-
-def remember_played_station(station):
-    if not station:
-        return False
-    try:
-        norm = normalize_station(station)
-        norm["played_at"] = int(time.time())
-        key = station_identity_key(norm)
-        clean = [norm]
-        seen = {key: True}
-        for item in load_history():
-            item_key = station_identity_key(item)
-            if item_key and item_key not in seen:
-                clean.append(item)
-                seen[item_key] = True
-            if len(clean) >= 30:
-                break
-        return save_json_file(HISTORY_FILE, clean)
-    except Exception:
-        return False
 
 def save_favorites(favorites):
     clean = []
@@ -473,7 +328,7 @@ I18N = {
         "plugin_desc": u"Modern internet radio for Enigma2 / Python 2/3",
         "stations_online": u"Online stations",
         "header_title": u"NeoRadio Online",
-        "help": u"OK/Green=Play  Yellow=Fav  Blue=Filters  Menu=Settings  Info=Details",
+        "help": u"OK/Green=Play  Yellow=Fav  Blue=Search  Menu=Menu  Info=Details",
         "status_ready": u"Status: ready",
         "by_author": u"by Paweł Pawełek",
         "station_desc_title": u"Station description",
@@ -487,22 +342,16 @@ I18N = {
         "green_play": u"Green: Play",
         "yellow_fav": u"Yellow: Fav",
         "blue_search": u"Blue: Search",
-        "blue_filter": u"Blue: Filters",
         "menu_cfg": u"Menu: Filters/Settings",
         "info_details": u"Info: Details",
         "picon_title": u"Station logo",
         "all": u"All",
         "favorites": u"Favorites",
-        "recent": u"Recently played",
-    "online": u"Online",
-    "other": u"Inne",
-    "equalizer_visual": u"Wizualny EQ",
         "online": u"Online",
         "other": u"Other",
         "equalizer_visual": u"Visual EQ",
         "country_filter": u"Country: %s",
         "genre_filter": u"Genre: %s",
-        "language_filter": u"Language: %s",
         "main_country": u"Main country",
         "all_countries": u"All countries",
         "filter": u"filter",
@@ -538,12 +387,6 @@ I18N = {
         "menu_title": u"NeoRadio - Menu",
         "menu_filter": u"Filter: %s",
         "menu_clear_search": u"Clear search",
-        "menu_search": u"Search station",
-        "menu_choose_filter": u"Choose station filter / bouquet",
-        "menu_station_language": u"Station language: %s",
-        "filter_title": u"NeoRadio - Filters / bouquets",
-        "choose_station_language": u"Choose station language",
-        "station_language_set": u"station language = %s",
         "menu_keep": u"Toggle: Keep playing after exit = %s",
         "menu_autoplay": u"Toggle: Autoplay last station = %s",
         "yes": u"YES",
@@ -559,7 +402,7 @@ I18N = {
         "no_keyboard_settings": u"No on-screen keyboard. You can also set the path manually in Enigma2 settings.",
         "picon_paths_title": u"Picon paths (separate with ;) ",
         "reloaded": u"station list refreshed",
-        "about_text": u"NeoRadio Online %s\n\nModern Enigma2 plugin for internet radio.\nFeatures:\n- internet radio\n- favorite stations\n- search and filters\n- country and station language selection\n- picons from SAT/IPTV\n- RDS/ICY metadata\n- UI PL/EN\n- optional screensaver\n- GitHub update support\n\nConfiguration files:\n%s\n%s",
+        "about_text": u"NeoRadio Online %s\n\nModern Enigma2 plugin for internet radio.\nFeatures:\n- internet radio\n- favorite stations\n- search and filters\n- country selection\n- picons from SAT/IPTV\n- RDS/ICY metadata\n- bilingual UI (PL/EN)\n- optional screensaver\n- GitHub update support\n\nConfiguration files:\n%s\n%s",
         "choose_country": u"Choose main country",
         "country_set": u"main country = %s",
         "country_all": u"main country = all",
@@ -600,7 +443,7 @@ I18N["pl"] = {
     "plugin_desc": u"Nowoczesne radio internetowe dla Enigma2 / Python 2/3",
     "stations_online": u"Stacje online",
     "header_title": u"NeoRadio Online",
-    "help": u"OK/Green=Play  Yellow=Fav  Blue=Filtry  Menu=Ustawienia  Info=Szczegóły",
+    "help": u"OK/Green=Play  Yellow=Fav  Blue=Szukaj  Menu=Menu  Info=Szczegóły",
     "status_ready": u"Stan: gotowy",
     "by_author": u"by Paweł Pawełek",
     "station_desc_title": u"Opis stacji",
@@ -614,19 +457,16 @@ I18N["pl"] = {
     "green_play": u"Zielony: Play",
     "yellow_fav": u"Żółty: Fav",
     "blue_search": u"Niebieski: Szukaj",
-    "blue_filter": u"Niebieski: Filtry",
     "menu_cfg": u"Menu: Filtr/Ustawienia",
     "info_details": u"Info: Szczegóły",
     "picon_title": u"Logo stacji",
-    "all": u"Wszystkie",
+    "all": u"All",
     "favorites": u"Ulubione",
-    "recent": u"Ostatnio odtwarzane",
     "online": u"Online",
     "other": u"Inne",
     "equalizer_visual": u"Wizualny EQ",
     "country_filter": u"Kraj: %s",
     "genre_filter": u"Gatunek: %s",
-    "language_filter": u"Język: %s",
     "main_country": u"Kraj główny",
     "all_countries": u"Wszystkie kraje",
     "filter": u"filtr",
@@ -662,12 +502,6 @@ I18N["pl"] = {
     "menu_title": u"NeoRadio - Menu",
     "menu_filter": u"Filtr: %s",
     "menu_clear_search": u"Wyczyść wyszukiwanie",
-    "menu_search": u"Szukaj stacji",
-    "menu_choose_filter": u"Wybierz filtr / bukiet stacji",
-    "menu_station_language": u"Język stacji: %s",
-    "filter_title": u"NeoRadio - filtry / bukiety",
-    "choose_station_language": u"Wybierz język stacji",
-    "station_language_set": u"język stacji = %s",
     "menu_keep": u"Przełącz: Odtwarzaj po wyjściu = %s",
     "menu_autoplay": u"Przełącz: Autoplay ostatniej stacji = %s",
     "yes": u"TAK",
@@ -683,7 +517,7 @@ I18N["pl"] = {
     "no_keyboard_settings": u"Brak klawiatury ekranowej. Ścieżkę możesz też ustawić ręcznie w ustawieniach Enigma2.",
     "picon_paths_title": u"Ścieżki piconów (oddzielaj średnikiem ;)",
     "reloaded": u"lista stacji odświeżona",
-    "about_text": u"NeoRadio Online %s\n\nNowoczesna wtyczka Enigma2 do radia internetowego.\nFunkcje:\n- radio internetowe\n- ulubione\n- wyszukiwanie i filtry\n- wybór kraju i języka stacji\n- picony z SAT/IPTV\n- metadane RDS/ICY\n- interfejs PL/EN\n- opcjonalny wygaszacz\n- obsługa aktualizacji z GitHub\n\nPliki konfiguracyjne:\n%s\n%s",
+    "about_text": u"NeoRadio Online %s\n\nNowoczesna wtyczka Enigma2 do radia internetowego.\nFunkcje:\n- radio internetowe\n- ulubione\n- wyszukiwanie i filtry\n- wybór kraju\n- picony z SAT/IPTV\n- metadane RDS/ICY\n- interfejs PL/EN\n- opcjonalny wygaszacz\n- obsługa aktualizacji z GitHub\n\nPliki konfiguracyjne:\n%s\n%s",
     "choose_country": u"Wybierz kraj główny",
     "country_set": u"kraj główny = %s",
     "country_all": u"kraj główny = wszystkie",
@@ -786,10 +620,6 @@ def format_genre_filter(genre):
     genre = to_text(genre).strip()
     return tr('genre_filter', genre if genre else tr('other'))
 
-def format_language_filter(lang):
-    lang = normalize_station_language(lang)
-    return tr('language_filter', lang if lang else tr('other'))
-
 def language_label(value):
     value = to_text(value).strip().lower()
     if value == 'pl':
@@ -811,6 +641,48 @@ def screensaver_timeout_label(value=None):
         return tr('screensaver_off')
     return tr('screensaver_min', to_text(minutes))
 
+
+def shell_quote(value):
+    value = to_text(value)
+    return "'" + value.replace("'", "'\"'\"'") + "'"
+
+
+def cleanup_tmp_install_files():
+    for pattern in TMP_INSTALL_PATTERNS:
+        try:
+            for path in glob.glob(pattern):
+                try:
+                    if os.path.isfile(path) or os.path.islink(path):
+                        os.remove(path)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+    for path in TMP_INSTALL_DIRS:
+        try:
+            if os.path.isdir(path):
+                for root, dirs, files in os.walk(path, topdown=False):
+                    for name in files:
+                        try:
+                            os.remove(os.path.join(root, name))
+                        except Exception:
+                            pass
+                    for name in dirs:
+                        try:
+                            os.rmdir(os.path.join(root, name))
+                        except Exception:
+                            pass
+                try:
+                    os.rmdir(path)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+
+def cleanup_tmp_install_shell():
+    # Constant paths only; keep glob patterns unquoted so shell can expand *.ipk.
+    return 'rm -f /tmp/neoradio_update.ipk /tmp/enigma2-plugin-extensions-neoradio*.ipk /tmp/neoradio*.ipk /tmp/NeoRadio*.ipk; rm -rf /tmp/neoradio /tmp/NeoRadio /tmp/neoradio_tmp /tmp/neoradio_install'
 
 def parse_version_tuple(value):
     numbers = re.findall(r'\d+', to_text(value))
@@ -1674,7 +1546,7 @@ class NeoRadioMain(Screen):
                 "red": self.close_plugin,
                 "green": self.play_current,
                 "yellow": self.toggle_favorite,
-                "blue": self.open_filter_menu,
+                "blue": self.open_search,
                 "menu": self.open_main_menu,
                 "showEventInfo": self.show_details,
                 "up": self.move_up,
@@ -1766,13 +1638,13 @@ class NeoRadioMain(Screen):
         self.touch_activity()
         self.prepare_pixmaps()
         self.setup_screensaver_overlay()
-        self.current_filter = self.get_start_filter()
-        self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value), select_url=to_text(getattr(config.plugins.neoradio, "last_url", "").value))
+        self.current_filter = self.get_default_filter()
+        self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value))
         self.update_cover(self.get_current_station())
         self.update_picon(self.get_picon_station())
         self.schedule_screensaver()
         self.timer.start(1000)
-        if config.plugins.neoradio.autoplay_last.value and (config.plugins.neoradio.last_station.value or getattr(config.plugins.neoradio, "last_url", "").value):
+        if config.plugins.neoradio.autoplay_last.value and config.plugins.neoradio.last_station.value:
             self.play_current()
 
     def apply_language(self):
@@ -1791,7 +1663,7 @@ class NeoRadioMain(Screen):
         self["key_red"].setText(tr('red_exit'))
         self["key_green"].setText(tr('green_play'))
         self["key_yellow"].setText(tr('yellow_fav'))
-        self["key_blue"].setText(tr('blue_filter'))
+        self["key_blue"].setText(tr('blue_search'))
         self["key_menu"].setText(tr('menu_cfg'))
         self["key_info"].setText(tr('info_details'))
         self["picon_large_title"].setText(tr('picon_title'))
@@ -1978,124 +1850,59 @@ class NeoRadioMain(Screen):
             return format_country_filter(country)
         return tr("all")
 
-    def get_start_filter(self):
-        saved = to_text(getattr(config.plugins.neoradio.last_filter, "value", u"")).strip()
-        filters = self.get_filters()
-        if saved and saved in filters:
-            return saved
-        legacy = saved.lower()
-        if legacy in ("all", "wszystkie"):
-            return tr("all")
-        if legacy in ("favorites", "ulubione"):
-            return tr("favorites")
-        if legacy in ("recently played", "ostatnio odtwarzane"):
-            return tr("recent")
-        for prefix in (u"Kraj:", u"Country:"):
-            if saved.startswith(prefix):
-                country = normalize_country(saved.split(u":", 1)[1].strip())
-                label = format_country_filter(country)
-                if label in filters:
-                    return label
-        for prefix in (u"Język:", u"Language:"):
-            if saved.startswith(prefix):
-                lang = normalize_station_language(saved.split(u":", 1)[1].strip())
-                label = format_language_filter(lang)
-                if label in filters:
-                    return label
-        return self.get_default_filter()
-
     def get_filters(self):
-        items = [tr("all"), tr("favorites"), tr("recent")]
+        items = [tr("all"), tr("favorites")]
         countries = {}
         genres = {}
-        languages = {}
         for station in self.base_stations:
-            country = normalize_country(station.get("country", u"Online")) or u"Online"
+            country = to_text(station.get("country", u"Online")).strip() or u"Online"
             genre = to_text(station.get("genre", u"Other")).strip() or u"Other"
-            lang = normalize_station_language(station.get("language", u""), country, station.get("name", u""), station.get("group", u""), station.get("url", u""))
             countries[country] = True
             genres[genre] = True
-            languages[lang] = True
         for country in sorted(countries.keys()):
             label = format_country_filter(country)
             if label not in items:
                 items.append(label)
-        for lang in STATION_LANGUAGE_ORDER:
-            if lang in languages:
-                label = format_language_filter(lang)
-                if label not in items:
-                    items.append(label)
-        for lang in sorted(languages.keys()):
-            if lang not in STATION_LANGUAGE_ORDER:
-                label = format_language_filter(lang)
-                if label not in items:
-                    items.append(label)
         for genre in sorted(genres.keys()):
             label = format_genre_filter(genre)
             if label not in items:
                 items.append(label)
         return items
 
-    def station_matches_search(self, station, term):
-        if not term:
-            return True
-        country = normalize_country(station.get("country", u""))
-        genre = to_text(station.get("genre", u""))
-        lang = normalize_station_language(station.get("language", u""), country, station.get("name", u""), station.get("group", u""), station.get("url", u""))
-        blob = u"%s %s %s %s %s" % (
-            to_text(station.get("name", u"")),
-            genre,
-            country,
-            lang,
-            to_text(station.get("description", u"")),
-        )
-        return term in blob.lower()
-
     def apply_filters(self):
         result = []
         term = to_text(self.search_term).lower().strip()
         selected_country = None
         selected_genre = None
-        selected_language = None
         country_prefix = tr("country_filter", "").split("%s", 1)[0]
         genre_prefix = tr("genre_filter", "").split("%s", 1)[0]
-        language_prefix = tr("language_filter", "").split("%s", 1)[0]
         if country_prefix and self.current_filter.startswith(country_prefix):
-            selected_country = normalize_country(self.current_filter.split(u":", 1)[1].strip())
-        elif language_prefix and self.current_filter.startswith(language_prefix):
-            selected_language = normalize_station_language(self.current_filter.split(u":", 1)[1].strip())
+            selected_country = self.current_filter.split(u":", 1)[1].strip()
         elif genre_prefix and self.current_filter.startswith(genre_prefix):
             selected_genre = self.current_filter.split(u":", 1)[1].strip()
-        if self.current_filter == tr("recent"):
-            station_map = {}
-            for station in self.base_stations:
-                station_map[station_identity_key(station)] = station
-            for item in load_history():
-                station = station_map.get(station_identity_key(item))
-                if station and self.station_matches_search(station, term):
-                    result.append(station)
-            self.filtered_stations = result
-            return
         for station in self.base_stations:
             include = True
-            country = normalize_country(station.get("country", u""))
+            country = to_text(station.get("country", u""))
             genre = to_text(station.get("genre", u""))
-            lang = normalize_station_language(station.get("language", u""), country, station.get("name", u""), station.get("group", u""), station.get("url", u""))
             if self.current_filter == tr("favorites"):
                 include = to_text(station.get("name")) in self.favorites
             elif selected_country is not None:
                 include = country == selected_country
-            elif selected_language is not None:
-                include = lang == selected_language
             elif selected_genre is not None:
                 include = genre == selected_genre
-            if include and not self.station_matches_search(station, term):
-                include = False
+            if include and term:
+                blob = u"%s %s %s %s" % (
+                    to_text(station.get("name", u"")),
+                    genre,
+                    country,
+                    to_text(station.get("description", u"")),
+                )
+                include = term in blob.lower()
             if include:
                 result.append(station)
         self.filtered_stations = result
 
-    def refresh_list(self, select_name=None, select_url=None):
+    def refresh_list(self, select_name=None):
         self.base_stations = load_stations()
         self.favorites = load_favorites()
         valid_filters = self.get_filters()
@@ -2117,16 +1924,10 @@ class NeoRadioMain(Screen):
         self["filter_label"].setText(tr("summary", country_label, self.current_filter, len(self.filtered_stations)))
         self["search_label"].setText(u"%s: %s" % (tr("search"), (self.search_term if self.search_term else tr("none"))))
         index = 0
-        if self.filtered_stations:
-            if select_url:
-                url_key = normalize_stream_url_key(select_url)
-                urls = [normalize_stream_url_key(x.get("url", u"")) for x in self.filtered_stations]
-                if url_key in urls:
-                    index = urls.index(url_key)
-            if index == 0 and select_name:
-                names = [to_text(x.get("name")) for x in self.filtered_stations]
-                if select_name in names:
-                    index = names.index(select_name)
+        if select_name and self.filtered_stations:
+            names = [to_text(x.get("name")) for x in self.filtered_stations]
+            if select_name in names:
+                index = names.index(select_name)
         try:
             self["station_list"].moveToIndex(index)
         except Exception:
@@ -2517,11 +2318,6 @@ class NeoRadioMain(Screen):
         self.update_picon(self.get_picon_station())
         config.plugins.neoradio.last_station.value = name
         config.plugins.neoradio.last_station.save()
-        try:
-            config.plugins.neoradio.last_url.value = to_text(station.get("url", u""))
-            config.plugins.neoradio.last_url.save()
-        except Exception:
-            pass
         config.plugins.neoradio.last_filter.value = self.current_filter
         config.plugins.neoradio.last_filter.save()
         configfile.save()
@@ -2591,17 +2387,6 @@ class NeoRadioMain(Screen):
         ref.setName(to_text(station.get("name", u"NeoRadio")))
         self.current_service = ref
         self.playing_station_data = station
-        try:
-            config.plugins.neoradio.last_station.value = to_text(station.get("name", u""))
-            config.plugins.neoradio.last_station.save()
-            config.plugins.neoradio.last_url.value = to_text(station.get("url", u""))
-            config.plugins.neoradio.last_url.save()
-            config.plugins.neoradio.last_filter.value = self.current_filter
-            config.plugins.neoradio.last_filter.save()
-            configfile.save()
-            remember_played_station(station)
-        except Exception:
-            pass
         self.session.nav.playService(ref)
         self.schedule_screensaver()
         self.last_meta_blob = text_type("")
@@ -2756,22 +2541,13 @@ class NeoRadioMain(Screen):
         text = tr("details_text", PLUGIN_VERSION, to_text(station.get("name", u"-")), to_text(station.get("genre", u"-")), to_text(station.get("country", u"-")), to_text(station.get("bitrate", u"-")), to_text(station.get("description", u"-")), to_text(station.get("url", u"-")), to_text(station.get("homepage", u"-")))
         self.session.open(MessageBox, text, MessageBox.TYPE_INFO)
 
-    def open_filter_menu(self):
-        if self.consume_screensaver_key():
-            return
-        self.touch_activity()
-        options = []
-        for item in self.get_filters():
-            options.append((item, ("filter", item)))
-        self.session.openWithCallback(self.menu_callback, ChoiceBox, title=tr("filter_title"), list=options)
-
     def open_main_menu(self):
         if self.consume_screensaver_key():
             return
         self.touch_activity()
         options = []
-        options.append((tr("menu_choose_filter"), ("choose_filter", None)))
-        options.append((tr("menu_search"), ("open_search", None)))
+        for item in self.get_filters():
+            options.append((tr("menu_filter", item), ("filter", item)))
         options.append((tr("menu_clear_search"), ("search", text_type(""))))
         options.append((tr("menu_keep", tr("yes") if config.plugins.neoradio.keep_playing.value else tr("no")), ("toggle_keep", None)))
         options.append((tr("menu_autoplay", tr("yes") if config.plugins.neoradio.autoplay_last.value else tr("no")), ("toggle_autoplay", None)))
@@ -2780,7 +2556,6 @@ class NeoRadioMain(Screen):
         if len(picon_value) > 52:
             picon_value = picon_value[:49] + u"..."
         options.append((tr("menu_country", country_value), ("choose_country", None)))
-        options.append((tr("menu_station_language", tr("all")), ("choose_station_language", None)))
         options.append((tr("menu_lang", language_label(config.plugins.neoradio.ui_language.value)), ("choose_language", None)))
         options.append((tr("menu_saver", screensaver_timeout_label()), ("choose_screensaver", None)))
         options.append((tr("menu_picons", picon_value), ("picon_paths", None)))
@@ -2799,10 +2574,6 @@ class NeoRadioMain(Screen):
         if action == "filter":
             self.current_filter = to_text(payload)
             self.refresh_list()
-        elif action == "choose_filter":
-            self.open_filter_menu()
-        elif action == "open_search":
-            self.open_search()
         elif action == "search":
             self.search_term = text_type("")
             self.refresh_list()
@@ -2820,8 +2591,6 @@ class NeoRadioMain(Screen):
             self.choose_country()
         elif action == "choose_language":
             self.choose_language()
-        elif action == "choose_station_language":
-            self.choose_station_language()
         elif action == "choose_screensaver":
             self.choose_screensaver()
         elif action == "picon_paths":
@@ -2834,7 +2603,7 @@ class NeoRadioMain(Screen):
             self.check_github_updates()
         elif action == "reload":
             self.clear_picon_cache()
-            self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value), select_url=to_text(getattr(config.plugins.neoradio, "last_url", "").value))
+            self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value))
             self.update_picon(self.get_picon_station())
             self["status_label"].setText(tr("status_prefix", tr("reloaded")))
         elif action == "about":
@@ -2861,39 +2630,6 @@ class NeoRadioMain(Screen):
         else:
             self["status_label"].setText(tr("status_prefix", tr("country_all")))
 
-    def get_available_station_languages(self):
-        seen = {}
-        result = []
-        for station in self.base_stations:
-            lang = normalize_station_language(station.get("language", u""), station.get("country", u""), station.get("name", u""), station.get("group", u""), station.get("url", u""))
-            if lang and lang not in seen:
-                seen[lang] = True
-        for lang in STATION_LANGUAGE_ORDER:
-            if lang in seen:
-                result.append(lang)
-        for lang in sorted(seen.keys()):
-            if lang not in result:
-                result.append(lang)
-        return result
-
-    def choose_station_language(self):
-        options = [(tr("all"), u"")]
-        for lang in self.get_available_station_languages():
-            options.append((lang, lang))
-        self.session.openWithCallback(self.station_language_choice_callback, ChoiceBox, title=tr("choose_station_language"), list=options)
-
-    def station_language_choice_callback(self, answer):
-        if not answer:
-            return
-        value = normalize_station_language(answer[1]) if to_text(answer[1]).strip() else u""
-        self.current_filter = format_language_filter(value) if value else tr("all")
-        config.plugins.neoradio.last_filter.value = self.current_filter
-        config.plugins.neoradio.last_filter.save()
-        configfile.save()
-        self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value), select_url=to_text(getattr(config.plugins.neoradio, "last_url", "").value))
-        if value:
-            self["status_label"].setText(tr("status_prefix", tr("station_language_set", value)))
-
     def choose_language(self):
         options = [(tr("auto"), "auto"), (tr("polish"), "pl"), (tr("english"), "en")]
         self.session.openWithCallback(self.language_choice_callback, ChoiceBox, title=tr("choose_language"), list=options)
@@ -2907,7 +2643,7 @@ class NeoRadioMain(Screen):
         configfile.save()
         self.apply_language()
         self.current_filter = self.get_default_filter() if self.current_filter in (tr("all"), tr("favorites")) else self.current_filter
-        self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value), select_url=to_text(getattr(config.plugins.neoradio, "last_url", "").value))
+        self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value))
         self["status_label"].setText(tr("status_prefix", tr("lang_set", language_label(value))))
 
     def choose_screensaver(self):
@@ -2977,10 +2713,14 @@ class NeoRadioMain(Screen):
     def install_github_update(self, ipk_url, remote_version):
         self.touch_activity()
         self["status_label"].setText(tr("status_prefix", tr("github_installing", remote_version)))
-        safe_url = to_text(ipk_url).replace('"', '%22')
-        cmd = 'rm -f "%(tmp)s"; wget --no-check-certificate -O "%(tmp)s" "%(url)s" && opkg install --force-reinstall "%(tmp)s"' % {
-            'tmp': UPDATE_TEMP_IPK,
-            'url': safe_url,
+        safe_url = to_text(ipk_url).strip()
+        cleanup_cmd = cleanup_tmp_install_shell()
+        quoted_tmp = shell_quote(UPDATE_TEMP_IPK)
+        quoted_url = shell_quote(safe_url)
+        cmd = '%(cleanup)s; wget --no-check-certificate -O %(tmp)s %(url)s; rc=$?; if [ $rc -eq 0 ]; then opkg install --force-reinstall %(tmp)s; rc=$?; fi; %(cleanup)s; exit $rc' % {
+            'cleanup': cleanup_cmd,
+            'tmp': quoted_tmp,
+            'url': quoted_url,
         }
         self.github_update_info['version'] = remote_version
         if ComponentsConsole is not None:
@@ -2994,11 +2734,7 @@ class NeoRadioMain(Screen):
         self.github_install_finished(text_type(''), retval, None)
 
     def github_install_finished(self, result, retval, extra_args=None):
-        try:
-            if os.path.exists(UPDATE_TEMP_IPK):
-                os.remove(UPDATE_TEMP_IPK)
-        except Exception:
-            pass
+        cleanup_tmp_install_files()
         remote_version = to_text((self.github_update_info or {}).get('version', u'?'))
         if retval == 0:
             self.session.openWithCallback(self.github_restart_callback, MessageBox, tr("github_install_ok", remote_version), MessageBox.TYPE_YESNO)

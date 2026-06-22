@@ -1,8 +1,8 @@
 {
-  "changelog": "Import stacji z bukietu, deduplikacja bukietów/krajów, filtry języków stacji, osobny ekran filtrów pod niebieskim przyciskiem oraz zapamiętywanie ostatnio odtwarzanych stacji.",
-  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "name": "NeoRadio",
-  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
+  "version": "1.3.4",
+  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
-  "version": "1.3.4"
+  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
+  "changelog": "Station database refreshed from HDF radio bouquet update 20.06.2026, added 565 new stations, removed invalid local placeholder entries, added post-install /tmp cleanup, hardened GitHub IPK update cleanup, and minor translation/path cleanup fixes."
 }
