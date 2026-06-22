@@ -1,8 +1,8 @@
 #!/bin/sh
-# NeoRadio post-install cleanup: remove temporary installer/update files from /tmp.
-rm -f /tmp/neoradio_update.ipk
-rm -f /tmp/enigma2-plugin-extensions-neoradio*.ipk
-rm -f /tmp/neoradio*.ipk
-rm -f /tmp/NeoRadio*.ipk
-rm -rf /tmp/neoradio /tmp/NeoRadio /tmp/neoradio_tmp /tmp/neoradio_install
+# NeoRadio 2.0 post-install cleanup.
+# Clean only NeoRadio temporary installation/update files from /tmp.
+for f in     /tmp/neoradio_update.ipk     /tmp/enigma2-plugin-extensions-neoradio*.ipk     /tmp/neoradio_repo*.tar.gz     /tmp/NeoRadio*.zip
+ do
+    [ -e "$f" ] && rm -f "$f"
+ done
 exit 0

@@ -10,6 +10,10 @@ import unicodedata
 import glob
 import hashlib
 try:
+    import subprocess
+except Exception:
+    subprocess = None
+try:
     import socket
 except Exception:
     socket = None
@@ -22,9 +26,11 @@ try:
 except Exception:
     threading = None
 try:
-    from PIL import Image
+    from PIL import Image, ImageDraw, ImageFont
 except Exception:
     Image = None
+    ImageDraw = None
+    ImageFont = None
 try:
     from urllib2 import Request, urlopen
     from urlparse import urlparse, urljoin
@@ -56,6 +62,14 @@ try:
 except Exception:
     language = None
 from enigma import eServiceReference, eTimer, getDesktop, iServiceInformation, ePoint
+try:
+    from enigma import gRGB
+except Exception:
+    gRGB = None
+try:
+    from enigma import eDVBVolumecontrol
+except Exception:
+    eDVBVolumecontrol = None
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
 PLUGIN_VERSION = "2.0"
@@ -65,14 +79,23 @@ PLUGIN_DESC = "NeoRadio Online"
 PLUGIN_PATH = "/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio"
 CONFIG_DIR = resolveFilename(SCOPE_CONFIG)
 FAV_FILE = os.path.join(CONFIG_DIR, "neoradio_favorites.json")
+HISTORY_FILE = os.path.join(CONFIG_DIR, "neoradio_history.json")
 USER_STATIONS_FILE = os.path.join(CONFIG_DIR, "neoradio_user_stations.json")
 BASE_STATIONS_FILE = os.path.join(PLUGIN_PATH, "stations.json")
 COVER_DIR = os.path.join(PLUGIN_PATH, "covers")
 DEFAULT_COVER = os.path.join(PLUGIN_PATH, "cover_default.png")
 DEFAULT_PICON = os.path.join(PLUGIN_PATH, "visualradio.png")
+AUDIO_UI_CACHE_DIR = os.path.join(CONFIG_DIR, "neoradio_ui_cache")
+AUDIO_UI_ASSET_DIR = os.path.join(PLUGIN_PATH, "audio_ui_assets")
 DEFAULT_PICON_DIRS = [
     "/usr/share/enigma2/picon",
     "/usr/share/enigma2/piconlcd",
+    "/usr/share/engma2/picon",
+    "/usr/share/engma2/piconlcd",
+    "/user/share/enigma2/picon",
+    "/user/share/enigma2/piconlcd",
+    "/user/share/engma2/picon",
+    "/user/share/engma2/piconlcd",
     "/picon",
     "/data/picon",
     "/media/hdd/picon",
@@ -127,6 +150,8 @@ if not hasattr(config.plugins.neoradio, "last_filter"):
     config.plugins.neoradio.last_filter = ConfigText(default="All", fixed_size=False)
 if not hasattr(config.plugins.neoradio, "last_station"):
     config.plugins.neoradio.last_station = ConfigText(default="", fixed_size=False)
+if not hasattr(config.plugins.neoradio, "last_url"):
+    config.plugins.neoradio.last_url = ConfigText(default="", fixed_size=False)
 if not hasattr(config.plugins.neoradio, "keep_playing"):
     config.plugins.neoradio.keep_playing = ConfigYesNo(default=False)
 if not hasattr(config.plugins.neoradio, "autoplay_last"):
@@ -141,21 +166,17 @@ if not hasattr(config.plugins.neoradio, "screensaver_timeout"):
     config.plugins.neoradio.screensaver_timeout = ConfigText(default="0", fixed_size=False)
 if not hasattr(config.plugins.neoradio, "github_manifest_url"):
     config.plugins.neoradio.github_manifest_url = ConfigText(default="https://raw.githubusercontent.com/OliOli2013/NeoRadio/main/manifest.json", fixed_size=False)
+if not hasattr(config.plugins.neoradio, "audio_balance"):
+    config.plugins.neoradio.audio_balance = ConfigText(default="0", fixed_size=False)
+if not hasattr(config.plugins.neoradio, "audio_treble"):
+    config.plugins.neoradio.audio_treble = ConfigText(default="0", fixed_size=False)
+if not hasattr(config.plugins.neoradio, "audio_bass"):
+    config.plugins.neoradio.audio_bass = ConfigText(default="0", fixed_size=False)
+if not hasattr(config.plugins.neoradio, "audio_theme"):
+    config.plugins.neoradio.audio_theme = ConfigText(default="dark", fixed_size=False)
 
 DEFAULT_GITHUB_MANIFEST_URL = "https://raw.githubusercontent.com/OliOli2013/NeoRadio/main/manifest.json"
 UPDATE_TEMP_IPK = "/tmp/neoradio_update.ipk"
-TMP_INSTALL_PATTERNS = [
-    "/tmp/neoradio_update.ipk",
-    "/tmp/enigma2-plugin-extensions-neoradio*.ipk",
-    "/tmp/neoradio*.ipk",
-    "/tmp/NeoRadio*.ipk",
-]
-TMP_INSTALL_DIRS = [
-    "/tmp/neoradio",
-    "/tmp/NeoRadio",
-    "/tmp/neoradio_tmp",
-    "/tmp/neoradio_install",
-]
 
 
 def to_text(value):
@@ -220,12 +241,108 @@ def save_json_file(path, data):
         return False
 
 
+
+COUNTRY_ALIASES = {
+    "polska": u"Polska", "poland": u"Polska", "polen": u"Polska",
+    "niemcy": u"Niemcy", "germany": u"Niemcy", "deutschland": u"Niemcy",
+    "francja": u"Francja", "france": u"Francja", "frankreich": u"Francja",
+    "wlochy": u"Włochy", "włochy": u"Włochy", "italy": u"Włochy", "italien": u"Włochy", "italia": u"Włochy",
+    "arabic": u"Arabskie", "arab": u"Arabskie", "arabskie": u"Arabskie",
+    "hiszpania": u"Hiszpania", "spain": u"Hiszpania", "spanien": u"Hiszpania",
+    "szwajcaria": u"Szwajcaria", "switzerland": u"Szwajcaria", "schweiz": u"Szwajcaria",
+    "austria": u"Austria", "osterreich": u"Austria", "oesterreich": u"Austria",
+    "czechy": u"Czechy", "czechia": u"Czechy", "tschechien": u"Czechy",
+    "usa": u"USA", "niederlande": u"Holandia", "netherlands": u"Holandia", "holandia": u"Holandia",
+    "belgien": u"Belgia", "belgia": u"Belgia", "griechenland": u"Grecja", "grecja": u"Grecja",
+    "slowakei": u"Słowacja", "slowacja": u"Słowacja", "portugal": u"Portugalia", "portugalia": u"Portugalia",
+    "mexiko": u"Meksyk", "meksyk": u"Meksyk", "finland": u"Finlandia", "finlandia": u"Finlandia",
+    "turkey": u"Turcja", "turcja": u"Turcja", "grossbritannien": u"Wielka Brytania", "gro_britannien": u"Wielka Brytania", "united_kingdom": u"Wielka Brytania", "uk": u"Wielka Brytania", "schottland": u"Wielka Brytania",
+    "online": u"Online", "other": u"Inne", "inne": u"Inne",
+}
+STATION_LANGUAGE_ORDER = [u"Polski", u"Arabski", u"Francuski", u"Niemiecki", u"Włoski", u"Inne"]
+LANGUAGE_BY_COUNTRY = {
+    u"Polska": u"Polski",
+    u"Arabskie": u"Arabski",
+    u"Francja": u"Francuski",
+    u"Niemcy": u"Niemiecki",
+    u"Austria": u"Niemiecki",
+    u"Szwajcaria": u"Niemiecki",
+    u"Włochy": u"Włoski",
+}
+LANGUAGE_ALIASES = {
+    "polski": u"Polski", "polish": u"Polski", "pl": u"Polski",
+    "arabski": u"Arabski", "arabic": u"Arabski", "arab": u"Arabski", "ar": u"Arabski",
+    "francuski": u"Francuski", "french": u"Francuski", "fr": u"Francuski",
+    "niemiecki": u"Niemiecki", "german": u"Niemiecki", "de": u"Niemiecki",
+    "wloski": u"Włoski", "wlochy": u"Włoski", "italian": u"Włoski", "it": u"Włoski",
+    "inne": u"Inne", "other": u"Inne", "misc": u"Inne",
+}
+
+
+def normalize_country(value):
+    raw = to_text(value).strip()
+    if not raw:
+        return u"Online"
+    key = slugify(raw)
+    return COUNTRY_ALIASES.get(key, raw)
+
+
+def normalize_station_language(value, country=None, name=None, group=None, url=None):
+    raw = to_text(value).strip()
+    if raw:
+        key = slugify(raw)
+        if key in LANGUAGE_ALIASES:
+            return LANGUAGE_ALIASES[key]
+        if raw in STATION_LANGUAGE_ORDER:
+            return raw
+    country = normalize_country(country or u"")
+    if country in LANGUAGE_BY_COUNTRY:
+        return LANGUAGE_BY_COUNTRY[country]
+    blob = u" %s %s %s " % (slugify(group or u""), slugify(name or u""), to_text(url or u"").lower())
+    if u"arabic" in blob or u" arab " in blob or u"quran" in blob or u"koran" in blob:
+        return u"Arabski"
+    if u"france" in blob or u"frankreich" in blob or u"hotmix" in blob or u"prysm" in blob or u".fr/" in blob:
+        return u"Francuski"
+    if u"italy" in blob or u"italien" in blob or u"italia" in blob or u".it/" in blob:
+        return u"Włoski"
+    if u"deutschland" in blob or u"germany" in blob or u"antenne" in blob or u"hitradio" in blob or u"radio_bob" in blob or u"schlager" in blob or u".de/" in blob:
+        return u"Niemiecki"
+    if u"polska" in blob or u"poland" in blob or u"polen" in blob or u" rmf" in blob or u"radio_zet" in blob or u"polskie_radio" in blob or u"eska" in blob:
+        return u"Polski"
+    return u"Inne"
+
+
+def normalize_stream_url_key(url):
+    url = to_text(url).strip().lower()
+    url = url.replace(u"%3a", u":").replace(u"%3A", u":").replace(u"%2f", u"/").replace(u"%2F", u"/")
+    try:
+        url = re.sub(r"[\?#].*$", "", url)
+    except Exception:
+        pass
+    return url.rstrip(u"/")
+
+
+def station_identity_key(station):
+    if not station:
+        return text_type("")
+    url_key = normalize_stream_url_key(station.get("url", u""))
+    if url_key:
+        return u"url:" + url_key
+    return u"name:" + slugify(station.get("name", u"")) + u"|" + normalize_station_language(station.get("language", u""), station.get("country", u""))
+
 def normalize_station(entry):
+    name = to_text(entry.get("name", "Unknown")).strip()
+    url = to_text(entry.get("url", "")).strip()
+    genre = to_text(entry.get("genre", "Other")).strip() or u"Other"
+    group = to_text(entry.get("group", entry.get("genre", ""))).strip() or genre
+    country = normalize_country(entry.get("country", "Online"))
+    lang = normalize_station_language(entry.get("language", ""), country, name, group, url)
     return {
-        "name": to_text(entry.get("name", "Unknown")),
-        "url": to_text(entry.get("url", "")),
-        "genre": to_text(entry.get("genre", "Other")),
-        "country": to_text(entry.get("country", "Online")),
+        "name": name,
+        "url": url,
+        "genre": genre,
+        "country": country,
+        "language": lang,
         "bitrate": to_text(entry.get("bitrate", "?")),
         "description": to_text(entry.get("description", "")),
         "homepage": to_text(entry.get("homepage", "")),
@@ -239,30 +356,82 @@ def normalize_station(entry):
         "metadata_text_key": to_text(entry.get("metadata_text_key", "")),
         "metadata_program_key": to_text(entry.get("metadata_program_key", "")),
         "metadata_cover_key": to_text(entry.get("metadata_cover_key", "")),
-        "group": to_text(entry.get("group", entry.get("genre", ""))),
+        "group": group,
     }
 
 
 def load_stations():
     stations = []
-    seen = {}
+    seen_urls = {}
+    seen_names = {}
     for src in (BASE_STATIONS_FILE, USER_STATIONS_FILE):
         for item in load_json_file(src, []):
             try:
                 norm = normalize_station(item)
-                key = norm.get("name", "") + "|" + norm.get("url", "")
-                if norm.get("url") and key not in seen:
-                    stations.append(norm)
-                    seen[key] = True
+                if not norm.get("url"):
+                    continue
+                url_key = normalize_stream_url_key(norm.get("url", ""))
+                name_key = slugify(norm.get("name", "")) + u"|" + normalize_station_language(norm.get("language", ""), norm.get("country", ""))
+                if (url_key and url_key in seen_urls) or (name_key and name_key in seen_names):
+                    continue
+                stations.append(norm)
+                if url_key:
+                    seen_urls[url_key] = True
+                if name_key:
+                    seen_names[name_key] = True
             except Exception:
                 pass
-    stations.sort(key=lambda x: (to_text(x.get("country", "")).lower(), to_text(x.get("group", x.get("genre", ""))).lower(), to_text(x.get("name", "")).lower()))
+    def sort_key(item):
+        lang = normalize_station_language(item.get("language", ""), item.get("country", ""))
+        try:
+            lang_idx = STATION_LANGUAGE_ORDER.index(lang)
+        except Exception:
+            lang_idx = 99
+        return (lang_idx, to_text(item.get("country", "")).lower(), to_text(item.get("group", item.get("genre", ""))).lower(), to_text(item.get("name", "")).lower())
+    stations.sort(key=sort_key)
     return stations
 
 
 def load_favorites():
     return [to_text(x) for x in load_json_file(FAV_FILE, []) if to_text(x)]
 
+
+
+
+def load_history():
+    result = []
+    seen = {}
+    for item in load_json_file(HISTORY_FILE, []):
+        try:
+            norm = normalize_station(item)
+            key = station_identity_key(norm)
+            if key and key not in seen:
+                result.append(norm)
+                seen[key] = True
+        except Exception:
+            pass
+    return result[:30]
+
+
+def remember_played_station(station):
+    if not station:
+        return False
+    try:
+        norm = normalize_station(station)
+        norm["played_at"] = int(time.time())
+        key = station_identity_key(norm)
+        clean = [norm]
+        seen = {key: True}
+        for item in load_history():
+            item_key = station_identity_key(item)
+            if item_key and item_key not in seen:
+                clean.append(item)
+                seen[item_key] = True
+            if len(clean) >= 30:
+                break
+        return save_json_file(HISTORY_FILE, clean)
+    except Exception:
+        return False
 
 def save_favorites(favorites):
     clean = []
@@ -328,7 +497,7 @@ I18N = {
         "plugin_desc": u"Modern internet radio for Enigma2 / Python 2/3",
         "stations_online": u"Online stations",
         "header_title": u"NeoRadio Online",
-        "help": u"OK/Green=Play  Yellow=Fav  Blue=Search  Menu=Menu  Info=Details",
+        "help": u"OK/Green=Play  Yellow=Fav  Blue=Filters  Menu=Settings  Info=Details",
         "status_ready": u"Status: ready",
         "by_author": u"by Paweł Pawełek",
         "station_desc_title": u"Station description",
@@ -342,16 +511,22 @@ I18N = {
         "green_play": u"Green: Play",
         "yellow_fav": u"Yellow: Fav",
         "blue_search": u"Blue: Search",
+        "blue_filter": u"Blue: Filters",
         "menu_cfg": u"Menu: Filters/Settings",
         "info_details": u"Info: Details",
         "picon_title": u"Station logo",
         "all": u"All",
         "favorites": u"Favorites",
+        "recent": u"Recently played",
+    "online": u"Online",
+    "other": u"Inne",
+    "equalizer_visual": u"Wizualny EQ",
         "online": u"Online",
         "other": u"Other",
         "equalizer_visual": u"Visual EQ",
         "country_filter": u"Country: %s",
         "genre_filter": u"Genre: %s",
+        "language_filter": u"Language: %s",
         "main_country": u"Main country",
         "all_countries": u"All countries",
         "filter": u"filter",
@@ -387,6 +562,12 @@ I18N = {
         "menu_title": u"NeoRadio - Menu",
         "menu_filter": u"Filter: %s",
         "menu_clear_search": u"Clear search",
+        "menu_search": u"Search station",
+        "menu_choose_filter": u"Choose station filter / bouquet",
+        "menu_station_language": u"Station language: %s",
+        "filter_title": u"NeoRadio - Filters / bouquets",
+        "choose_station_language": u"Choose station language",
+        "station_language_set": u"station language = %s",
         "menu_keep": u"Toggle: Keep playing after exit = %s",
         "menu_autoplay": u"Toggle: Autoplay last station = %s",
         "yes": u"YES",
@@ -394,6 +575,7 @@ I18N = {
         "menu_country": u"Main country: %s",
         "menu_lang": u"Language: %s",
         "menu_saver": u"Screensaver: %s",
+        "menu_audio_theme": u"Premium audio theme: %s",
         "menu_picons": u"Picon paths: %s",
         "menu_reload": u"Reload station list",
         "menu_github_url": u"GitHub update URL: %s",
@@ -402,7 +584,7 @@ I18N = {
         "no_keyboard_settings": u"No on-screen keyboard. You can also set the path manually in Enigma2 settings.",
         "picon_paths_title": u"Picon paths (separate with ;) ",
         "reloaded": u"station list refreshed",
-        "about_text": u"NeoRadio Online %s\n\nModern Enigma2 plugin for internet radio.\nFeatures:\n- internet radio\n- favorite stations\n- search and filters\n- country selection\n- picons from SAT/IPTV\n- RDS/ICY metadata\n- bilingual UI (PL/EN)\n- optional screensaver\n- GitHub update support\n\nConfiguration files:\n%s\n%s",
+        "about_text": u"NeoRadio Online %s\n\nModern Enigma2 plugin for internet radio.\nFeatures:\n- internet radio\n- favorite stations\n- search and filters\n- country and station language selection\n- picons from SAT/IPTV\n- RDS/ICY metadata\n- UI PL/EN\n- optional screensaver\n- GitHub update support\n\nConfiguration files:\n%s\n%s",
         "choose_country": u"Choose main country",
         "country_set": u"main country = %s",
         "country_all": u"main country = all",
@@ -414,6 +596,10 @@ I18N = {
         "screensaver_off": u"Off",
         "screensaver_min": u"%s min",
         "choose_saver": u"Choose screensaver timeout",
+        "choose_audio_theme": u"Choose premium audio theme",
+        "theme_dark_premium": u"Dark premium",
+        "theme_blue_premium": u"Blue premium",
+        "theme_set": u"premium audio theme = %s",
         "saver_set": u"screensaver = %s",
         "saved_picons": u"saved custom picon paths",
         "auto_picons": u"automatic picon search enabled",
@@ -434,6 +620,16 @@ I18N = {
         "github_restarting": u"restarting Enigma2 GUI...",
         "github_restart_later": u"update installed - restart GUI later",
         "github_error": u"Could not check GitHub updates.",
+        "audio_title": u"Premium audio knobs   [0 theme] [5 reset]",
+        "audio_balance": u"Balance",
+        "audio_treble": u"Treble",
+        "audio_bass": u"Bass",
+        "audio_help": u"",
+        "audio_balance_help": u"1 left   3 right",
+        "audio_treble_help": u"4 lower   6 raise",
+        "audio_bass_help": u"7 lower   9 raise",
+        "audio_status": u"Audio: %s",
+        "audio_reset_status": u"audio controls reset",
         "screensaver_hint": u"Press any key to return",
         "screensaver_title": u"NeoRadio screensaver",
     },
@@ -443,7 +639,7 @@ I18N["pl"] = {
     "plugin_desc": u"Nowoczesne radio internetowe dla Enigma2 / Python 2/3",
     "stations_online": u"Stacje online",
     "header_title": u"NeoRadio Online",
-    "help": u"OK/Green=Play  Yellow=Fav  Blue=Szukaj  Menu=Menu  Info=Szczegóły",
+    "help": u"OK/Green=Play  Yellow=Fav  Blue=Filtry  Menu=Ustawienia  Info=Szczegóły",
     "status_ready": u"Stan: gotowy",
     "by_author": u"by Paweł Pawełek",
     "station_desc_title": u"Opis stacji",
@@ -457,16 +653,19 @@ I18N["pl"] = {
     "green_play": u"Zielony: Play",
     "yellow_fav": u"Żółty: Fav",
     "blue_search": u"Niebieski: Szukaj",
+    "blue_filter": u"Niebieski: Filtry",
     "menu_cfg": u"Menu: Filtr/Ustawienia",
     "info_details": u"Info: Szczegóły",
     "picon_title": u"Logo stacji",
-    "all": u"All",
+    "all": u"Wszystkie",
     "favorites": u"Ulubione",
+    "recent": u"Ostatnio odtwarzane",
     "online": u"Online",
     "other": u"Inne",
     "equalizer_visual": u"Wizualny EQ",
     "country_filter": u"Kraj: %s",
     "genre_filter": u"Gatunek: %s",
+    "language_filter": u"Język: %s",
     "main_country": u"Kraj główny",
     "all_countries": u"Wszystkie kraje",
     "filter": u"filtr",
@@ -502,6 +701,12 @@ I18N["pl"] = {
     "menu_title": u"NeoRadio - Menu",
     "menu_filter": u"Filtr: %s",
     "menu_clear_search": u"Wyczyść wyszukiwanie",
+    "menu_search": u"Szukaj stacji",
+    "menu_choose_filter": u"Wybierz filtr / bukiet stacji",
+    "menu_station_language": u"Język stacji: %s",
+    "filter_title": u"NeoRadio - filtry / bukiety",
+    "choose_station_language": u"Wybierz język stacji",
+    "station_language_set": u"język stacji = %s",
     "menu_keep": u"Przełącz: Odtwarzaj po wyjściu = %s",
     "menu_autoplay": u"Przełącz: Autoplay ostatniej stacji = %s",
     "yes": u"TAK",
@@ -509,6 +714,7 @@ I18N["pl"] = {
     "menu_country": u"Kraj główny: %s",
     "menu_lang": u"Język: %s",
     "menu_saver": u"Wygaszacz: %s",
+    "menu_audio_theme": u"Motyw premium audio: %s",
     "menu_picons": u"Ścieżki piconów: %s",
     "menu_reload": u"Przeładuj listę stacji",
     "menu_github_url": u"URL aktualizacji GitHub: %s",
@@ -517,7 +723,7 @@ I18N["pl"] = {
     "no_keyboard_settings": u"Brak klawiatury ekranowej. Ścieżkę możesz też ustawić ręcznie w ustawieniach Enigma2.",
     "picon_paths_title": u"Ścieżki piconów (oddzielaj średnikiem ;)",
     "reloaded": u"lista stacji odświeżona",
-    "about_text": u"NeoRadio Online %s\n\nNowoczesna wtyczka Enigma2 do radia internetowego.\nFunkcje:\n- radio internetowe\n- ulubione\n- wyszukiwanie i filtry\n- wybór kraju\n- picony z SAT/IPTV\n- metadane RDS/ICY\n- interfejs PL/EN\n- opcjonalny wygaszacz\n- obsługa aktualizacji z GitHub\n\nPliki konfiguracyjne:\n%s\n%s",
+    "about_text": u"NeoRadio Online %s\n\nNowoczesna wtyczka Enigma2 do radia internetowego.\nFunkcje:\n- radio internetowe\n- ulubione\n- wyszukiwanie i filtry\n- wybór kraju i języka stacji\n- picony z SAT/IPTV\n- metadane RDS/ICY\n- interfejs PL/EN\n- opcjonalny wygaszacz\n- obsługa aktualizacji z GitHub\n\nPliki konfiguracyjne:\n%s\n%s",
     "choose_country": u"Wybierz kraj główny",
     "country_set": u"kraj główny = %s",
     "country_all": u"kraj główny = wszystkie",
@@ -529,6 +735,10 @@ I18N["pl"] = {
     "screensaver_off": u"Wyłączony",
     "screensaver_min": u"%s min",
     "choose_saver": u"Wybierz czas wygaszacza",
+    "choose_audio_theme": u"Wybierz motyw premium audio",
+    "theme_dark_premium": u"Dark premium",
+    "theme_blue_premium": u"Blue premium",
+    "theme_set": u"motyw premium audio = %s",
     "saver_set": u"wygaszacz = %s",
     "saved_picons": u"zapisano własne ścieżki piconów",
     "auto_picons": u"włączono automatyczne szukanie piconów",
@@ -549,6 +759,16 @@ I18N["pl"] = {
     "github_restarting": u"restart GUI Enigma2...",
     "github_restart_later": u"aktualizacja zainstalowana - zrestartuj GUI później",
     "github_error": u"Nie udało się sprawdzić aktualizacji GitHub.",
+    "audio_title": u"Premium gałki audio   [0 motyw] [5 reset]",
+    "audio_balance": u"Balans",
+    "audio_treble": u"Wysokie",
+    "audio_bass": u"Niskie",
+    "audio_help": u"",
+    "audio_balance_help": u"1 lewo   3 prawo",
+    "audio_treble_help": u"4 mniej   6 więcej",
+    "audio_bass_help": u"7 mniej   9 więcej",
+    "audio_status": u"Audio: %s",
+    "audio_reset_status": u"potencjometry audio wyzerowane",
     "screensaver_hint": u"Naciśnij dowolny klawisz, aby wrócić",
     "screensaver_title": u"Wygaszacz NeoRadio",
 }
@@ -620,6 +840,10 @@ def format_genre_filter(genre):
     genre = to_text(genre).strip()
     return tr('genre_filter', genre if genre else tr('other'))
 
+def format_language_filter(lang):
+    lang = normalize_station_language(lang)
+    return tr('language_filter', lang if lang else tr('other'))
+
 def language_label(value):
     value = to_text(value).strip().lower()
     if value == 'pl':
@@ -642,47 +866,12 @@ def screensaver_timeout_label(value=None):
     return tr('screensaver_min', to_text(minutes))
 
 
-def shell_quote(value):
-    value = to_text(value)
-    return "'" + value.replace("'", "'\"'\"'") + "'"
+def audio_theme_label(value=None):
+    raw = to_text(getattr(config.plugins.neoradio.audio_theme, 'value', 'dark') if value is None else value).strip().lower()
+    if raw == 'blue':
+        return tr('theme_blue_premium')
+    return tr('theme_dark_premium')
 
-
-def cleanup_tmp_install_files():
-    for pattern in TMP_INSTALL_PATTERNS:
-        try:
-            for path in glob.glob(pattern):
-                try:
-                    if os.path.isfile(path) or os.path.islink(path):
-                        os.remove(path)
-                except Exception:
-                    pass
-        except Exception:
-            pass
-    for path in TMP_INSTALL_DIRS:
-        try:
-            if os.path.isdir(path):
-                for root, dirs, files in os.walk(path, topdown=False):
-                    for name in files:
-                        try:
-                            os.remove(os.path.join(root, name))
-                        except Exception:
-                            pass
-                    for name in dirs:
-                        try:
-                            os.rmdir(os.path.join(root, name))
-                        except Exception:
-                            pass
-                try:
-                    os.rmdir(path)
-                except Exception:
-                    pass
-        except Exception:
-            pass
-
-
-def cleanup_tmp_install_shell():
-    # Constant paths only; keep glob patterns unquoted so shell can expand *.ipk.
-    return 'rm -f /tmp/neoradio_update.ipk /tmp/enigma2-plugin-extensions-neoradio*.ipk /tmp/neoradio*.ipk /tmp/NeoRadio*.ipk; rm -rf /tmp/neoradio /tmp/NeoRadio /tmp/neoradio_tmp /tmp/neoradio_install'
 
 def parse_version_tuple(value):
     numbers = re.findall(r'\d+', to_text(value))
@@ -1193,6 +1382,21 @@ def get_skin():
             <widget name="spectrum_title" position="1434,406" size="180,24" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
             <widget name="spectrum_label" position="1428,438" size="192,46" font="Regular;36" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
 
+            <widget name="audio_title" position="570,532" size="430,26" font="Regular;22" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+            <widget name="audio_balance_card" position="570,562" size="330,62" alphatest="blend" zPosition="3" />
+            <widget name="audio_treble_card" position="920,562" size="330,62" alphatest="blend" zPosition="3" />
+            <widget name="audio_bass_card" position="1270,562" size="330,62" alphatest="blend" zPosition="3" />
+            <widget name="audio_balance_title" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+            <widget name="audio_balance" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+            <widget name="audio_balance_help" position="588,626" size="296,16" font="Regular;15" foregroundColor="#00b5bfd1" backgroundColor="#00101a2d" halign="center" transparent="0" zPosition="2" />
+            <widget name="audio_treble_title" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+            <widget name="audio_treble" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+            <widget name="audio_treble_help" position="938,626" size="296,16" font="Regular;15" foregroundColor="#00b5bfd1" backgroundColor="#00101a2d" halign="center" transparent="0" zPosition="2" />
+            <widget name="audio_bass_title" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+            <widget name="audio_bass" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+            <widget name="audio_bass_help" position="1288,626" size="296,16" font="Regular;15" foregroundColor="#00b5bfd1" backgroundColor="#00101a2d" halign="center" transparent="0" zPosition="2" />
+            <widget name="audio_help" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+
             <widget name="np_header" position="570,660" size="300,30" font="Regular;28" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
             <widget name="np_title" position="570,700" size="730,32" font="Regular;25" foregroundColor="#00ffffff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
             <widget name="np_artist" position="570,734" size="730,30" font="Regular;23" foregroundColor="#008fd3ff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
@@ -1258,6 +1462,21 @@ def get_skin():
         <widget name="cover" position="940,112" size="164,160" alphatest="blend" zPosition="2" />
         <widget name="spectrum_title" position="954,304" size="136,16" font="Regular;15" foregroundColor="#00ffd27d" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
         <widget name="spectrum_label" position="946,326" size="152,28" font="Regular;24" foregroundColor="#0075e59b" backgroundColor="#00121f36" halign="center" transparent="0" zPosition="2" />
+
+        <widget name="audio_title" position="486,336" size="320,16" font="Regular;15" foregroundColor="#00ffd27d" backgroundColor="#00101a2d" transparent="0" zPosition="2" />
+        <widget name="audio_balance_card" position="486,358" size="196,44" alphatest="blend" zPosition="3" />
+        <widget name="audio_treble_card" position="694,358" size="196,44" alphatest="blend" zPosition="3" />
+        <widget name="audio_bass_card" position="902,358" size="196,44" alphatest="blend" zPosition="3" />
+        <widget name="audio_balance_title" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+        <widget name="audio_balance" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+        <widget name="audio_balance_help" position="490,406" size="188,12" font="Regular;11" foregroundColor="#00b5bfd1" backgroundColor="#00101a2d" halign="center" transparent="0" zPosition="2" />
+        <widget name="audio_treble_title" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+        <widget name="audio_treble" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+        <widget name="audio_treble_help" position="698,406" size="188,12" font="Regular;11" foregroundColor="#00b5bfd1" backgroundColor="#00101a2d" halign="center" transparent="0" zPosition="2" />
+        <widget name="audio_bass_title" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+        <widget name="audio_bass" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
+        <widget name="audio_bass_help" position="906,406" size="188,12" font="Regular;11" foregroundColor="#00b5bfd1" backgroundColor="#00101a2d" halign="center" transparent="0" zPosition="2" />
+        <widget name="audio_help" position="0,0" size="1,1" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00000000" transparent="0" zPosition="0" />
 
         <widget name="np_header" position="486,440" size="220,20" font="Regular;19" foregroundColor="#00ffd27d" backgroundColor="#000d1626" transparent="0" zPosition="2" />
         <widget name="np_title" position="486,468" size="396,20" font="Regular;17" foregroundColor="#00ffffff" backgroundColor="#000d1626" transparent="0" zPosition="2" />
@@ -1340,6 +1559,11 @@ class NeoRadioSaver(Screen):
             self.saver_timer.callback.append(self.on_screensaver_timeout)
         except Exception:
             self.saver_timer_conn = self.saver_timer.timeout.connect(self.on_screensaver_timeout)
+        self.audio_anim_timer = eTimer()
+        try:
+            self.audio_anim_timer.callback.append(self.on_audio_anim_timer)
+        except Exception:
+            self.audio_anim_timer_conn = self.audio_anim_timer.timeout.connect(self.on_audio_anim_timer)
         self.last_activity_ts = time.time()
         self.saver_open = False
         self.saver_deadline = 0
@@ -1489,6 +1713,15 @@ class NeoRadioMain(Screen):
         self.saver_clock_y = 0
         self.saver_dx = 18 if self.is_fhd else 12
         self.saver_dy = 14 if self.is_fhd else 10
+        self.audio_balance_value = self.get_config_audio_value("audio_balance", 0)
+        self.audio_treble_value = self.get_config_audio_value("audio_treble", 0)
+        self.audio_bass_value = self.get_config_audio_value("audio_bass", 0)
+        self.audio_master_volume = None
+        self.audio_last_left = None
+        self.audio_last_right = None
+        self.audio_active_control = None
+        self.audio_active_until = 0
+        self.audio_anim_frame = 0
 
         self["list_title"] = Label(text_type(""))
         self["header_title"] = Label(text_type(""))
@@ -1500,6 +1733,20 @@ class NeoRadioMain(Screen):
         self["hero_clock"] = Label(text_type(""))
         self["hero_date"] = Label(text_type(""))
         self["visualizer_label"] = Label(text_type(""))
+        self["audio_title"] = Label(text_type(""))
+        self["audio_balance_card"] = Pixmap()
+        self["audio_treble_card"] = Pixmap()
+        self["audio_bass_card"] = Pixmap()
+        self["audio_balance_title"] = Label(text_type(""))
+        self["audio_balance"] = Label(text_type(""))
+        self["audio_balance_help"] = Label(text_type(""))
+        self["audio_treble_title"] = Label(text_type(""))
+        self["audio_treble"] = Label(text_type(""))
+        self["audio_treble_help"] = Label(text_type(""))
+        self["audio_bass_title"] = Label(text_type(""))
+        self["audio_bass"] = Label(text_type(""))
+        self["audio_bass_help"] = Label(text_type(""))
+        self["audio_help"] = Label(text_type(""))
         self["footer_brand"] = Label(text_type(""))
         self["footer_label"] = Label(text_type(""))
         self["station_name"] = Label(u"-")
@@ -1539,20 +1786,28 @@ class NeoRadioMain(Screen):
             pass
 
         self["actions"] = ActionMap(
-            ["OkCancelActions", "ColorActions", "DirectionActions", "MenuActions", "InfobarActions"],
+            ["OkCancelActions", "ColorActions", "DirectionActions", "MenuActions", "InfobarActions", "NumberActions"],
             {
                 "ok": self.play_current,
                 "cancel": self.close_plugin,
                 "red": self.close_plugin,
                 "green": self.play_current,
                 "yellow": self.toggle_favorite,
-                "blue": self.open_search,
+                "blue": self.open_filter_menu,
                 "menu": self.open_main_menu,
                 "showEventInfo": self.show_details,
                 "up": self.move_up,
                 "down": self.move_down,
                 "left": self.page_up,
                 "right": self.page_down,
+                "1": self.audio_balance_left,
+                "3": self.audio_balance_right,
+                "4": self.audio_treble_down,
+                "6": self.audio_treble_up,
+                "7": self.audio_bass_down,
+                "9": self.audio_bass_up,
+                "0": self.audio_toggle_theme_shortcut,
+                "5": self.audio_reset,
             },
             -1,
         )
@@ -1567,6 +1822,11 @@ class NeoRadioMain(Screen):
             self.saver_timer.callback.append(self.on_screensaver_timeout)
         except Exception:
             self.saver_timer_conn = self.saver_timer.timeout.connect(self.on_screensaver_timeout)
+        self.audio_anim_timer = eTimer()
+        try:
+            self.audio_anim_timer.callback.append(self.on_audio_anim_timer)
+        except Exception:
+            self.audio_anim_timer_conn = self.audio_anim_timer.timeout.connect(self.on_audio_anim_timer)
         self.last_activity_ts = time.time()
         self.saver_open = False
         self.saver_deadline = 0
@@ -1638,13 +1898,15 @@ class NeoRadioMain(Screen):
         self.touch_activity()
         self.prepare_pixmaps()
         self.setup_screensaver_overlay()
-        self.current_filter = self.get_default_filter()
-        self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value))
+        self.current_filter = self.get_start_filter()
+        self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value), select_url=to_text(getattr(config.plugins.neoradio, "last_url", "").value))
         self.update_cover(self.get_current_station())
         self.update_picon(self.get_picon_station())
         self.schedule_screensaver()
+        self.apply_audio_controls()
         self.timer.start(1000)
-        if config.plugins.neoradio.autoplay_last.value and config.plugins.neoradio.last_station.value:
+        self.audio_anim_timer.start(220)
+        if config.plugins.neoradio.autoplay_last.value and (config.plugins.neoradio.last_station.value or getattr(config.plugins.neoradio, "last_url", "").value):
             self.play_current()
 
     def apply_language(self):
@@ -1652,6 +1914,15 @@ class NeoRadioMain(Screen):
         self["header_title"].setText(tr('header_title'))
         self["help_label"].setText(tr('help'))
         self["status_label"].setText(tr('status_ready'))
+        self["audio_title"].setText(tr('audio_title'))
+        self["audio_balance_title"].setText(tr('audio_balance'))
+        self["audio_balance_help"].setText(tr('audio_balance_help'))
+        self["audio_treble_title"].setText(tr('audio_treble'))
+        self["audio_treble_help"].setText(tr('audio_treble_help'))
+        self["audio_bass_title"].setText(tr('audio_bass'))
+        self["audio_bass_help"].setText(tr('audio_bass_help'))
+        self["audio_help"].setText(tr('audio_help'))
+        self.update_audio_controls_labels()
         self["footer_brand"].setText(tr('by_author'))
         self["station_desc_title"].setText(tr('station_desc_title'))
         self["spectrum_title"].setText(tr('spectrum_title'))
@@ -1663,7 +1934,7 @@ class NeoRadioMain(Screen):
         self["key_red"].setText(tr('red_exit'))
         self["key_green"].setText(tr('green_play'))
         self["key_yellow"].setText(tr('yellow_fav'))
-        self["key_blue"].setText(tr('blue_search'))
+        self["key_blue"].setText(tr('blue_filter'))
         self["key_menu"].setText(tr('menu_cfg'))
         self["key_info"].setText(tr('info_details'))
         self["picon_large_title"].setText(tr('picon_title'))
@@ -1827,6 +2098,16 @@ class NeoRadioMain(Screen):
         else:
             self.maybe_open_screensaver()
 
+    def on_audio_anim_timer(self):
+        if self.audio_active_control:
+            if time.time() >= self.audio_active_until:
+                self.audio_active_control = None
+                self.audio_anim_frame = 0
+                self.update_audio_control_cards()
+                return
+            self.audio_anim_frame = (self.audio_anim_frame + 1) % 4
+            self.update_audio_control_cards()
+
     def get_available_countries(self):
         countries = []
         seen = {}
@@ -1850,59 +2131,124 @@ class NeoRadioMain(Screen):
             return format_country_filter(country)
         return tr("all")
 
+    def get_start_filter(self):
+        saved = to_text(getattr(config.plugins.neoradio.last_filter, "value", u"")).strip()
+        filters = self.get_filters()
+        if saved and saved in filters:
+            return saved
+        legacy = saved.lower()
+        if legacy in ("all", "wszystkie"):
+            return tr("all")
+        if legacy in ("favorites", "ulubione"):
+            return tr("favorites")
+        if legacy in ("recently played", "ostatnio odtwarzane"):
+            return tr("recent")
+        for prefix in (u"Kraj:", u"Country:"):
+            if saved.startswith(prefix):
+                country = normalize_country(saved.split(u":", 1)[1].strip())
+                label = format_country_filter(country)
+                if label in filters:
+                    return label
+        for prefix in (u"Język:", u"Language:"):
+            if saved.startswith(prefix):
+                lang = normalize_station_language(saved.split(u":", 1)[1].strip())
+                label = format_language_filter(lang)
+                if label in filters:
+                    return label
+        return self.get_default_filter()
+
     def get_filters(self):
-        items = [tr("all"), tr("favorites")]
+        items = [tr("all"), tr("favorites"), tr("recent")]
         countries = {}
         genres = {}
+        languages = {}
         for station in self.base_stations:
-            country = to_text(station.get("country", u"Online")).strip() or u"Online"
+            country = normalize_country(station.get("country", u"Online")) or u"Online"
             genre = to_text(station.get("genre", u"Other")).strip() or u"Other"
+            lang = normalize_station_language(station.get("language", u""), country, station.get("name", u""), station.get("group", u""), station.get("url", u""))
             countries[country] = True
             genres[genre] = True
+            languages[lang] = True
         for country in sorted(countries.keys()):
             label = format_country_filter(country)
             if label not in items:
                 items.append(label)
+        for lang in STATION_LANGUAGE_ORDER:
+            if lang in languages:
+                label = format_language_filter(lang)
+                if label not in items:
+                    items.append(label)
+        for lang in sorted(languages.keys()):
+            if lang not in STATION_LANGUAGE_ORDER:
+                label = format_language_filter(lang)
+                if label not in items:
+                    items.append(label)
         for genre in sorted(genres.keys()):
             label = format_genre_filter(genre)
             if label not in items:
                 items.append(label)
         return items
 
+    def station_matches_search(self, station, term):
+        if not term:
+            return True
+        country = normalize_country(station.get("country", u""))
+        genre = to_text(station.get("genre", u""))
+        lang = normalize_station_language(station.get("language", u""), country, station.get("name", u""), station.get("group", u""), station.get("url", u""))
+        blob = u"%s %s %s %s %s" % (
+            to_text(station.get("name", u"")),
+            genre,
+            country,
+            lang,
+            to_text(station.get("description", u"")),
+        )
+        return term in blob.lower()
+
     def apply_filters(self):
         result = []
         term = to_text(self.search_term).lower().strip()
         selected_country = None
         selected_genre = None
+        selected_language = None
         country_prefix = tr("country_filter", "").split("%s", 1)[0]
         genre_prefix = tr("genre_filter", "").split("%s", 1)[0]
+        language_prefix = tr("language_filter", "").split("%s", 1)[0]
         if country_prefix and self.current_filter.startswith(country_prefix):
-            selected_country = self.current_filter.split(u":", 1)[1].strip()
+            selected_country = normalize_country(self.current_filter.split(u":", 1)[1].strip())
+        elif language_prefix and self.current_filter.startswith(language_prefix):
+            selected_language = normalize_station_language(self.current_filter.split(u":", 1)[1].strip())
         elif genre_prefix and self.current_filter.startswith(genre_prefix):
             selected_genre = self.current_filter.split(u":", 1)[1].strip()
+        if self.current_filter == tr("recent"):
+            station_map = {}
+            for station in self.base_stations:
+                station_map[station_identity_key(station)] = station
+            for item in load_history():
+                station = station_map.get(station_identity_key(item))
+                if station and self.station_matches_search(station, term):
+                    result.append(station)
+            self.filtered_stations = result
+            return
         for station in self.base_stations:
             include = True
-            country = to_text(station.get("country", u""))
+            country = normalize_country(station.get("country", u""))
             genre = to_text(station.get("genre", u""))
+            lang = normalize_station_language(station.get("language", u""), country, station.get("name", u""), station.get("group", u""), station.get("url", u""))
             if self.current_filter == tr("favorites"):
                 include = to_text(station.get("name")) in self.favorites
             elif selected_country is not None:
                 include = country == selected_country
+            elif selected_language is not None:
+                include = lang == selected_language
             elif selected_genre is not None:
                 include = genre == selected_genre
-            if include and term:
-                blob = u"%s %s %s %s" % (
-                    to_text(station.get("name", u"")),
-                    genre,
-                    country,
-                    to_text(station.get("description", u"")),
-                )
-                include = term in blob.lower()
+            if include and not self.station_matches_search(station, term):
+                include = False
             if include:
                 result.append(station)
         self.filtered_stations = result
 
-    def refresh_list(self, select_name=None):
+    def refresh_list(self, select_name=None, select_url=None):
         self.base_stations = load_stations()
         self.favorites = load_favorites()
         valid_filters = self.get_filters()
@@ -1924,10 +2270,16 @@ class NeoRadioMain(Screen):
         self["filter_label"].setText(tr("summary", country_label, self.current_filter, len(self.filtered_stations)))
         self["search_label"].setText(u"%s: %s" % (tr("search"), (self.search_term if self.search_term else tr("none"))))
         index = 0
-        if select_name and self.filtered_stations:
-            names = [to_text(x.get("name")) for x in self.filtered_stations]
-            if select_name in names:
-                index = names.index(select_name)
+        if self.filtered_stations:
+            if select_url:
+                url_key = normalize_stream_url_key(select_url)
+                urls = [normalize_stream_url_key(x.get("url", u"")) for x in self.filtered_stations]
+                if url_key in urls:
+                    index = urls.index(url_key)
+            if index == 0 and select_name:
+                names = [to_text(x.get("name")) for x in self.filtered_stations]
+                if select_name in names:
+                    index = names.index(select_name)
         try:
             self["station_list"].moveToIndex(index)
         except Exception:
@@ -2318,6 +2670,11 @@ class NeoRadioMain(Screen):
         self.update_picon(self.get_picon_station())
         config.plugins.neoradio.last_station.value = name
         config.plugins.neoradio.last_station.save()
+        try:
+            config.plugins.neoradio.last_url.value = to_text(station.get("url", u""))
+            config.plugins.neoradio.last_url.save()
+        except Exception:
+            pass
         config.plugins.neoradio.last_filter.value = self.current_filter
         config.plugins.neoradio.last_filter.save()
         configfile.save()
@@ -2387,7 +2744,19 @@ class NeoRadioMain(Screen):
         ref.setName(to_text(station.get("name", u"NeoRadio")))
         self.current_service = ref
         self.playing_station_data = station
+        try:
+            config.plugins.neoradio.last_station.value = to_text(station.get("name", u""))
+            config.plugins.neoradio.last_station.save()
+            config.plugins.neoradio.last_url.value = to_text(station.get("url", u""))
+            config.plugins.neoradio.last_url.save()
+            config.plugins.neoradio.last_filter.value = self.current_filter
+            config.plugins.neoradio.last_filter.save()
+            configfile.save()
+            remember_played_station(station)
+        except Exception:
+            pass
         self.session.nav.playService(ref)
+        self.apply_audio_controls()
         self.schedule_screensaver()
         self.last_meta_blob = text_type("")
         self["status_label"].setText(tr("status_prefix", tr("playing", to_text(station.get("name", u"")))))
@@ -2398,6 +2767,321 @@ class NeoRadioMain(Screen):
         self.update_picon(station)
         self.start_network_metadata_worker(station, stream_url)
         self["spectrum_label"].setText(self.spectrum_frames[self.visualizer_idx % len(self.spectrum_frames)])
+
+    def clamp_audio_value(self, value, min_value=-10, max_value=10):
+        try:
+            value = int(to_text(value).strip())
+        except Exception:
+            value = 0
+        return max(int(min_value), min(int(max_value), value))
+
+    def get_config_audio_value(self, name, default_value=0):
+        try:
+            item = getattr(config.plugins.neoradio, name)
+            return self.clamp_audio_value(getattr(item, 'value', default_value))
+        except Exception:
+            return self.clamp_audio_value(default_value)
+
+    def save_audio_config_value(self, name, value):
+        try:
+            item = getattr(config.plugins.neoradio, name)
+            item.value = to_text(self.clamp_audio_value(value))
+            item.save()
+            return True
+        except Exception:
+            return False
+
+    def save_audio_controls(self):
+        self.save_audio_config_value("audio_balance", self.audio_balance_value)
+        self.save_audio_config_value("audio_treble", self.audio_treble_value)
+        self.save_audio_config_value("audio_bass", self.audio_bass_value)
+        try:
+            configfile.save()
+        except Exception:
+            pass
+
+    def signed_audio_value(self, value):
+        value = self.clamp_audio_value(value)
+        if value > 0:
+            return u"+%d" % value
+        return u"%d" % value
+
+    def make_audio_pot_bar(self, value, min_value=-10, max_value=10, width=None):
+        width = width or (13 if self.is_fhd else 9)
+        value = self.clamp_audio_value(value, min_value, max_value)
+        try:
+            pos = int(round(float(value - min_value) / float(max_value - min_value) * float(width - 1)))
+        except Exception:
+            pos = width // 2
+        pos = max(0, min(width - 1, pos))
+        center = width // 2
+        chars = [u"-"] * width
+        if 0 <= center < width:
+            chars[center] = u"|"
+        if pos > center:
+            for idx in range(center + 1, pos):
+                chars[idx] = u"="
+        elif pos < center:
+            for idx in range(pos + 1, center):
+                chars[idx] = u"="
+        chars[pos] = u"o"
+        return u"[" + u"".join(chars) + u"]"
+
+    def audio_control_value_text(self, control_name):
+        if control_name == 'balance':
+            bal_value = self.clamp_audio_value(self.audio_balance_value)
+            if bal_value < 0:
+                return u"L%d" % abs(bal_value)
+            if bal_value > 0:
+                return u"R%d" % bal_value
+            return u"C"
+        if control_name == 'treble':
+            return self.signed_audio_value(self.audio_treble_value)
+        return self.signed_audio_value(self.audio_bass_value)
+
+    def ensure_audio_ui_cache_dir(self):
+        try:
+            if not os.path.isdir(AUDIO_UI_CACHE_DIR):
+                os.makedirs(AUDIO_UI_CACHE_DIR)
+        except Exception:
+            pass
+
+    def get_audio_theme_value(self):
+        value = to_text(getattr(config.plugins.neoradio.audio_theme, 'value', 'dark')).strip().lower()
+        if value not in ('dark', 'blue'):
+            value = 'dark'
+        return value
+
+    def get_audio_card_asset_path(self, control_name, value, active=False):
+        theme = self.get_audio_theme_value()
+        mode = 'fhd' if self.is_fhd else 'hd'
+        value = self.clamp_audio_value(value)
+        if active and self.audio_active_control == control_name:
+            frame = self.audio_anim_frame % 4
+            state = 'active%d' % frame
+        else:
+            state = 'inactive'
+        filename = 'audio_%s_%s_%s_%s_%+03d.png' % (mode, theme, control_name, state, value)
+        return os.path.join(AUDIO_UI_ASSET_DIR, filename)
+
+    def set_audio_card_pixmap(self, widget_name, image_path):
+        if not image_path or not os.path.exists(image_path):
+            return False
+        try:
+            self[widget_name].instance.setPixmapFromFile(image_path)
+            return True
+        except Exception:
+            return False
+
+    def update_audio_control_cards(self):
+        mapping = [
+            ('balance', 'audio_balance_card', self.audio_balance_value),
+            ('treble', 'audio_treble_card', self.audio_treble_value),
+            ('bass', 'audio_bass_card', self.audio_bass_value),
+        ]
+        for control_name, widget_name, value in mapping:
+            path = self.get_audio_card_asset_path(control_name, value, active=(self.audio_active_control == control_name))
+            self.set_audio_card_pixmap(widget_name, path)
+
+    def update_audio_controls_labels(self):
+        try:
+            bal_value = self.clamp_audio_value(self.audio_balance_value)
+            bal_side = u"C"
+            if bal_value < 0:
+                bal_side = u"L%d" % abs(bal_value)
+            elif bal_value > 0:
+                bal_side = u"R%d" % bal_value
+            self["audio_balance"].setText(u"%s %s" % (self.make_audio_pot_bar(bal_value), bal_side))
+            self["audio_treble"].setText(u"%s %s" % (self.make_audio_pot_bar(self.audio_treble_value), self.signed_audio_value(self.audio_treble_value)))
+            self["audio_bass"].setText(u"%s %s" % (self.make_audio_pot_bar(self.audio_bass_value), self.signed_audio_value(self.audio_bass_value)))
+        except Exception:
+            pass
+        self.update_audio_control_cards()
+
+    def audio_summary_text(self):
+        bal = self.clamp_audio_value(self.audio_balance_value)
+        if bal < 0:
+            bal_text = u"L%d" % abs(bal)
+        elif bal > 0:
+            bal_text = u"R%d" % bal
+        else:
+            bal_text = u"C"
+        return u"%s %s | %s %s | %s %s" % (tr('audio_balance'), bal_text, tr('audio_treble'), self.signed_audio_value(self.audio_treble_value), tr('audio_bass'), self.signed_audio_value(self.audio_bass_value))
+
+    def get_audio_volume_controller(self):
+        if eDVBVolumecontrol is None:
+            return None
+        try:
+            return eDVBVolumecontrol.getInstance()
+        except Exception:
+            return None
+
+    def get_current_audio_volume(self):
+        controller = self.get_audio_volume_controller()
+        if controller is None:
+            return None
+        try:
+            value = int(controller.getVolume())
+            return max(0, min(100, value))
+        except Exception:
+            return None
+
+    def apply_audio_balance(self):
+        controller = self.get_audio_volume_controller()
+        if controller is None:
+            return False
+        current_volume = self.get_current_audio_volume()
+        if self.audio_master_volume is None:
+            self.audio_master_volume = current_volume if current_volume is not None else 50
+        volume = self.audio_master_volume
+        if current_volume is not None and self.clamp_audio_value(self.audio_balance_value) == 0:
+            volume = current_volume
+            self.audio_master_volume = current_volume
+        volume = max(0, min(100, int(volume)))
+        balance = self.clamp_audio_value(self.audio_balance_value)
+        left = volume
+        right = volume
+        if balance < 0:
+            right = int(round(float(volume) * float(10 + balance) / 10.0))
+        elif balance > 0:
+            left = int(round(float(volume) * float(10 - balance) / 10.0))
+        left = max(0, min(100, left))
+        right = max(0, min(100, right))
+        try:
+            controller.setVolume(left, right)
+            self.audio_last_left = left
+            self.audio_last_right = right
+            return True
+        except Exception:
+            return False
+
+    def write_audio_proc_value(self, paths, value, percent):
+        for path in paths:
+            try:
+                if not os.path.exists(path):
+                    continue
+            except Exception:
+                continue
+            for payload in (to_text(value), to_text(percent)):
+                try:
+                    handle = open(path, 'w')
+                    handle.write(payload)
+                    handle.close()
+                    return True
+                except Exception:
+                    try:
+                        handle.close()
+                    except Exception:
+                        pass
+        return False
+
+    def run_amixer_control(self, control_name, percent):
+        if subprocess is None:
+            return False
+        devnull = None
+        try:
+            devnull = open(os.devnull, 'w')
+            for args in (
+                ['amixer', '-q', 'sset', control_name, '%d%%' % int(percent)],
+                ['amixer', '-q', '-c', '0', 'sset', control_name, '%d%%' % int(percent)],
+            ):
+                try:
+                    if subprocess.call(args, stdout=devnull, stderr=devnull) == 0:
+                        return True
+                except Exception:
+                    pass
+        finally:
+            try:
+                if devnull:
+                    devnull.close()
+            except Exception:
+                pass
+        return False
+
+    def apply_audio_tone(self, tone_name):
+        tone_name = to_text(tone_name).strip().lower()
+        value = self.audio_bass_value if tone_name == 'bass' else self.audio_treble_value
+        value = self.clamp_audio_value(value)
+        percent = int(round(float(value + 10) * 5.0))
+        percent = max(0, min(100, percent))
+        if tone_name == 'bass':
+            if self.write_audio_proc_value(['/proc/stb/audio/bass', '/proc/stb/audio/bass_level'], value, percent):
+                return True
+            controls = ['Bass', 'bass', 'Bass Playback Volume', 'Tone Control - Bass']
+        else:
+            if self.write_audio_proc_value(['/proc/stb/audio/treble', '/proc/stb/audio/treble_level'], value, percent):
+                return True
+            controls = ['Treble', 'treble', 'Treble Playback Volume', 'Tone Control - Treble']
+        for control in controls:
+            if self.run_amixer_control(control, percent):
+                return True
+        return False
+
+    def apply_audio_controls(self):
+        self.apply_audio_balance()
+        self.apply_audio_tone('treble')
+        self.apply_audio_tone('bass')
+        self.update_audio_controls_labels()
+
+    def set_active_audio_control(self, control_name=None, duration=3):
+        self.audio_active_control = control_name
+        self.audio_anim_frame = 0
+        try:
+            self.audio_active_until = time.time() + max(1, int(duration))
+        except Exception:
+            self.audio_active_until = 0
+        self.update_audio_controls_labels()
+
+    def adjust_audio_control(self, control_name, delta):
+        if self.consume_screensaver_key():
+            return
+        self.touch_activity()
+        control_name = to_text(control_name).strip().lower()
+        if control_name == 'balance':
+            self.audio_balance_value = self.clamp_audio_value(self.audio_balance_value + int(delta))
+            self.apply_audio_balance()
+        elif control_name == 'treble':
+            self.audio_treble_value = self.clamp_audio_value(self.audio_treble_value + int(delta))
+            self.apply_audio_tone('treble')
+        elif control_name == 'bass':
+            self.audio_bass_value = self.clamp_audio_value(self.audio_bass_value + int(delta))
+            self.apply_audio_tone('bass')
+        self.save_audio_controls()
+        self.update_audio_controls_labels()
+        self["status_label"].setText(tr("status_prefix", tr("audio_status", self.audio_summary_text())))
+
+    def audio_balance_left(self):
+        self.adjust_audio_control('balance', -1)
+
+    def audio_balance_right(self):
+        self.adjust_audio_control('balance', 1)
+
+    def audio_treble_down(self):
+        self.adjust_audio_control('treble', -1)
+
+    def audio_treble_up(self):
+        self.adjust_audio_control('treble', 1)
+
+    def audio_bass_down(self):
+        self.adjust_audio_control('bass', -1)
+
+    def audio_bass_up(self):
+        self.adjust_audio_control('bass', 1)
+
+    def audio_reset(self):
+        if self.consume_screensaver_key():
+            return
+        self.touch_activity()
+        self.audio_balance_value = 0
+        self.audio_treble_value = 0
+        self.audio_bass_value = 0
+        current_volume = self.get_current_audio_volume()
+        if current_volume is not None:
+            self.audio_master_volume = current_volume
+        self.apply_audio_controls()
+        self.set_active_audio_control(None, 1)
+        self.save_audio_controls()
+        self["status_label"].setText(tr("status_prefix", tr("audio_reset_status")))
 
     def toggle_favorite(self):
         if self.consume_screensaver_key():
@@ -2541,13 +3225,22 @@ class NeoRadioMain(Screen):
         text = tr("details_text", PLUGIN_VERSION, to_text(station.get("name", u"-")), to_text(station.get("genre", u"-")), to_text(station.get("country", u"-")), to_text(station.get("bitrate", u"-")), to_text(station.get("description", u"-")), to_text(station.get("url", u"-")), to_text(station.get("homepage", u"-")))
         self.session.open(MessageBox, text, MessageBox.TYPE_INFO)
 
-    def open_main_menu(self):
+    def open_filter_menu(self):
         if self.consume_screensaver_key():
             return
         self.touch_activity()
         options = []
         for item in self.get_filters():
-            options.append((tr("menu_filter", item), ("filter", item)))
+            options.append((item, ("filter", item)))
+        self.session.openWithCallback(self.menu_callback, ChoiceBox, title=tr("filter_title"), list=options)
+
+    def open_main_menu(self):
+        if self.consume_screensaver_key():
+            return
+        self.touch_activity()
+        options = []
+        options.append((tr("menu_choose_filter"), ("choose_filter", None)))
+        options.append((tr("menu_search"), ("open_search", None)))
         options.append((tr("menu_clear_search"), ("search", text_type(""))))
         options.append((tr("menu_keep", tr("yes") if config.plugins.neoradio.keep_playing.value else tr("no")), ("toggle_keep", None)))
         options.append((tr("menu_autoplay", tr("yes") if config.plugins.neoradio.autoplay_last.value else tr("no")), ("toggle_autoplay", None)))
@@ -2556,8 +3249,10 @@ class NeoRadioMain(Screen):
         if len(picon_value) > 52:
             picon_value = picon_value[:49] + u"..."
         options.append((tr("menu_country", country_value), ("choose_country", None)))
+        options.append((tr("menu_station_language", tr("all")), ("choose_station_language", None)))
         options.append((tr("menu_lang", language_label(config.plugins.neoradio.ui_language.value)), ("choose_language", None)))
         options.append((tr("menu_saver", screensaver_timeout_label()), ("choose_screensaver", None)))
+        options.append((tr("menu_audio_theme", audio_theme_label()), ("choose_audio_theme", None)))
         options.append((tr("menu_picons", picon_value), ("picon_paths", None)))
         options.append((tr("menu_github_check"), ("github_check", None)))
         options.append((tr("menu_reload"), ("reload", None)))
@@ -2574,6 +3269,10 @@ class NeoRadioMain(Screen):
         if action == "filter":
             self.current_filter = to_text(payload)
             self.refresh_list()
+        elif action == "choose_filter":
+            self.open_filter_menu()
+        elif action == "open_search":
+            self.open_search()
         elif action == "search":
             self.search_term = text_type("")
             self.refresh_list()
@@ -2591,8 +3290,12 @@ class NeoRadioMain(Screen):
             self.choose_country()
         elif action == "choose_language":
             self.choose_language()
+        elif action == "choose_station_language":
+            self.choose_station_language()
         elif action == "choose_screensaver":
             self.choose_screensaver()
+        elif action == "choose_audio_theme":
+            self.choose_audio_theme()
         elif action == "picon_paths":
             current = to_text(config.plugins.neoradio.picon_paths.value)
             if VirtualKeyBoard is None:
@@ -2603,7 +3306,7 @@ class NeoRadioMain(Screen):
             self.check_github_updates()
         elif action == "reload":
             self.clear_picon_cache()
-            self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value))
+            self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value), select_url=to_text(getattr(config.plugins.neoradio, "last_url", "").value))
             self.update_picon(self.get_picon_station())
             self["status_label"].setText(tr("status_prefix", tr("reloaded")))
         elif action == "about":
@@ -2630,6 +3333,39 @@ class NeoRadioMain(Screen):
         else:
             self["status_label"].setText(tr("status_prefix", tr("country_all")))
 
+    def get_available_station_languages(self):
+        seen = {}
+        result = []
+        for station in self.base_stations:
+            lang = normalize_station_language(station.get("language", u""), station.get("country", u""), station.get("name", u""), station.get("group", u""), station.get("url", u""))
+            if lang and lang not in seen:
+                seen[lang] = True
+        for lang in STATION_LANGUAGE_ORDER:
+            if lang in seen:
+                result.append(lang)
+        for lang in sorted(seen.keys()):
+            if lang not in result:
+                result.append(lang)
+        return result
+
+    def choose_station_language(self):
+        options = [(tr("all"), u"")]
+        for lang in self.get_available_station_languages():
+            options.append((lang, lang))
+        self.session.openWithCallback(self.station_language_choice_callback, ChoiceBox, title=tr("choose_station_language"), list=options)
+
+    def station_language_choice_callback(self, answer):
+        if not answer:
+            return
+        value = normalize_station_language(answer[1]) if to_text(answer[1]).strip() else u""
+        self.current_filter = format_language_filter(value) if value else tr("all")
+        config.plugins.neoradio.last_filter.value = self.current_filter
+        config.plugins.neoradio.last_filter.save()
+        configfile.save()
+        self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value), select_url=to_text(getattr(config.plugins.neoradio, "last_url", "").value))
+        if value:
+            self["status_label"].setText(tr("status_prefix", tr("station_language_set", value)))
+
     def choose_language(self):
         options = [(tr("auto"), "auto"), (tr("polish"), "pl"), (tr("english"), "en")]
         self.session.openWithCallback(self.language_choice_callback, ChoiceBox, title=tr("choose_language"), list=options)
@@ -2643,7 +3379,7 @@ class NeoRadioMain(Screen):
         configfile.save()
         self.apply_language()
         self.current_filter = self.get_default_filter() if self.current_filter in (tr("all"), tr("favorites")) else self.current_filter
-        self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value))
+        self.refresh_list(select_name=to_text(config.plugins.neoradio.last_station.value), select_url=to_text(getattr(config.plugins.neoradio, "last_url", "").value))
         self["status_label"].setText(tr("status_prefix", tr("lang_set", language_label(value))))
 
     def choose_screensaver(self):
@@ -2659,6 +3395,32 @@ class NeoRadioMain(Screen):
         configfile.save()
         self.touch_activity()
         self["status_label"].setText(tr("status_prefix", tr("saver_set", screensaver_timeout_label(int(value)))))
+
+    def choose_audio_theme(self):
+        options = [(tr("theme_dark_premium"), "dark"), (tr("theme_blue_premium"), "blue")]
+        self.session.openWithCallback(self.audio_theme_choice_callback, ChoiceBox, title=tr("choose_audio_theme"), list=options)
+
+    def audio_theme_choice_callback(self, answer):
+        if not answer:
+            return
+        value = to_text(answer[1]).strip().lower() or 'dark'
+        if value not in ('dark', 'blue'):
+            value = 'dark'
+        config.plugins.neoradio.audio_theme.value = value
+        config.plugins.neoradio.audio_theme.save()
+        configfile.save()
+        self.update_audio_control_cards()
+        self["status_label"].setText(tr("status_prefix", tr("theme_set", audio_theme_label(value))))
+
+    def audio_toggle_theme_shortcut(self):
+        current = to_text(getattr(config.plugins.neoradio.audio_theme, 'value', 'dark')).strip().lower()
+        value = 'blue' if current == 'dark' else 'dark'
+        config.plugins.neoradio.audio_theme.value = value
+        config.plugins.neoradio.audio_theme.save()
+        configfile.save()
+        self.touch_activity()
+        self.update_audio_control_cards()
+        self["status_label"].setText(tr("status_prefix", tr("theme_set", audio_theme_label(value))))
 
     def github_url_callback(self, text=None):
         if text is None:
@@ -2713,14 +3475,10 @@ class NeoRadioMain(Screen):
     def install_github_update(self, ipk_url, remote_version):
         self.touch_activity()
         self["status_label"].setText(tr("status_prefix", tr("github_installing", remote_version)))
-        safe_url = to_text(ipk_url).strip()
-        cleanup_cmd = cleanup_tmp_install_shell()
-        quoted_tmp = shell_quote(UPDATE_TEMP_IPK)
-        quoted_url = shell_quote(safe_url)
-        cmd = '%(cleanup)s; wget --no-check-certificate -O %(tmp)s %(url)s; rc=$?; if [ $rc -eq 0 ]; then opkg install --force-reinstall %(tmp)s; rc=$?; fi; %(cleanup)s; exit $rc' % {
-            'cleanup': cleanup_cmd,
-            'tmp': quoted_tmp,
-            'url': quoted_url,
+        safe_url = to_text(ipk_url).replace('"', '%22')
+        cmd = 'rm -f /tmp/neoradio_update.ipk /tmp/enigma2-plugin-extensions-neoradio*.ipk /tmp/neoradio_repo*.tar.gz /tmp/NeoRadio*.zip; wget --no-check-certificate -O "%(tmp)s" "%(url)s" && opkg install --force-reinstall "%(tmp)s"; r=$?; rm -f "%(tmp)s" /tmp/enigma2-plugin-extensions-neoradio*.ipk /tmp/neoradio_repo*.tar.gz /tmp/NeoRadio*.zip; exit $r' % {
+            'tmp': UPDATE_TEMP_IPK,
+            'url': safe_url,
         }
         self.github_update_info['version'] = remote_version
         if ComponentsConsole is not None:
@@ -2734,7 +3492,11 @@ class NeoRadioMain(Screen):
         self.github_install_finished(text_type(''), retval, None)
 
     def github_install_finished(self, result, retval, extra_args=None):
-        cleanup_tmp_install_files()
+        try:
+            if os.path.exists(UPDATE_TEMP_IPK):
+                os.remove(UPDATE_TEMP_IPK)
+        except Exception:
+            pass
         remote_version = to_text((self.github_update_info or {}).get('version', u'?'))
         if retval == 0:
             self.session.openWithCallback(self.github_restart_callback, MessageBox, tr("github_install_ok", remote_version), MessageBox.TYPE_YESNO)

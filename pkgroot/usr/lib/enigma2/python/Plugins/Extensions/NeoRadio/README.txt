@@ -1,1 +1,7 @@
-NeoRadio 2.0 - Enigma2 internet radio plugin. Station database refreshed from HDF radio bouquet 20.06.2026. Temporary install files in /tmp are cleaned after install/update.
+NeoRadio Online 2.0
+Stacje z bukietu HDF Radio Streams, deduplikacja Polska/Poland/Polen, filtry języków stacji, osobny niebieski przycisk filtrów oraz zapamiętywanie ostatniej stacji i historii odtwarzania.
+
+
+1.3.9: Dodano trzy potencjometry audio na głównej stronie radia: balans L/P, wysokie tony i niskie tony. Skróty: 1/3 balans, 4/6 wysokie, 7/9 niskie, 5 reset.
+
+2.0: Wersja zbudowana na bazie NeoRadio 1.3.9. Zachowano rozbudowane funkcje 1.3.9, zaktualizowano bazę stacji z pliku userbouquet.iptv_radio.radio i dodano czyszczenie plików instalacyjnych NeoRadio z /tmp po instalacji.

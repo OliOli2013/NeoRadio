@@ -5,4 +5,4 @@ Maintainer: Paweł Pawełek <aio-iptv@wp.pl>
 Section: base
 Priority: optional
 Depends: enigma2
-Description: NeoRadio internet radio plugin for Enigma2 with refreshed station database
+Description: NeoRadio internet radio plugin for Enigma2

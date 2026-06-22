@@ -1,8 +1,8 @@
 {
-  "name": "NeoRadio",
-  "version": "2.0",
+  "changelog": "NeoRadio 2.0: wersja zbudowana na bazie 1.3.9. Zachowano rozbudowane funkcje 1.3.9, dodano aktualizację bazy stacji z pliku userbouquet.iptv_radio.radio oraz czyszczenie plików instalacyjnych NeoRadio z /tmp po instalacji.",
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
-  "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
+  "name": "NeoRadio",
   "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
-  "changelog": "Station database refreshed from HDF radio bouquet update 20.06.2026, added 565 new stations, removed invalid local placeholder entries, added post-install /tmp cleanup, hardened GitHub IPK update cleanup, and minor translation/path cleanup fixes."
+  "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
+  "version": "2.0"
 }

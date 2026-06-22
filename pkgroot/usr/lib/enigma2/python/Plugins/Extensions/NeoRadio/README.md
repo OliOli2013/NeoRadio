@@ -2,14 +2,29 @@
 
 NeoRadio is a modern Enigma2 internet radio plugin focused on fast playback, readable metadata, SAT/IPTV picon support, bilingual Polish/English UI, and GitHub-based updates.
 
+
 ## What's new in 2.0
 
-- refreshed the built-in station database using `userbouquet.iptv_radio.radio` update from 20.06.2026
-- added 565 new unique station entries from the supplied HDF radio bouquet
-- added post-install cleanup for temporary NeoRadio installation files in `/tmp`
-- hardened GitHub update installation by cleaning temporary IPK files before and after update
-- removed 70 invalid placeholder/local test station entries that could not play
-- fixed English Favorites label and removed incorrect picon search typo paths
+- rebuilt from the full NeoRadio 1.3.9 package, preserving the expanded audio controls and UI assets
+- updated the built-in radio database using the supplied `userbouquet.iptv_radio.radio` bouquet from HDF Radio Streams
+- added installer cleanup for temporary NeoRadio installation/update files in `/tmp`
+- removed technical placeholder streams such as `127.0.0.1/hdfradio` from the packaged station database
+
+## What's new in 1.3.9
+
+- added three audio potentiometers on the main radio screen: left/right balance, treble, and bass
+- added direct remote control shortcuts: `1/3` balance, `4/6` treble, `7/9` bass, `5` reset
+- added persistent audio settings in Enigma2 config while keeping the existing station list, metadata, picons, screensaver, and GitHub update behavior unchanged
+
+## What's new in 1.3.4
+
+- imported stations from the supplied `userbouquet.iptv_radio.radio` bouquet
+- normalized duplicate country/bouquet naming such as `Polska`, `Poland`, and `Polen`
+- added station language filters: Polish, Arabic, French, German, Italian, and Other
+- added a separate Blue-button filters/bouquets screen so the Menu button opens settings immediately
+- restored the last selected filter and last station URL on startup
+- added persistent recently played history in `/etc/enigma2/neoradio_history.json`
+- kept existing options such as keep-playing, autoplay, picons, screensaver, and GitHub update URL persistent through Enigma2 config
 
 ## What's new in 1.3.3
 
@@ -80,7 +95,7 @@ The plugin checks `manifest.json` and expects a payload like this:
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
   "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
-  "changelog": "Station database refreshed from HDF radio bouquet update 20.06.2026, added post-install /tmp cleanup, hardened GitHub IPK update cleanup, and minor translation/path cleanup fixes."
+  "changelog": "Added stronger ICY metadata parsing, optional per-station JSON/text metadata endpoints, improved Now Playing fallback logic, refreshed default artwork, and cleaner metadata presentation in the UI."
 }
 ```
 

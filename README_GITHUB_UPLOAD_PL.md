@@ -1,38 +1,30 @@
-# NeoRadio 2.0 — pliki do aktualizacji GitHub
+# NeoRadio 2.0 - instrukcja aktualizacji GitHub
 
-To jest paczka PATCH ONLY. Nie kasuj starych plików z repozytorium.
-Kopiuj pliki na istniejące repo z nadpisaniem.
+Ta paczka jest przygotowana na bazie pełnej wersji **NeoRadio 1.3.9**, a nie starej 1.3.3.
 
-## Najważniejsze pliki
+## Wrzucenie do repo
 
-1. `manifest.json` — główny manifest aktualizacji, wersja 2.0.
-2. `enigma2-plugin-extensions-neoradio_all.ipk` — paczka latest do linków aktualizacji.
-3. `enigma2-plugin-extensions-neoradio_2.0_all.ipk` — paczka wersji 2.0.
-4. `release/enigma2-plugin-extensions-neoradio_all.ipk` — kopia paczki w folderze `release`.
-5. `release/enigma2-plugin-extensions-neoradio_2.0_all.ipk` — kopia wersji 2.0 w folderze `release`.
-6. `releases/enigma2-plugin-extensions-neoradio_all.ipk` — dodatkowa kopia dla folderu `releases`, jeśli takiego używasz na GitHubie.
-7. `releases/enigma2-plugin-extensions-neoradio_2.0_all.ipk` — dodatkowa kopia wersji 2.0 dla folderu `releases`.
-8. `pkgroot/` — aktualne pliki wtyczki.
+1. Rozpakuj ZIP.
+2. Skopiuj zawartość do istniejącego repo `NeoRadio` z nadpisaniem plików.
+3. Nie kasuj pozostałych starych plików repo.
+4. Sprawdź w GitKraken, żeby nie było czerwonych usunięć typu `README.txt`, `LICENSE`, `docs/`, `build/` itd.
+5. Commit: `NeoRadio 2.0 update from 1.3.9 base`.
+6. Push do `main`.
 
-## Ważne
+## GitHub Releases
 
-Jeżeli na GitHubie masz folder `release`, wrzuć pliki do `release`.
-Jeżeli używasz folderu `releases`, wrzuć pliki do `releases`.
-W tej paczce są oba warianty: `release/` i `releases/`, żeby niczego nie brakowało.
+Po push utwórz nowy release:
 
-GitHub Releases, czyli zakładka „Releases” na stronie repo, nie uzupełnia się sama po skopiowaniu plików do repozytorium. Tam trzeba ręcznie utworzyć tag/release `v2.0` i dodać plik IPK jako asset, jeśli chcesz go mieć widocznego w zakładce Releases.
+- tag: `v2.0`
+- title: `NeoRadio v2.0`
+- target: `main`
+- asset główny: `enigma2-plugin-extensions-neoradio_all.ipk`
+- asset dodatkowy: `enigma2-plugin-extensions-neoradio_2.0_all.ipk`
 
-## Przed commitem sprawdź
+## Dane techniczne
 
-W GitKraken nie może być czerwonego usunięcia plików typu:
-- `README.txt`
-- `README.md`
-- `LICENSE`
-- `.gitignore`
-- `docs/`
-- `build/`
-- inne stare pliki repozytorium, których nie chcesz usuwać.
-
-Commit przykładowy:
-
-`NeoRadio 2.0 update`
+- baza startowa: `enigma2-plugin-extensions-neoradio_1.3.9_all.ipk`
+- finalna wersja: `2.0`
+- stacje po aktualizacji: `5843`
+- dodane nowe stacje z bukietu: `148`
+- postinst czyści tymczasowe pliki NeoRadio z `/tmp`
