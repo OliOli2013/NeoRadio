@@ -1,17 +1,6 @@
-# NeoRadio 1.3.9
-
-NeoRadio is a modern Enigma2 internet radio plugin focused on fast playback, readable metadata, SAT/IPTV picon support, bilingual Polish/English UI, and GitHub-based updates.
-
-
-## What's new in 1.3.9
-
-- added three audio potentiometers on the main radio screen: left/right balance, treble, and bass
-- added direct remote control shortcuts: `1/3` balance, `4/6` treble, `7/9` bass, `5` reset
-- added persistent audio settings in Enigma2 config while keeping the existing station list, metadata, picons, screensaver, and GitHub update behavior unchanged
-
 ## What's new in 1.3.4
 
-- imported stations from the supplied `userbouquet.iptv_radio.radio` bouquet
+- imported stations from the supplied
 - normalized duplicate country/bouquet naming such as `Polska`, `Poland`, and `Polen`
 - added station language filters: Polish, Arabic, French, German, Italian, and Other
 - added a separate Blue-button filters/bouquets screen so the Menu button opens settings immediately
