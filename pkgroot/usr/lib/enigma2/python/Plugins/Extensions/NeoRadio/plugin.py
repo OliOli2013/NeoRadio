@@ -115,6 +115,10 @@ RADIO_BROWSER_DEFAULT_LIMIT = 100000
 RADIO_BROWSER_ONLY_MODE = True
 RADIO_BROWSER_AUTO_ON_EMPTY = True
 SAFE_VOLUME_MODE = True
+# HOTFIX v2.1: do not hook Enigma2 volume keys and do not touch the system volume controller.
+# Some images/RC drivers can lose Volume+/Volume- after repeated plugin openings when a plugin grabs VolumeActions.
+DISABLE_VOLUME_KEY_HOOK = True
+DISABLE_DIRECT_VOLUME_CONTROL = True
 NETWORK_META_POLL_SECS = 18
 NETWORK_META_TIMEOUT = 7
 NETWORK_META_READ_LIMIT = 262144
@@ -2161,7 +2165,7 @@ class NeoRadioMain(Screen):
             pass
 
         self["actions"] = ActionMap(
-            ["OkCancelActions", "ColorActions", "DirectionActions", "MenuActions", "InfobarActions", "NumberActions", "VolumeActions", "GlobalActions"],
+            ["OkCancelActions", "ColorActions", "DirectionActions", "MenuActions", "InfobarActions", "NumberActions"],
             {
                 "ok": self.play_current,
                 "cancel": self.close_plugin,
@@ -2183,9 +2187,6 @@ class NeoRadioMain(Screen):
                 "9": self.audio_bass_up,
                 "0": self.audio_toggle_theme_shortcut,
                 "5": self.audio_reset,
-                "volumeUp": self.volume_up,
-                "volumeDown": self.volume_down,
-                "volumeMute": self.volume_mute,
             },
             -1,
         )
@@ -3242,12 +3243,21 @@ class NeoRadioMain(Screen):
             pass
 
     def volume_up(self):
+        # Unused in volume-safe mode. Physical Volume+ is handled globally by Enigma2.
+        if DISABLE_VOLUME_KEY_HOOK:
+            return
         self.adjust_system_volume(5)
 
     def volume_down(self):
+        # Unused in volume-safe mode. Physical Volume- is handled globally by Enigma2.
+        if DISABLE_VOLUME_KEY_HOOK:
+            return
         self.adjust_system_volume(-5)
 
     def volume_mute(self):
+        # Unused in volume-safe mode. Physical Mute is handled globally by Enigma2.
+        if DISABLE_VOLUME_KEY_HOOK:
+            return
         if self.consume_screensaver_key():
             return
         self.touch_activity()
@@ -3466,6 +3476,11 @@ class NeoRadioMain(Screen):
         return u"%s %s | %s %s | %s %s" % (tr('audio_balance'), bal_text, tr('audio_treble'), self.signed_audio_value(self.audio_treble_value), tr('audio_bass'), self.signed_audio_value(self.audio_bass_value))
 
     def get_audio_volume_controller(self):
+        # HOTFIX v2.1: NeoRadio must not take ownership of the receiver volume system.
+        # Volume+/Volume-/Mute are left to Enigma2 global handling to avoid RC lockups
+        # after repeated plugin openings on some images/drivers.
+        if DISABLE_DIRECT_VOLUME_CONTROL:
+            return None
         if eDVBVolumecontrol is None:
             return None
         try:
@@ -3487,6 +3502,10 @@ class NeoRadioMain(Screen):
             return None
 
     def apply_audio_balance(self):
+        # HOTFIX v2.1: never call eDVBVolumecontrol.setVolume() from NeoRadio.
+        # The plugin may still show audio control cards, but system volume remains owned by Enigma2.
+        if DISABLE_DIRECT_VOLUME_CONTROL:
+            return True
         controller = self.get_audio_volume_controller()
         if controller is None:
             return False

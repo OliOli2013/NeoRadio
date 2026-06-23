@@ -1,7 +1,7 @@
 {
   "name": "NeoRadio",
   "version": "2.1",
-  "changelog": "NeoRadio v2.1 HOTFIX: tryb wyłącznie Radio-Browser Online, automatyczne pobieranie listy kraju według języka/locale tunera przy pierwszym uruchomieniu po instalacji, usunięto prefiks [kraj] z nazw na liście, poprawiono pobieranie i wyświetlanie piconów/favicon z Radio-Browser, wbudowany stations.json pozostaje pusty.",
+  "changelog": "NeoRadio v2.1 HOTFIX: tryb Volume Safe - NeoRadio nie przechwytuje już klawiszy Volume+/Volume-/Mute i nie steruje bezpośrednio systemową głośnością. Regulacja głośności pozostaje po stronie Enigma2. Pozostawiono tryb Radio-Browser Only i automatyczne pobieranie stacji online.",
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
   "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest"
