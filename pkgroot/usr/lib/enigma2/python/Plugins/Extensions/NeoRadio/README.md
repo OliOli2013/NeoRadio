@@ -1,22 +1,15 @@
-# NeoRadio 2.0
+# NeoRadio 2.1
 
 NeoRadio is a modern Enigma2 internet radio plugin focused on fast playback, readable metadata, SAT/IPTV picon support, bilingual Polish/English UI, and GitHub-based updates.
 
 
-## What's new in 2.0
-
-- rebuilt from the full NeoRadio 1.3.9 package, preserving the expanded audio controls and UI assets
-- updated the built-in radio database using the supplied `userbouquet.iptv_radio.radio` bouquet from HDF Radio Streams
-- added installer cleanup for temporary NeoRadio installation/update files in `/tmp`
-- removed technical placeholder streams such as `127.0.0.1/hdfradio` from the packaged station database
-
-## What's new in 1.3.9
+## What's new in 2.1
 
 - added three audio potentiometers on the main radio screen: left/right balance, treble, and bass
 - added direct remote control shortcuts: `1/3` balance, `4/6` treble, `7/9` bass, `5` reset
 - added persistent audio settings in Enigma2 config while keeping the existing station list, metadata, picons, screensaver, and GitHub update behavior unchanged
 
-## What's new in 1.3.4
+## What's new in 2.1
 
 - imported stations from the supplied `userbouquet.iptv_radio.radio` bouquet
 - normalized duplicate country/bouquet naming such as `Polska`, `Poland`, and `Polen`
@@ -91,7 +84,7 @@ The plugin checks `manifest.json` and expects a payload like this:
 ```json
 {
   "name": "NeoRadio",
-  "version": "2.0",
+  "version": "1.3.3",
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
   "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",

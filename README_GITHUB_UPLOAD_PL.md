@@ -1,30 +1,20 @@
-# NeoRadio 2.0 - instrukcja aktualizacji GitHub
+# NeoRadio v2.1 — paczka do GitHuba
 
-Ta paczka jest przygotowana na bazie pełnej wersji **NeoRadio 1.3.9**, a nie starej 1.3.3.
+Ta paczka jest hotfixem wersji 2.1. Numer wersji pozostaje 2.1.
 
-## Wrzucenie do repo
+## Co wrzucić
 
-1. Rozpakuj ZIP.
-2. Skopiuj zawartość do istniejącego repo `NeoRadio` z nadpisaniem plików.
-3. Nie kasuj pozostałych starych plików repo.
-4. Sprawdź w GitKraken, żeby nie było czerwonych usunięć typu `README.txt`, `LICENSE`, `docs/`, `build/` itd.
-5. Commit: `NeoRadio 2.0 update from 1.3.9 base`.
-6. Push do `main`.
+Skopiuj zawartość tej paczki do głównego katalogu repo NeoRadio z nadpisaniem plików. Nie kasuj ręcznie innych plików repo.
 
-## GitHub Releases
+Najważniejsze pliki:
 
-Po push utwórz nowy release:
+- `pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/plugin.py`
+- `pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/stations.json` — pusty, bo baza ma być pobierana online
+- `release/CONTROL/postinst`
+- `manifest.json`
+- `release/enigma2-plugin-extensions-neoradio_all.ipk`
+- `release/enigma2-plugin-extensions-neoradio_2.1_all.ipk`
 
-- tag: `v2.0`
-- title: `NeoRadio v2.0`
-- target: `main`
-- asset główny: `enigma2-plugin-extensions-neoradio_all.ipk`
-- asset dodatkowy: `enigma2-plugin-extensions-neoradio_2.0_all.ipk`
+## Działanie
 
-## Dane techniczne
-
-- baza startowa: `enigma2-plugin-extensions-neoradio_1.3.9_all.ipk`
-- finalna wersja: `2.0`
-- stacje po aktualizacji: `5843`
-- dodane nowe stacje z bukietu: `148`
-- postinst czyści tymczasowe pliki NeoRadio z `/tmp`
+Po instalacji `postinst` czyści `/tmp` oraz usuwa stary cache Radio-Browser z `/etc/enigma2`. Przy pierwszym uruchomieniu NeoRadio pobiera świeżą listę stacji z Radio-Browser zgodnie z językiem/locale tunera.

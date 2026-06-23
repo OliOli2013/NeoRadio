@@ -1,8 +1,10 @@
 #!/bin/sh
-# NeoRadio 2.0 post-install cleanup.
-# Clean only NeoRadio temporary installation/update files from /tmp.
-for f in     /tmp/neoradio_update.ipk     /tmp/enigma2-plugin-extensions-neoradio*.ipk     /tmp/neoradio_repo*.tar.gz     /tmp/NeoRadio*.zip
- do
-    [ -e "$f" ] && rm -f "$f"
- done
+# NeoRadio post-install cleanup
+rm -f /tmp/neoradio_update.ipk 2>/dev/null
+rm -f /tmp/enigma2-plugin-extensions-neoradio*.ipk 2>/dev/null
+rm -f /tmp/NeoRadio*.zip /tmp/neoradio*.zip /tmp/neoradio*.tar.gz 2>/dev/null
+rm -rf /tmp/neoradio /tmp/NeoRadio /tmp/neoradio_install /tmp/neoradio_update 2>/dev/null
+# v2.1 Radio-Browser-only mode: force fresh online list on first start after install
+rm -f /etc/enigma2/neoradio_radiobrowser_stations.json 2>/dev/null
+rm -f /etc/enigma2/neoradio_radiobrowser_countries.json 2>/dev/null
 exit 0
