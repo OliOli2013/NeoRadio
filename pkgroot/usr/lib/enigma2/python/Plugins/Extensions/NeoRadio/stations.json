@@ -569,10 +569,10 @@
   {
     "bitrate": "128",
     "country": "Polska",
-    "description": "Regional hit radio.",
-    "genre": "Regional",
-    "group": "Regional",
-    "homepage": "https://radiofest.pl",
+    "description": "Radio Fest 100.2 FM (Gliwice/Śląsk) - poprawiony stream OpenFM dla Enigma2.",
+    "genre": "Regionalne",
+    "group": "Regionalne",
+    "homepage": "https://radiofest.pl/",
     "language": "Polski",
     "metadata_album_key": "",
     "metadata_artist_key": "",
@@ -585,7 +585,7 @@
     "name": "Radio Fest",
     "picon": "",
     "picon_url": "",
-    "url": "http://stream4.nadaje.com:10764/fest"
+    "url": "http://stream.open.fm/335?type=.aac&player_group=WWW"
   },
   {
     "bitrate": "128",
@@ -716,10 +716,10 @@
   {
     "bitrate": "128",
     "country": "Polska",
-    "description": "Silesian regional station.",
-    "genre": "Regional",
-    "group": "Regional",
-    "homepage": "https://radiosilesia.pl",
+    "description": "Radio Silesia (Katowice/Zabrze) - bezpośredni stream użytkownika.",
+    "genre": "Regionalne",
+    "group": "Regionalne",
+    "homepage": "https://silesia.fm/",
     "language": "Polski",
     "metadata_album_key": "",
     "metadata_artist_key": "",
@@ -732,7 +732,7 @@
     "name": "Radio Silesia",
     "picon": "",
     "picon_url": "",
-    "url": "http://stream4.nadaje.com:8462/silesia"
+    "url": "http://s1.slotex.pl:7350/"
   },
   {
     "bitrate": "128",
@@ -800,7 +800,7 @@
   {
     "bitrate": "128",
     "country": "Polska",
-    "description": "Radio Katowice.",
+    "description": "Radio Katowice (Polskie Radio) - bezpośredni stream użytkownika.",
     "genre": "Regionalne",
     "group": "Regionalne",
     "homepage": "https://www.radio.katowice.pl/",
@@ -816,7 +816,7 @@
     "name": "Radio Katowice",
     "picon": "",
     "picon_url": "",
-    "url": "http://stream4.nadaje.com:9212/radiokatowice"
+    "url": "http://85.11.77.142:8000/RadioKatowice.mp3"
   },
   {
     "bitrate": "128",
@@ -66423,13 +66423,13 @@
     "url": "http://stream.euroradio.fm:8000/euroradio1"
   },
   {
-    "bitrate": "?",
-    "country": "Niemcy",
-    "description": "Radio Express FM",
-    "genre": "Polen",
-    "group": "Polen",
-    "homepage": "",
-    "language": "Niemiecki",
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Express FM (Tychy/Bielsko-Biała) - bezpośredni stream użytkownika.",
+    "genre": "Regionalne",
+    "group": "Regionalne",
+    "homepage": "https://radioexpress.pl/",
+    "language": "Polski",
     "metadata_album_key": "",
     "metadata_artist_key": "",
     "metadata_cover_key": "",
@@ -66441,7 +66441,7 @@
     "name": "Radio Express FM",
     "picon": "",
     "picon_url": "",
-    "url": "https://stream.rcs.revma.com/yx6cub73kwzuv"
+    "url": "https://stream.radioexpress.pl:8443/express.mp3"
   },
   {
     "bitrate": "?",
@@ -68397,13 +68397,13 @@
     "url": "http://stream4.nadaje.com:15274/live"
   },
   {
-    "bitrate": "?",
-    "country": "Niemcy",
-    "description": "Radio Park",
-    "genre": "Polen",
-    "group": "Polen",
-    "homepage": "",
-    "language": "Niemiecki",
+    "bitrate": "128",
+    "country": "Polska",
+    "description": "Radio Park (Kędzierzyn-Koźle/Gliwice) - bezpośredni stream użytkownika.",
+    "genre": "Regionalne",
+    "group": "Regionalne",
+    "homepage": "https://radiopark.fm/",
+    "language": "Polski",
     "metadata_album_key": "",
     "metadata_artist_key": "",
     "metadata_cover_key": "",
@@ -120122,10 +120122,10 @@
   {
     "bitrate": "128",
     "country": "Polska",
-    "description": "Radio Piekary.",
+    "description": "Radio Piekary - bezpośredni stream Revma użytkownika.",
     "genre": "Regionalne",
     "group": "Regionalne",
-    "homepage": "",
+    "homepage": "https://radiopiekary.pl/",
     "language": "Polski",
     "metadata_album_key": "",
     "metadata_artist_key": "",
@@ -120138,6 +120138,6 @@
     "name": "Radio Piekary",
     "picon": "",
     "picon_url": "",
-    "url": "https://stream.rcs.revma.com/0rg0mztk33bwv"
+    "url": "https://n25-eu.rcs.revma.com/0rg0mztk33bwv?rj-ttl=5&rj-tok=AAABnvP-GakAXttyNjURP1qtKQ"
   }
 ]

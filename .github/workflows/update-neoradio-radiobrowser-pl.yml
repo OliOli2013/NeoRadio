@@ -1,0 +1,57 @@
+name: NeoRadio - import polskich stacji Radio-Browser
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "tools/import_radio_browser_polish_to_stations.py"
+      - ".github/workflows/update-neoradio-radiobrowser-pl.yml"
+      - "pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/stations.json"
+
+permissions:
+  contents: write
+
+jobs:
+  import-radiobrowser-pl:
+    # Zabezpieczenie przed pętlą: commit wykonany przez GitHub Actions nie uruchamia importu ponownie.
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pobierz repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ustaw Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Importuj polskie stacje z Radio-Browser do stations.json
+        run: |
+          python3 tools/import_radio_browser_polish_to_stations.py \
+            --input pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/stations.json \
+            --output pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/stations.json \
+            --limit 100000
+
+      - name: Pokaż zmiany
+        run: |
+          git status --short
+          if [ -f pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/stations_radio_browser_import_report.txt ]; then
+            cat pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/stations_radio_browser_import_report.txt
+          fi
+
+      - name: Commit finalnego stations.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pkgroot/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/stations.json
+          if git diff --cached --quiet; then
+            echo "Brak nowych stacji do zapisania."
+          else
+            git commit -m "Update NeoRadio stations from Radio-Browser PL"
+            git push
+          fi
