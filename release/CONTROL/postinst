@@ -7,6 +7,4 @@ rm -rf /tmp/neoradio /tmp/NeoRadio /tmp/neoradio_install /tmp/neoradio_update 2>
 # v2.1 Radio-Browser-only mode: force fresh online list on first start after install
 rm -f /etc/enigma2/neoradio_radiobrowser_stations.json 2>/dev/null
 rm -f /etc/enigma2/neoradio_radiobrowser_countries.json 2>/dev/null
-rm -rf /usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/__pycache__ 2>/dev/null
-# NeoRadio __pycache__ cleanup after hotfix
 exit 0
