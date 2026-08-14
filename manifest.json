@@ -4,6 +4,6 @@
   "ipk": "https://github.com/OliOli2013/NeoRadio/releases/download/v3.0.0/enigma2-plugin-extensions-neoradio_3.0.0_all.ipk",
   "release_page": "https://github.com/OliOli2013/NeoRadio/releases/tag/v3.0.0",
   "project_page": "https://olioli2013.github.io/aio-iptv-projekt/",
-  "sha256": "d9e43b84d64c061fe106aa9d2f5d5c3371a7eb34a4b6d4dc76c99ed1991a11ef",
-  "changelog": "NeoRadio 3.0.0: merged custom/Radio-Browser station sources, safer API limits, asynchronous picon and update networking, HTTPS + SHA-256 + IPK validation, atomic JSON writes, dead-code cleanup and unified AIO visual identity with project QR."
+  "sha256": "50ef58384a6b6fe121a415bb319f68f47bd11621cb6fe9d479abb234c64e700a",
+  "changelog": "NeoRadio 3.0.0: corrected INFO key handling across Enigma2 images, fixed project information screen opening with compatibility fallback, and added automatic cleanup of NeoRadio installer/update files from /tmp after installation."
 }

@@ -1,10 +1,16 @@
 #!/bin/sh
-# NeoRadio post-install cleanup
-rm -f /tmp/neoradio_update.ipk 2>/dev/null
-rm -f /tmp/enigma2-plugin-extensions-neoradio*.ipk 2>/dev/null
-rm -f /tmp/NeoRadio*.zip /tmp/neoradio*.zip /tmp/neoradio*.tar.gz 2>/dev/null
-rm -rf /tmp/neoradio /tmp/NeoRadio /tmp/neoradio_install /tmp/neoradio_update 2>/dev/null
-# v2.1 Radio-Browser-only mode: force fresh online list on first start after install
-rm -f /etc/enigma2/neoradio_radiobrowser_stations.json 2>/dev/null
-rm -f /etc/enigma2/neoradio_radiobrowser_countries.json 2>/dev/null
+# NeoRadio v3.0 - remove only NeoRadio installer/update leftovers from /tmp.
+# Run after opkg has completed its work with a short delay so the source IPK
+# can be safely unlinked regardless of the image/opkg implementation.
+(
+    sleep 2
+    rm -f /tmp/enigma2-plugin-extensions-neoradio*.ipk \
+          /tmp/neoradio*.ipk \
+          /tmp/NeoRadio*.ipk \
+          /tmp/neoradio_update.ipk \
+          /tmp/neoradio_update.ipk.part \
+          /tmp/neoradio*.part \
+          /tmp/NeoRadio*.part 2>/dev/null || true
+    rm -rf /tmp/neoradio-ipk-* /tmp/NeoRadio-install-* 2>/dev/null || true
+) >/dev/null 2>&1 &
 exit 0

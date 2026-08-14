@@ -1,3 +1,9 @@
+## Poprawki końcowe v3.0
+
+- Naprawiono obsługę przycisku INFO na różnych image Enigma2 (OpenATV/OpenPLi i zgodne mapowania).
+- Naprawiono otwieranie `Menu → Informacje / strona projektu` i dodano bezpieczny fallback.
+- Dodano automatyczne usuwanie plików instalacyjnych i IPK NeoRadio z `/tmp` po instalacji.
+
 # NeoRadio 3.0.0 – changelog
 
 ## Stability and station database

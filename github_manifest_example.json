@@ -1,9 +1,9 @@
 {
   "name": "NeoRadio",
-  "version": "3.0.1",
-  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/download/v3.0.1/enigma2-plugin-extensions-neoradio_3.0.1_all.ipk",
-  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/tag/v3.0.1",
+  "version": "3.0.0",
+  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/download/v3.0.0/enigma2-plugin-extensions-neoradio_3.0.0_all.ipk",
+  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/tag/v3.0.0",
   "project_page": "https://olioli2013.github.io/aio-iptv-projekt/",
-  "sha256": "PUT_64_CHARACTER_SHA256_HERE",
-  "changelog": "Describe the update here."
+  "sha256": "50ef58384a6b6fe121a415bb319f68f47bd11621cb6fe9d479abb234c64e700a",
+  "changelog": "NeoRadio 3.0.0: corrected INFO key handling, repaired project information opening and added automatic NeoRadio installer cleanup in /tmp."
 }

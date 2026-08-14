@@ -2242,7 +2242,7 @@ class NeoRadioMain(Screen):
             pass
 
         self["actions"] = ActionMap(
-            ["OkCancelActions", "ColorActions", "DirectionActions", "MenuActions", "InfobarActions", "NumberActions", "VolumeActions", "GlobalActions"],
+            ["OkCancelActions", "ColorActions", "DirectionActions", "MenuActions", "InfobarActions", "InfobarEPGActions", "InfoActions", "NumberActions", "VolumeActions", "GlobalActions"],
             {
                 "ok": self.play_current,
                 "cancel": self.close_plugin,
@@ -2251,7 +2251,12 @@ class NeoRadioMain(Screen):
                 "yellow": self.toggle_favorite,
                 "blue": self.open_filter_menu,
                 "menu": self.open_main_menu,
+                # INFO differs between Enigma2 images. Keep all common aliases
+                # on one handler so OpenATV/OpenPLi and older images behave alike.
                 "showEventInfo": self.show_details,
+                "info": self.show_details,
+                "InfoPressed": self.show_details,
+                "IPressed": self.show_details,
                 "up": self.move_up,
                 "down": self.move_down,
                 "left": self.page_up,
@@ -3937,11 +3942,41 @@ class NeoRadioMain(Screen):
         if self.consume_screensaver_key():
             return
         self.touch_activity()
-        station = self.get_current_station()
+        # Prefer the highlighted station; if the list is temporarily empty,
+        # fall back to the station that is currently playing. Never fail
+        # silently on INFO.
+        station = self.get_current_station() or self.playing_station_data
         if not station:
+            self.open_about()
             return
         text = tr("details_text", PLUGIN_VERSION, to_text(station.get("name", u"-")), to_text(station.get("genre", u"-")), to_text(station.get("country", u"-")), to_text(station.get("bitrate", u"-")), to_text(station.get("description", u"-")), to_text(station.get("url", u"-")), to_text(station.get("homepage", u"-")))
-        self.session.open(MessageBox, text, MessageBox.TYPE_INFO)
+        try:
+            self.session.open(MessageBox, text, MessageBox.TYPE_INFO)
+        except Exception:
+            self.open_about()
+
+    def open_about(self):
+        if self.consume_screensaver_key():
+            return
+        self.touch_activity()
+        try:
+            self.session.open(NeoRadioAbout)
+            return
+        except Exception:
+            pass
+        # Compatibility fallback for images that cannot render the custom
+        # about skin. The project information must remain reachable.
+        fallback = u"%s\n%s\n\n%s\n%s\n\n%s" % (
+            tr('about_title'),
+            tr('about_version', PLUGIN_VERSION),
+            tr('about_author'),
+            tr('about_website', PROJECT_URL),
+            tr('about_scan'),
+        )
+        try:
+            self.session.open(MessageBox, fallback, MessageBox.TYPE_INFO)
+        except Exception:
+            pass
 
     def open_filter_menu(self):
         if self.consume_screensaver_key():
@@ -4031,7 +4066,7 @@ class NeoRadioMain(Screen):
             self.update_picon(self.get_picon_station())
             self["status_label"].setText(tr("status_prefix", tr("reloaded")))
         elif action == "about":
-            self.session.open(NeoRadioAbout)
+            self.open_about()
 
     def open_radio_browser_country_menu(self):
         if self.consume_screensaver_key():
