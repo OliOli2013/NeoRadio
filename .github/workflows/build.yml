@@ -1,0 +1,37 @@
+name: NeoRadio build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  validate-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install audit dependency
+        run: python -m pip install --disable-pip-version-check pillow
+      - name: Static audit
+        run: python tools/static_audit.py
+      - name: Build IPK
+        run: python tools/build_ipk.py
+      - name: Validate archive
+        run: |
+          ar t releases/enigma2-plugin-extensions-neoradio_3.0.0_all.ipk
+          rm -rf /tmp/neoradio-ipk-check && mkdir -p /tmp/neoradio-ipk-check
+          cd /tmp/neoradio-ipk-check
+          ar x "$GITHUB_WORKSPACE/releases/enigma2-plugin-extensions-neoradio_3.0.0_all.ipk"
+          tar -tzf control.tar.gz | grep -E '(^|/)control$'
+          tar -tzf data.tar.gz | grep 'usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/plugin.py'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NeoRadio-3.0.0-IPK
+          path: releases/enigma2-plugin-extensions-neoradio_3.0.0_all.ipk

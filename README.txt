@@ -1,7 +1,13 @@
-NeoRadio Online 2.0
-Stacje z bukietu HDF Radio Streams, deduplikacja Polska/Poland/Polen, filtry języków stacji, osobny niebieski przycisk filtrów oraz zapamiętywanie ostatniej stacji i historii odtwarzania.
+NeoRadio 3.0.0 for Enigma2
+=========================
 
+Internet radio for Enigma2 with Radio-Browser, metadata, picons, favorites,
+history, audio controls, PL/EN interface and validated GitHub updates.
 
-1.3.9: Dodano trzy potencjometry audio na głównej stronie radia: balans L/P, wysokie tony i niskie tony. Skróty: 1/3 balans, 4/6 wysokie, 7/9 niskie, 5 reset.
+Author: Paweł Pawełek
+Website: https://olioli2013.github.io/aio-iptv-projekt/
+GitHub: https://github.com/OliOli2013/NeoRadio
 
-2.0: Wersja zbudowana na bazie NeoRadio 1.3.9. Zachowano rozbudowane funkcje 1.3.9, zaktualizowano bazę stacji z pliku userbouquet.iptv_radio.radio i dodano czyszczenie plików instalacyjnych NeoRadio z /tmp po instalacji.
+Build: ./release/build_ipk.sh
+Audit: python3 tools/static_audit.py
+Detailed changes: CHANGELOG_3.0.0.md

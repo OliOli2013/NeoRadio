@@ -1,8 +1,9 @@
 {
   "name": "NeoRadio",
-  "version": "2.1",
-  "changelog": "NeoRadio v2.1 HOTFIX: tryb wyłącznie Radio-Browser Online, automatyczne pobieranie listy kraju według języka/locale tunera przy pierwszym uruchomieniu po instalacji, usunięto prefiks [kraj] z nazw na liście, poprawiono pobieranie i wyświetlanie piconów/favicon z Radio-Browser, wbudowany stations.json pozostaje pusty.",
-  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
-  "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
-  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest"
+  "version": "3.0.0",
+  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/download/v3.0.0/enigma2-plugin-extensions-neoradio_3.0.0_all.ipk",
+  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/tag/v3.0.0",
+  "project_page": "https://olioli2013.github.io/aio-iptv-projekt/",
+  "sha256": "d9e43b84d64c061fe106aa9d2f5d5c3371a7eb34a4b6d4dc76c99ed1991a11ef",
+  "changelog": "NeoRadio 3.0.0: merged custom/Radio-Browser station sources, safer API limits, asynchronous picon and update networking, HTTPS + SHA-256 + IPK validation, atomic JSON writes, dead-code cleanup and unified AIO visual identity with project QR."
 }

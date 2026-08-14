@@ -9,6 +9,7 @@ import time
 import unicodedata
 import glob
 import hashlib
+import tarfile
 try:
     import subprocess
 except Exception:
@@ -48,6 +49,10 @@ from Screens.Screen import Screen
 from Screens.MessageBox import MessageBox
 from Screens.ChoiceBox import ChoiceBox
 try:
+    from Screens.Standby import TryQuitMainloop
+except Exception:
+    TryQuitMainloop = None
+try:
     from Screens.VirtualKeyBoard import VirtualKeyBoard
 except Exception:
     VirtualKeyBoard = None
@@ -76,11 +81,11 @@ except Exception:
     eDVBVolumecontrol = None
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "2.1"
+PLUGIN_VERSION = "3.0.0"
 PLUGIN_NAME = "NeoRadio"
-PLUGIN_TITLE = "NeoRadio Online"
-PLUGIN_DESC = "NeoRadio Online"
-PLUGIN_PATH = "/usr/lib/enigma2/python/Plugins/Extensions/NeoRadio"
+PLUGIN_TITLE = "NeoRadio"
+PLUGIN_DESC = "NeoRadio - internet radio for Enigma2"
+PLUGIN_PATH = os.path.dirname(os.path.abspath(__file__))
 CONFIG_DIR = resolveFilename(SCOPE_CONFIG)
 FAV_FILE = os.path.join(CONFIG_DIR, "neoradio_favorites.json")
 HISTORY_FILE = os.path.join(CONFIG_DIR, "neoradio_history.json")
@@ -89,6 +94,8 @@ BASE_STATIONS_FILE = os.path.join(PLUGIN_PATH, "stations.json")
 COVER_DIR = os.path.join(PLUGIN_PATH, "covers")
 DEFAULT_COVER = os.path.join(PLUGIN_PATH, "cover_default.png")
 DEFAULT_PICON = os.path.join(PLUGIN_PATH, "visualradio.png")
+PROJECT_URL = "https://olioli2013.github.io/aio-iptv-projekt/"
+PROJECT_QR = os.path.join(PLUGIN_PATH, "website_qr.png")
 AUDIO_UI_CACHE_DIR = os.path.join(CONFIG_DIR, "neoradio_ui_cache")
 AUDIO_UI_ASSET_DIR = os.path.join(PLUGIN_PATH, "audio_ui_assets")
 DEFAULT_PICON_DIRS = [
@@ -111,13 +118,17 @@ RADIO_BROWSER_API_BASES = [
     "https://nl1.api.radio-browser.info",
     "https://at1.api.radio-browser.info",
 ]
-RADIO_BROWSER_DEFAULT_LIMIT = 100000
-RADIO_BROWSER_ONLY_MODE = True
+RADIO_BROWSER_DEFAULT_LIMIT = 500
+RADIO_BROWSER_MAX_LIMIT = 2000
+RADIO_BROWSER_ONLY_MODE = False
 RADIO_BROWSER_AUTO_ON_EMPTY = True
 SAFE_VOLUME_MODE = True
 NETWORK_META_POLL_SECS = 18
 NETWORK_META_TIMEOUT = 7
 NETWORK_META_READ_LIMIT = 262144
+REMOTE_PICON_MAX_BYTES = 2 * 1024 * 1024
+JSON_DOWNLOAD_MAX_BYTES = 16 * 1024 * 1024
+UPDATE_MAX_BYTES = 64 * 1024 * 1024
 
 
 PICON_ALIASES = {
@@ -244,13 +255,31 @@ def load_json_file(path, default_value):
 
 
 def save_json_file(path, data):
+    """Atomically save JSON so a power loss cannot leave a half-written config file."""
+    tmp_path = to_text(path) + u".tmp"
     try:
+        parent = os.path.dirname(path)
+        if parent and not os.path.isdir(parent):
+            os.makedirs(parent)
         payload = json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True)
-        handle = io.open(path, "w", encoding="utf-8")
-        handle.write(to_text(payload))
-        handle.close()
+        handle = io.open(tmp_path, "w", encoding="utf-8")
+        try:
+            handle.write(to_text(payload))
+            handle.flush()
+            try:
+                os.fsync(handle.fileno())
+            except Exception:
+                pass
+        finally:
+            handle.close()
+        os.rename(tmp_path, path)
         return True
     except Exception:
+        try:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+        except Exception:
+            pass
         return False
 
 
@@ -313,36 +342,79 @@ def build_query_string(params):
             return ''
 
 
-def fetch_json_url(url, timeout=20):
+def fetch_json_url(url, timeout=20, max_bytes=JSON_DOWNLOAD_MAX_BYTES):
+    request = Request(to_text(url), headers={
+        "User-Agent": "NeoRadio/%s Enigma2" % PLUGIN_VERSION,
+        "Accept": "application/json",
+    })
+    handle = None
     try:
-        request = Request(to_text(url), headers={
-            "User-Agent": "NeoRadio/%s Enigma2" % PLUGIN_VERSION,
-            "Accept": "application/json",
-            "Content-Type": "application/json; charset=utf-8",
-        })
         handle = urlopen(request, timeout=timeout)
-        data = handle.read()
-        try:
-            handle.close()
-        except Exception:
-            pass
+        data = handle.read(int(max_bytes) + 1)
+        if len(data) > int(max_bytes):
+            raise Exception("JSON response too large")
         text = bytes_to_text(data)
         return json.loads(text)
-    except Exception as e:
-        raise e
+    finally:
+        try:
+            if handle is not None:
+                handle.close()
+        except Exception:
+            pass
+
+
+def discover_radio_browser_api_bases():
+    """Best-effort mirror discovery used only after configured mirrors fail."""
+    result = []
+    if socket is None:
+        return result
+    try:
+        infos = socket.getaddrinfo('all.api.radio-browser.info', 443, 0, socket.SOCK_STREAM)
+    except Exception:
+        return result
+    seen_ips = {}
+    for item in infos[:12]:
+        try:
+            ip = to_text(item[4][0]).strip()
+            if not ip or ip in seen_ips:
+                continue
+            seen_ips[ip] = True
+            host = to_text(socket.gethostbyaddr(ip)[0]).strip().lower().rstrip('.')
+            if host.endswith('.api.radio-browser.info') and host != 'all.api.radio-browser.info':
+                url = 'https://' + host
+                if url not in result:
+                    result.append(url)
+            if len(result) >= 6:
+                break
+        except Exception:
+            pass
+    return result
 
 
 def radio_browser_api_json(path, params=None, timeout=25):
     query = build_query_string(params or {})
     errors = []
-    for base in RADIO_BROWSER_API_BASES:
-        url = base.rstrip('/') + '/' + to_text(path).strip().lstrip('/')
-        if query:
-            url += '?' + query
-        try:
-            return fetch_json_url(url, timeout=timeout)
-        except Exception as e:
-            errors.append('%s: %s' % (base, to_text(e)))
+    attempted = {}
+    # Fast path: known mirrors. Dynamic DNS discovery is a fallback only.
+    bases = list(RADIO_BROWSER_API_BASES)
+    for phase in (0, 1):
+        if phase == 1:
+            for base in discover_radio_browser_api_bases():
+                if base not in bases:
+                    bases.append(base)
+        for base in bases:
+            if base in attempted:
+                continue
+            attempted[base] = True
+            url = base.rstrip('/') + '/' + to_text(path).strip().lstrip('/')
+            if query:
+                url += '?' + query
+            try:
+                return fetch_json_url(url, timeout=timeout)
+            except Exception as e:
+                errors.append('%s: %s' % (base, to_text(e)))
+        if phase == 0 and not socket:
+            break
     raise Exception(' | '.join(errors[-3:]) or 'Radio-Browser API error')
 
 
@@ -377,8 +449,8 @@ def radio_browser_countrycodes():
         'hidebroken': 'true',
         'order': 'stationcount',
         'reverse': 'true',
-        'limit': 100000,
-    }, timeout=25)
+        'limit': 1000,
+    }, timeout=12)
     clean = clean_radio_browser_country_codes(data)
     save_json_file(RADIO_BROWSER_COUNTRIES_FILE, clean)
     return clean
@@ -431,21 +503,25 @@ def radio_browser_station_to_neoradio(item):
         'metadata_text_key': '',
         'metadata_program_key': '',
         'metadata_cover_key': '',
+        'radio_browser_uuid': to_text(item.get('stationuuid', '')).strip(),
     }
 
 
 def radio_browser_fetch_stations(countrycode, limit=None):
     countrycode = to_text(countrycode).strip().upper()
+    if not re.match(r'^[A-Z]{2}$', countrycode):
+        raise Exception('invalid country code')
     limit = safe_int(limit, RADIO_BROWSER_DEFAULT_LIMIT)
     if limit <= 0:
         limit = RADIO_BROWSER_DEFAULT_LIMIT
+    limit = max(25, min(RADIO_BROWSER_MAX_LIMIT, limit))
     data = radio_browser_api_json('/json/stations/search', {
         'countrycode': countrycode,
         'hidebroken': 'true',
         'order': 'clickcount',
         'reverse': 'true',
         'limit': limit,
-    }, timeout=45)
+    }, timeout=18)
     result = []
     seen = {}
     for item in data or []:
@@ -458,6 +534,32 @@ def radio_browser_fetch_stations(countrycode, limit=None):
         seen[key] = True
         result.append(station)
     return result
+
+
+def radio_browser_register_click(station_uuid):
+    """Best-effort Radio-Browser click counter; never affects playback."""
+    station_uuid = to_text(station_uuid).strip()
+    if not re.match(r'^[0-9a-fA-F-]{16,64}$', station_uuid):
+        return False
+    try:
+        radio_browser_api_json('/json/url/' + station_uuid, {}, timeout=5)
+        return True
+    except Exception:
+        return False
+
+
+def radio_browser_register_click_async(station_uuid):
+    if threading is None:
+        return
+    station_uuid = to_text(station_uuid).strip()
+    if not station_uuid:
+        return
+    try:
+        worker = threading.Thread(target=radio_browser_register_click, args=(station_uuid,))
+        worker.setDaemon(True)
+        worker.start()
+    except Exception:
+        pass
 
 
 COUNTRY_ALIASES = {
@@ -574,6 +676,7 @@ def normalize_station(entry):
         "metadata_text_key": to_text(entry.get("metadata_text_key", "")),
         "metadata_program_key": to_text(entry.get("metadata_program_key", "")),
         "metadata_cover_key": to_text(entry.get("metadata_cover_key", "")),
+        "radio_browser_uuid": to_text(entry.get("radio_browser_uuid", "")).strip(),
         "group": group,
     }
 
@@ -808,8 +911,18 @@ I18N = {
         "radiobrowser_fail": u"Radio-Browser error: %s",
         "radiobrowser_clear": u"Clear Radio-Browser downloaded stations",
         "radiobrowser_cleared": u"Radio-Browser cache cleared",
+        "radiobrowser_busy": u"A Radio-Browser operation is already running.",
         "volume_status": u"Volume: %s",
-        "menu_about": u"Plugin information",
+        "menu_about": u"Plugin information / project website",
+        "about_title": u"NeoRadio • AIO project",
+        "about_version": u"Version: %s",
+        "about_intro": u"Internet radio for Enigma2 with Radio-Browser, favorites, search, RDS/ICY metadata, local/SAT/IPTV picons and audio controls.",
+        "about_scan": u"Scan the QR code to visit the creator's website",
+        "about_website": u"Website: %s",
+        "about_author": u"Author: Paweł Pawełek",
+        "about_close": u"Red / OK: close",
+        "github_update_busy": u"An update operation is already running.",
+        "github_download_fail": u"Update %s could not be prepared safely.\n\n%s",
         "no_keyboard_settings": u"No on-screen keyboard. You can also set the path manually in Enigma2 settings.",
         "picon_paths_title": u"Picon paths (separate with ;) ",
         "reloaded": u"station list refreshed",
@@ -957,8 +1070,18 @@ I18N["pl"] = {
     "radiobrowser_fail": u"Błąd Radio-Browser: %s",
     "radiobrowser_clear": u"Wyczyść pobrane stacje Radio-Browser",
     "radiobrowser_cleared": u"Wyczyszczono cache Radio-Browser",
+    "radiobrowser_busy": u"Operacja Radio-Browser już trwa.",
     "volume_status": u"Głośność: %s",
-    "menu_about": u"Informacje o wtyczce",
+    "menu_about": u"Informacje / strona projektu",
+    "about_title": u"NeoRadio • projekt AIO",
+    "about_version": u"Wersja: %s",
+    "about_intro": u"Radio internetowe dla Enigma2 z Radio-Browser, ulubionymi, wyszukiwaniem, metadanymi RDS/ICY, piconami lokalnymi/SAT/IPTV i sterowaniem dźwiękiem.",
+    "about_scan": u"Zeskanuj kod QR, aby odwiedzić stronę twórcy",
+    "about_website": u"Strona: %s",
+    "about_author": u"Autor: Paweł Pawełek",
+    "about_close": u"Czerwony / OK: zamknij",
+    "github_update_busy": u"Operacja aktualizacji już trwa.",
+    "github_download_fail": u"Nie udało się bezpiecznie przygotować aktualizacji %s.\n\n%s",
     "no_keyboard_settings": u"Brak klawiatury ekranowej. Ścieżkę możesz też ustawić ręcznie w ustawieniach Enigma2.",
     "picon_paths_title": u"Ścieżki piconów (oddzielaj średnikiem ;)",
     "reloaded": u"lista stacji odświeżona",
@@ -1190,6 +1313,148 @@ def fetch_text_url(url, timeout=8):
         return to_text(data)
     except Exception:
         return text_type("")
+
+
+def download_url_to_file(url, target_path, timeout=25, max_bytes=UPDATE_MAX_BYTES):
+    url = to_text(url).strip()
+    parsed = urlparse(url)
+    if to_text(parsed.scheme).lower() != 'https':
+        raise Exception('update package must use HTTPS')
+    request = Request(url, headers={"User-Agent": "NeoRadio/%s Enigma2" % PLUGIN_VERSION})
+    response = None
+    total = 0
+    digest = hashlib.sha256()
+    tmp_path = to_text(target_path) + u'.part'
+    try:
+        response = urlopen(request, timeout=timeout)
+        with open(tmp_path, 'wb') as handle:
+            while True:
+                chunk = response.read(65536)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > int(max_bytes):
+                    raise Exception('update package too large')
+                digest.update(chunk)
+                handle.write(chunk)
+            handle.flush()
+            try:
+                os.fsync(handle.fileno())
+            except Exception:
+                pass
+        if total < 256:
+            raise Exception('downloaded update package is too small')
+        os.rename(tmp_path, target_path)
+        return digest.hexdigest()
+    finally:
+        try:
+            if response is not None:
+                response.close()
+        except Exception:
+            pass
+        try:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+        except Exception:
+            pass
+
+
+def read_ipk_control(path):
+    """Read CONTROL/control from an ar-based IPK without executing external tools."""
+    with open(path, 'rb') as handle:
+        if handle.read(8) != b'!<arch>\n':
+            raise Exception('invalid IPK/ar header')
+        control_blob = None
+        while True:
+            header = handle.read(60)
+            if not header:
+                break
+            if len(header) != 60 or header[58:60] != b'`\n':
+                raise Exception('invalid IPK member header')
+            name = bytes_to_text(header[:16]).strip().rstrip('/')
+            try:
+                size = int(bytes_to_text(header[48:58]).strip())
+            except Exception:
+                raise Exception('invalid IPK member size')
+            if size < 0 or size > UPDATE_MAX_BYTES:
+                raise Exception('invalid IPK member size')
+            data = handle.read(size)
+            if len(data) != size:
+                raise Exception('truncated IPK member')
+            if size % 2:
+                handle.read(1)
+            if name in ('control.tar.gz', 'control.tar'):
+                control_blob = data
+                break
+        if control_blob is None:
+            raise Exception('IPK has no control archive')
+    mode = 'r:gz' if control_blob[:2] == b'\x1f\x8b' else 'r:'
+    archive = tarfile.open(fileobj=io.BytesIO(control_blob), mode=mode)
+    try:
+        member = None
+        for candidate in ('control', './control'):
+            try:
+                member = archive.getmember(candidate)
+                break
+            except Exception:
+                pass
+        if member is None:
+            for item in archive.getmembers():
+                if to_text(item.name).lstrip('./') == 'control':
+                    member = item
+                    break
+        if member is None:
+            raise Exception('IPK control file missing')
+        fh = archive.extractfile(member)
+        raw = fh.read() if fh is not None else b''
+    finally:
+        archive.close()
+    fields = {}
+    for line in bytes_to_text(raw).splitlines():
+        if ':' not in line:
+            continue
+        key, value = line.split(':', 1)
+        fields[to_text(key).strip()] = to_text(value).strip()
+    return fields
+
+
+def validate_update_ipk(path, expected_version=None, expected_sha256=None):
+    if not os.path.exists(path):
+        raise Exception('update package not found')
+    size = os.path.getsize(path)
+    if size < 256 or size > UPDATE_MAX_BYTES:
+        raise Exception('invalid update package size')
+    if expected_sha256:
+        expected = re.sub(r'[^0-9a-fA-F]', '', to_text(expected_sha256)).lower()
+        if len(expected) != 64:
+            raise Exception('invalid SHA-256 in manifest')
+        digest = hashlib.sha256()
+        with open(path, 'rb') as handle:
+            while True:
+                chunk = handle.read(65536)
+                if not chunk:
+                    break
+                digest.update(chunk)
+        if digest.hexdigest().lower() != expected:
+            raise Exception('SHA-256 mismatch')
+    fields = read_ipk_control(path)
+    if fields.get('Package') != 'enigma2-plugin-extensions-neoradio':
+        raise Exception('unexpected package name')
+    version = to_text(fields.get('Version', '')).strip()
+    if expected_version and parse_version_tuple(version) != parse_version_tuple(expected_version):
+        raise Exception('package version does not match manifest')
+    return fields
+
+
+def prepare_update_ipk(ipk_url, remote_version, expected_sha256=None):
+    try:
+        if os.path.exists(UPDATE_TEMP_IPK):
+            os.unlink(UPDATE_TEMP_IPK)
+    except Exception:
+        pass
+    downloaded_sha = download_url_to_file(ipk_url, UPDATE_TEMP_IPK, timeout=30, max_bytes=UPDATE_MAX_BYTES)
+    fields = validate_update_ipk(UPDATE_TEMP_IPK, remote_version, expected_sha256)
+    return {'sha256': downloaded_sha, 'fields': fields}
 
 
 def parse_playlist_content(text):
@@ -1776,275 +2041,83 @@ def get_skin():
 
 
 
-class NeoRadioSaver(Screen):
-    skin = """
-    <screen name="NeoRadioSaver" position="0,0" size="1920,1080" title="NeoRadio screensaver" backgroundColor="#00000000">
-        <eLabel position="0,0" size="1920,1080" backgroundColor="#00060d16" zPosition="0" />
-        <eLabel position="120,120" size="1680,840" backgroundColor="#00101826" zPosition="1" />
-        <eLabel position="170,170" size="540,540" backgroundColor="#00131d2f" zPosition="1" />
-        <eLabel position="780,170" size="960,220" backgroundColor="#00131d2f" zPosition="1" />
-        <eLabel position="780,422" size="960,180" backgroundColor="#00131d2f" zPosition="1" />
-        <eLabel position="780,636" size="960,180" backgroundColor="#00131d2f" zPosition="1" />
-        <widget name="cover" position="182,182" size="516,516" alphatest="blend" zPosition="2" />
-        <widget name="clock" position="812,196" size="896,72" font="Regular;58" foregroundColor="#00c5ddff" backgroundColor="#00131d2f" halign="center" transparent="0" zPosition="2" />
-        <widget name="station" position="812,284" size="896,70" font="Regular;52" foregroundColor="#00ffffff" backgroundColor="#00131d2f" halign="center" transparent="0" zPosition="2" />
-        <widget name="meta" position="812,356" size="896,34" font="Regular;28" foregroundColor="#007de29f" backgroundColor="#00131d2f" halign="center" transparent="0" zPosition="2" />
-        <widget name="picon" position="980,450" size="560,120" alphatest="blend" zPosition="2" />
-        <widget name="spectrum" position="842,670" size="836,74" font="Regular;62" foregroundColor="#0089f0b0" backgroundColor="#00131d2f" halign="center" transparent="0" zPosition="2" />
-        <widget name="hint" position="812,770" size="896,30" font="Regular;24" foregroundColor="#00ffd27d" backgroundColor="#00131d2f" halign="center" transparent="0" zPosition="2" />
+
+def get_about_skin():
+    width = getDesktop(0).size().width()
+    if width >= 1920:
+        return """
+        <screen name="NeoRadioAbout" position="center,center" size="1120,650" title="NeoRadio" backgroundColor="#0008121f">
+            <eLabel position="0,0" size="1120,86" backgroundColor="#00101f35" />
+            <eLabel position="34,112" size="650,430" backgroundColor="#000d1829" />
+            <eLabel position="712,112" size="374,430" backgroundColor="#00101f35" />
+            <eLabel position="0,584" size="1120,66" backgroundColor="#00101f35" />
+            <widget name="title" position="38,20" size="650,46" font="Regular;38" foregroundColor="#00ffffff" backgroundColor="#00101f35" transparent="0" />
+            <widget name="version" position="760,24" size="300,36" font="Regular;27" foregroundColor="#0065c4ff" backgroundColor="#00101f35" halign="right" transparent="0" />
+            <widget name="intro" position="62,146" size="590,180" font="Regular;27" foregroundColor="#00edf2fa" backgroundColor="#000d1829" transparent="0" />
+            <widget name="author" position="62,354" size="590,34" font="Regular;26" foregroundColor="#00ffd27d" backgroundColor="#000d1829" transparent="0" />
+            <widget name="website" position="62,402" size="590,72" font="Regular;23" foregroundColor="#008fd3ff" backgroundColor="#000d1829" transparent="0" />
+            <widget name="scan" position="62,486" size="590,40" font="Regular;23" foregroundColor="#00b5bfd1" backgroundColor="#000d1829" transparent="0" />
+            <widget name="qr" position="754,146" size="290,290" alphatest="blend" />
+            <widget name="qr_hint" position="740,456" size="318,62" font="Regular;23" foregroundColor="#00ffffff" backgroundColor="#00101f35" halign="center" transparent="0" />
+            <widget name="close_hint" position="38,600" size="1040,34" font="Regular;25" foregroundColor="#00ffffff" backgroundColor="#00101f35" halign="center" transparent="0" />
+        </screen>
+        """
+    return """
+    <screen name="NeoRadioAbout" position="center,center" size="820,470" title="NeoRadio" backgroundColor="#0008121f">
+        <eLabel position="0,0" size="820,62" backgroundColor="#00101f35" />
+        <eLabel position="24,80" size="472,320" backgroundColor="#000d1829" />
+        <eLabel position="514,80" size="282,320" backgroundColor="#00101f35" />
+        <eLabel position="0,420" size="820,50" backgroundColor="#00101f35" />
+        <widget name="title" position="26,14" size="470,34" font="Regular;28" foregroundColor="#00ffffff" backgroundColor="#00101f35" transparent="0" />
+        <widget name="version" position="540,16" size="240,30" font="Regular;22" foregroundColor="#0065c4ff" backgroundColor="#00101f35" halign="right" transparent="0" />
+        <widget name="intro" position="42,104" size="430,120" font="Regular;20" foregroundColor="#00edf2fa" backgroundColor="#000d1829" transparent="0" />
+        <widget name="author" position="42,246" size="430,26" font="Regular;20" foregroundColor="#00ffd27d" backgroundColor="#000d1829" transparent="0" />
+        <widget name="website" position="42,282" size="430,52" font="Regular;18" foregroundColor="#008fd3ff" backgroundColor="#000d1829" transparent="0" />
+        <widget name="scan" position="42,346" size="430,36" font="Regular;18" foregroundColor="#00b5bfd1" backgroundColor="#000d1829" transparent="0" />
+        <widget name="qr" position="552,110" size="208,208" alphatest="blend" />
+        <widget name="qr_hint" position="534,330" size="244,54" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#00101f35" halign="center" transparent="0" />
+        <widget name="close_hint" position="28,432" size="764,28" font="Regular;19" foregroundColor="#00ffffff" backgroundColor="#00101f35" halign="center" transparent="0" />
     </screen>
     """
 
-    def __init__(self, session, parent):
+
+class NeoRadioAbout(Screen):
+    skin = get_about_skin()
+
+    def __init__(self, session):
         Screen.__init__(self, session)
-        self.parent = parent
-        self["clock"] = Label(text_type(""))
-        self["station"] = Label(text_type(""))
-        self["meta"] = Label(text_type(""))
-        self["hint"] = Label(tr('screensaver_hint'))
-        self["spectrum"] = Label(u"▁▂▃▄▅")
-        self["cover"] = Pixmap()
-        self["picon"] = Pixmap()
-        self["actions"] = ActionMap(["OkCancelActions", "ColorActions", "DirectionActions", "MenuActions", "InfobarActions"], {
-            "ok": self.close,
-            "cancel": self.close,
-            "red": self.close,
-            "green": self.close,
-            "yellow": self.close,
-            "blue": self.close,
-            "menu": self.close,
-            "showEventInfo": self.close,
-            "up": self.close,
-            "down": self.close,
-            "left": self.close,
-            "right": self.close,
+        self.setTitle(tr('about_title'))
+        self['title'] = Label(tr('about_title'))
+        self['version'] = Label(tr('about_version', PLUGIN_VERSION))
+        self['intro'] = Label(tr('about_intro'))
+        self['author'] = Label(tr('about_author'))
+        self['website'] = Label(tr('about_website', PROJECT_URL))
+        self['scan'] = Label(tr('about_scan'))
+        self['qr_hint'] = Label(tr('about_scan'))
+        self['close_hint'] = Label(tr('about_close'))
+        self['qr'] = Pixmap()
+        self['actions'] = ActionMap(['OkCancelActions', 'ColorActions'], {
+            'ok': self.close,
+            'cancel': self.close,
+            'red': self.close,
         }, -1)
-        self.timer = eTimer()
-        try:
-            self.timer.callback.append(self.on_timer)
-        except Exception:
-            self.timer_conn = self.timer.timeout.connect(self.on_timer)
-        self.saver_timer = eTimer()
-        try:
-            self.saver_timer.callback.append(self.on_screensaver_timeout)
-        except Exception:
-            self.saver_timer_conn = self.saver_timer.timeout.connect(self.on_screensaver_timeout)
-        self.audio_anim_timer = eTimer()
-        try:
-            self.audio_anim_timer.callback.append(self.on_audio_anim_timer)
-        except Exception:
-            self.audio_anim_timer_conn = self.audio_anim_timer.timeout.connect(self.on_audio_anim_timer)
-        self.rb_auto_timer = eTimer()
-        try:
-            self.rb_auto_timer.callback.append(self.on_radio_browser_auto_timer)
-        except Exception:
-            self.rb_auto_timer_conn = self.rb_auto_timer.timeout.connect(self.on_radio_browser_auto_timer)
-        self.rb_auto_running = False
-        self.rb_auto_result = None
-        self.rb_auto_error = None
-        self.rb_auto_code = text_type("")
-        self.last_activity_ts = time.time()
-        self.saver_open = False
-        self.saver_deadline = 0
-        self.onLayoutFinish.append(self.on_layout_ready)
-        self.apply_language()
+        self.onLayoutFinish.append(self.load_qr)
 
-    def set_footer_default(self):
-        self.footer_mode = 'default'
-        self["footer_brand"].setText(tr('by_author'))
-        self["footer_label"].setText(u"")
-
-    def source_label_from_kind(self, kind):
-        kind = to_text(kind).strip().lower()
-        if kind == 'icy':
-            return tr('metadata_source_icy')
-        if kind == 'endpoint':
-            return tr('metadata_source_endpoint')
-        if kind == 'hybrid':
-            return tr('metadata_source_hybrid')
-        return tr('metadata_source_service')
-
-    def set_footer_metadata(self, kind, detail_text):
-        detail_text = shorten_text(detail_text, 94 if self.is_fhd else 54)
-        self.footer_mode = 'metadata'
-        self["footer_brand"].setText(self.source_label_from_kind(kind))
-        self["footer_label"].setText(detail_text)
-
-    def reset_network_metadata(self):
-        self.network_meta = {}
-        self.network_meta_last_update = 0
-        self.network_meta_worker_id += 1
-        self.set_footer_default()
-
-    def start_network_metadata_worker(self, station, stream_url):
-        self.reset_network_metadata()
-        if threading is None:
-            return
-        worker_id = self.network_meta_worker_id
-        safe_station = dict(station or {})
-        safe_stream_url = to_text(stream_url).strip()
-        if not safe_stream_url:
-            return
+    def load_qr(self):
         try:
-            worker = threading.Thread(target=self.network_metadata_worker, args=(worker_id, safe_station, safe_stream_url))
-            worker.setDaemon(True)
-            worker.start()
+            if os.path.exists(PROJECT_QR):
+                try:
+                    self['qr'].instance.setScale(1)
+                except Exception:
+                    pass
+                self['qr'].instance.setPixmapFromFile(PROJECT_QR)
         except Exception:
             pass
 
-    def network_metadata_worker(self, worker_id, station, stream_url):
-        for _ in range(120):
-            if self.network_meta_worker_id != worker_id:
-                return
-            payload = fetch_station_network_metadata(station, stream_url)
-            if self.network_meta_worker_id != worker_id:
-                return
-            if payload:
-                payload['updated_at'] = format_ui_stamp()
-                self.network_meta = payload
-                self.network_meta_last_update = time.time()
-            sleep_left = NETWORK_META_POLL_SECS
-            while sleep_left > 0:
-                if self.network_meta_worker_id != worker_id:
-                    return
-                time.sleep(1)
-                sleep_left -= 1
 
 
-    def radio_browser_cache_has_stations(self):
-        try:
-            data = load_json_file(RADIO_BROWSER_STATIONS_FILE, [])
-            return bool(data)
-        except Exception:
-            return False
-
-    def start_radio_browser_default_autoload(self, force=False):
-        if not RADIO_BROWSER_AUTO_ON_EMPTY and not force:
-            return
-        if self.rb_auto_running:
-            return
-        if self.radio_browser_cache_has_stations() and not force:
-            return
-        code = detect_system_countrycode()
-        if not code:
-            code = 'PL'
-        self.rb_auto_code = code
-        self.rb_auto_result = None
-        self.rb_auto_error = None
-        try:
-            self["status_label"].setText(tr("status_prefix", tr("radiobrowser_downloading", code)))
-        except Exception:
-            pass
-        if threading is None:
-            try:
-                stations = radio_browser_fetch_stations(code, safe_int(getattr(config.plugins.neoradio.radio_browser_limit, 'value', RADIO_BROWSER_DEFAULT_LIMIT), RADIO_BROWSER_DEFAULT_LIMIT))
-                self.finish_radio_browser_autoload(code, stations, None)
-            except Exception as e:
-                self.finish_radio_browser_autoload(code, None, e)
-            return
-        self.rb_auto_running = True
-        try:
-            worker = threading.Thread(target=self.radio_browser_auto_worker, args=(code,))
-            worker.setDaemon(True)
-            worker.start()
-            self.rb_auto_timer.start(700)
-        except Exception as e:
-            self.rb_auto_running = False
-            self.finish_radio_browser_autoload(code, None, e)
-
-    def radio_browser_auto_worker(self, code):
-        try:
-            limit = safe_int(getattr(config.plugins.neoradio.radio_browser_limit, 'value', RADIO_BROWSER_DEFAULT_LIMIT), RADIO_BROWSER_DEFAULT_LIMIT)
-            self.rb_auto_result = radio_browser_fetch_stations(code, limit)
-            self.rb_auto_error = None
-        except Exception as e:
-            self.rb_auto_result = None
-            self.rb_auto_error = e
-
-    def on_radio_browser_auto_timer(self):
-        if not self.rb_auto_running:
-            try:
-                self.rb_auto_timer.stop()
-            except Exception:
-                pass
-            return
-        if self.rb_auto_result is None and self.rb_auto_error is None:
-            return
-        try:
-            self.rb_auto_timer.stop()
-        except Exception:
-            pass
-        self.rb_auto_running = False
-        self.finish_radio_browser_autoload(self.rb_auto_code, self.rb_auto_result, self.rb_auto_error)
-
-    def finish_radio_browser_autoload(self, code, stations, error=None):
-        if error is not None:
-            try:
-                self["status_label"].setText(tr("status_prefix", tr("radiobrowser_fail", shorten_text(to_text(error), 120))))
-            except Exception:
-                pass
-            return
-        if not stations:
-            try:
-                self["status_label"].setText(tr("status_prefix", tr("radiobrowser_empty", code)))
-            except Exception:
-                pass
-            return
-        save_json_file(RADIO_BROWSER_STATIONS_FILE, stations)
-        try:
-            config.plugins.neoradio.radio_browser_countrycode.value = code
-            config.plugins.neoradio.radio_browser_countrycode.save()
-            configfile.save()
-        except Exception:
-            pass
-        self.clear_picon_cache()
-        self.base_stations = load_stations()
-        self.current_filter = tr("all")
-        self.refresh_list(select_name=to_text(stations[0].get('name', '')), select_url=to_text(stations[0].get('url', '')))
-        try:
-            self["status_label"].setText(tr("status_prefix", tr("radiobrowser_done", code, len(stations))))
-        except Exception:
-            pass
-
-    def on_layout_ready(self):
-        try:
-            self['picon'].instance.setScale(1)
-            self['cover'].instance.setScale(1)
-        except Exception:
-            pass
-        self.on_timer()
-        self.timer.start(1000)
-
-    def on_timer(self):
-        self['clock'].setText(to_text(time.strftime('%H:%M:%S')))
-        station = None
-        try:
-            station = self.parent.get_screensaver_station()
-        except Exception:
-            station = None
-        name = to_text(station.get('name', u'NeoRadio')) if station else u'NeoRadio'
-        meta = []
-        if station:
-            meta.append(to_text(station.get('country', u'')))
-            meta.append(to_text(station.get('genre', u'')))
-            meta.append(u'%s kbps' % to_text(station.get('bitrate', u'?')))
-        self['station'].setText(name)
-        self['meta'].setText(u' | '.join([x for x in meta if x]))
-        try:
-            self['spectrum'].setText(self.parent.spectrum_frames[self.parent.visualizer_idx % len(self.parent.spectrum_frames)])
-            self['picon'].instance.setPixmapFromFile(self.parent.current_picon_path or DEFAULT_PICON)
-            self['cover'].instance.setPixmapFromFile(self.parent.current_cover_path or DEFAULT_COVER)
-        except Exception:
-            pass
-
-    def close(self):
-        try:
-            self.timer.stop()
-        except Exception:
-            pass
-        Screen.close(self)
-
-
+# The legacy standalone NeoRadioSaver class was removed in 3.0.0.
+# The active screensaver is the lightweight overlay managed by NeoRadioMain.
 
 class NeoRadioMain(Screen):
     skin = get_skin()
@@ -2077,8 +2150,16 @@ class NeoRadioMain(Screen):
         self.playlist_cache = {}
         self.remote_picon_cache = {}
         self.remote_picon_discovery_cache = {}
+        self.remote_picon_worker_id = 0
+        self.remote_picon_jobs = {}
         self.github_console = None
         self.github_update_info = {}
+        self.github_update_running = False
+        self.github_update_result = None
+        self.github_update_error = None
+        self.github_check_running = False
+        self.github_check_result = None
+        self.github_check_error = None
         self.network_meta = {}
         self.network_meta_worker_id = 0
         self.network_meta_last_update = 0
@@ -2210,10 +2291,35 @@ class NeoRadioMain(Screen):
             self.rb_auto_timer.callback.append(self.on_radio_browser_auto_timer)
         except Exception:
             self.rb_auto_timer_conn = self.rb_auto_timer.timeout.connect(self.on_radio_browser_auto_timer)
+        self.rb_manual_timer = eTimer()
+        try:
+            self.rb_manual_timer.callback.append(self.on_radio_browser_manual_timer)
+        except Exception:
+            self.rb_manual_timer_conn = self.rb_manual_timer.timeout.connect(self.on_radio_browser_manual_timer)
+        self.remote_picon_timer = eTimer()
+        try:
+            self.remote_picon_timer.callback.append(self.on_remote_picon_timer)
+        except Exception:
+            self.remote_picon_timer_conn = self.remote_picon_timer.timeout.connect(self.on_remote_picon_timer)
+        self.github_update_timer = eTimer()
+        try:
+            self.github_update_timer.callback.append(self.on_github_update_timer)
+        except Exception:
+            self.github_update_timer_conn = self.github_update_timer.timeout.connect(self.on_github_update_timer)
+        self.github_check_timer = eTimer()
+        try:
+            self.github_check_timer.callback.append(self.on_github_check_timer)
+        except Exception:
+            self.github_check_timer_conn = self.github_check_timer.timeout.connect(self.on_github_check_timer)
         self.rb_auto_running = False
         self.rb_auto_result = None
         self.rb_auto_error = None
         self.rb_auto_code = text_type("")
+        self.rb_manual_running = False
+        self.rb_manual_mode = text_type("")
+        self.rb_manual_code = text_type("")
+        self.rb_manual_result = None
+        self.rb_manual_error = None
         self.last_activity_ts = time.time()
         self.saver_open = False
         self.saver_deadline = 0
@@ -2223,7 +2329,7 @@ class NeoRadioMain(Screen):
     def set_footer_default(self):
         self.footer_mode = 'default'
         self["footer_brand"].setText(tr('by_author'))
-        self["footer_label"].setText(u"")
+        self["footer_label"].setText(PROJECT_URL)
 
     def source_label_from_kind(self, kind):
         kind = to_text(kind).strip().lower()
@@ -2967,96 +3073,142 @@ class NeoRadioMain(Screen):
         self.remote_picon_discovery_cache[base] = resolved
         return resolved
 
+    def get_cached_remote_picon(self, station):
+        source_url = self.get_remote_picon_url(station)
+        if not source_url:
+            return None
+        cached = self.remote_picon_cache.get(source_url)
+        if cached and os.path.exists(cached):
+            return cached
+        digest = hashlib.md5(to_text(source_url).encode('utf-8')).hexdigest()
+        for ext in ('.png', '.jpg', '.jpeg'):
+            candidate = os.path.join(REMOTE_PICON_CACHE_DIR, digest + ext)
+            if os.path.exists(candidate) and os.path.getsize(candidate) > 0 and is_usable_picon_image(candidate):
+                self.remote_picon_cache[source_url] = candidate
+                return candidate
+        return None
+
     def download_remote_picon(self, station):
+        """Download a small station logo without invoking a shell command."""
         if not station:
             return None
         source_url = self.get_remote_picon_url(station)
         if not source_url:
             return None
-        if source_url in self.remote_picon_cache:
-            cached = self.remote_picon_cache.get(source_url)
-            if cached and os.path.exists(cached):
-                return cached
+        cached = self.get_cached_remote_picon(station)
+        if cached:
+            return cached
         ensure_dir(REMOTE_PICON_CACHE_DIR)
         digest = hashlib.md5(to_text(source_url).encode('utf-8')).hexdigest()
         target_png = os.path.join(REMOTE_PICON_CACHE_DIR, digest + '.png')
-        if os.path.exists(target_png) and os.path.getsize(target_png) > 0:
-            self.remote_picon_cache[source_url] = target_png
-            return target_png
+        response = None
         try:
-            request = Request(source_url, headers={"User-Agent": "NeoRadio/%s" % PLUGIN_VERSION})
-            response = urlopen(request, timeout=8)
-            data = response.read()
+            request = Request(source_url, headers={"User-Agent": "NeoRadio/%s Enigma2" % PLUGIN_VERSION})
+            response = urlopen(request, timeout=5)
+            data = response.read(REMOTE_PICON_MAX_BYTES + 1)
+            if len(data) > REMOTE_PICON_MAX_BYTES:
+                raise Exception('remote picon too large')
             content_type = to_text(response.info().get('Content-Type', ''))
         except Exception:
             data = None
             content_type = ''
-        if data:
+        finally:
             try:
-                if Image is not None:
-                    stream = io.BytesIO(data)
-                    image = Image.open(stream)
-                    image.load()
-                    if image.mode not in ('RGB', 'RGBA'):
-                        image = image.convert('RGBA')
-                    image.save(target_png, 'PNG')
-                    if os.path.exists(target_png) and os.path.getsize(target_png) > 0:
-                        self.remote_picon_cache[source_url] = target_png
-                        return target_png
+                if response is not None:
+                    response.close()
             except Exception:
                 pass
-            ext = guess_image_extension(source_url, content_type)
-            fallback_target = os.path.join(REMOTE_PICON_CACHE_DIR, digest + ext)
-            try:
-                with open(fallback_target, 'wb') as handle:
-                    handle.write(data)
-                if os.path.exists(fallback_target) and os.path.getsize(fallback_target) > 0:
-                    if Image is not None or is_enigma_supported_pixmap_path(fallback_target):
-                        self.remote_picon_cache[source_url] = fallback_target
-                        return fallback_target
-            except Exception:
-                pass
-        tmp_target = os.path.join(REMOTE_PICON_CACHE_DIR, digest + '.download')
+        if not data:
+            self.remote_picon_cache[source_url] = None
+            return None
         try:
-            os.system('wget -q --timeout=10 --tries=1 --no-check-certificate -O "%s" "%s"' % (tmp_target, source_url))
-            if os.path.exists(tmp_target) and os.path.getsize(tmp_target) > 0:
-                try:
-                    if Image is not None:
-                        image = Image.open(tmp_target)
-                        image.load()
-                        if image.mode not in ('RGB', 'RGBA'):
-                            image = image.convert('RGBA')
-                        image.save(target_png, 'PNG')
-                        if os.path.exists(target_png) and os.path.getsize(target_png) > 0:
-                            self.remote_picon_cache[source_url] = target_png
-                            return target_png
-                except Exception:
-                    pass
-                ext = guess_image_extension(source_url, '')
-                fallback_target = os.path.join(REMOTE_PICON_CACHE_DIR, digest + ext)
-                try:
-                    os.rename(tmp_target, fallback_target)
-                except Exception:
-                    try:
-                        with open(tmp_target, 'rb') as src:
-                            with open(fallback_target, 'wb') as dst:
-                                dst.write(src.read())
-                        os.unlink(tmp_target)
-                    except Exception:
-                        pass
-                if os.path.exists(fallback_target) and os.path.getsize(fallback_target) > 0:
-                    if Image is not None or is_enigma_supported_pixmap_path(fallback_target):
-                        self.remote_picon_cache[source_url] = fallback_target
-                        return fallback_target
+            if Image is not None:
+                stream = io.BytesIO(data)
+                image = Image.open(stream)
+                image.load()
+                if image.mode not in ('RGB', 'RGBA'):
+                    image = image.convert('RGBA')
+                width, height = image.size
+                if width < 12 or height < 12 or width > 3000 or height > 3000:
+                    raise Exception('invalid picon dimensions')
+                image.save(target_png, 'PNG')
+                if os.path.exists(target_png) and os.path.getsize(target_png) > 0:
+                    self.remote_picon_cache[source_url] = target_png
+                    return target_png
         except Exception:
             pass
+        if data.startswith(b'\x89PNG\r\n\x1a\n'):
+            ext = '.png'
+        elif data.startswith(b'\xff\xd8\xff'):
+            ext = '.jpg'
+        else:
+            self.remote_picon_cache[source_url] = None
+            return None
+        fallback_target = os.path.join(REMOTE_PICON_CACHE_DIR, digest + ext)
         try:
-            if os.path.exists(tmp_target):
-                os.unlink(tmp_target)
+            with open(fallback_target, 'wb') as handle:
+                handle.write(data)
+            if os.path.exists(fallback_target) and os.path.getsize(fallback_target) > 0 and is_usable_picon_image(fallback_target):
+                self.remote_picon_cache[source_url] = fallback_target
+                return fallback_target
         except Exception:
             pass
         self.remote_picon_cache[source_url] = None
         return None
+
+    def start_remote_picon_worker(self, station):
+        if threading is None or not station:
+            return
+        if self.get_cached_remote_picon(station):
+            return
+        if not self.get_remote_picon_url(station):
+            return
+        self.remote_picon_worker_id += 1
+        worker_id = self.remote_picon_worker_id
+        safe_station = dict(station)
+        try:
+            worker = threading.Thread(target=self.remote_picon_worker, args=(worker_id, safe_station))
+            worker.setDaemon(True)
+            worker.start()
+            self.remote_picon_timer.start(300)
+        except Exception:
+            pass
+
+    def remote_picon_worker(self, worker_id, station):
+        path = None
+        try:
+            path = self.download_remote_picon(station)
+        except Exception:
+            path = None
+        self.remote_picon_jobs[worker_id] = (station, path)
+
+    def on_remote_picon_timer(self):
+        worker_id = self.remote_picon_worker_id
+        result = self.remote_picon_jobs.pop(worker_id, None)
+        for old_id in list(self.remote_picon_jobs.keys()):
+            if old_id < worker_id:
+                self.remote_picon_jobs.pop(old_id, None)
+        if result is None:
+            return
+        try:
+            self.remote_picon_timer.stop()
+        except Exception:
+            pass
+        station, path = result
+        if not path or not os.path.exists(path):
+            return
+        current = self.playing_station_data or self.get_current_station()
+        if station_identity_key(current) != station_identity_key(station):
+            return
+        cache_key = u"|".join([
+            to_text(station.get("name", u"")),
+            to_text(station.get("picon", u"")),
+            to_text(station.get("picon_url", u"")),
+        ])
+        self.picon_cache[cache_key] = path
+        self.current_picon_path = path
+        self.set_pixmap_file("picon", path)
+        self.set_pixmap_file("picon_large", path)
 
     def find_picon_path(self, station):
         if not station:
@@ -3106,7 +3258,7 @@ class NeoRadioMain(Screen):
                     if os.path.exists(path) and is_usable_picon_image(path):
                         self.picon_cache[cache_key] = path
                         return path
-        remote = self.download_remote_picon(station)
+        remote = self.get_cached_remote_picon(station)
         if remote and is_usable_picon_image(remote):
             self.picon_cache[cache_key] = remote
             return remote
@@ -3313,6 +3465,7 @@ class NeoRadioMain(Screen):
         except Exception:
             pass
         self.session.nav.playService(ref)
+        radio_browser_register_click_async(station.get('radio_browser_uuid', ''))
         self.apply_audio_controls()
         self.schedule_screensaver()
         self.last_meta_blob = text_type("")
@@ -3322,6 +3475,7 @@ class NeoRadioMain(Screen):
         else:
             self["np_status"].setText(tr("metadata_waiting"))
         self.update_picon(station)
+        self.start_remote_picon_worker(station)
         self.start_network_metadata_worker(station, stream_url)
         self["spectrum_label"].setText(self.spectrum_frames[self.visualizer_idx % len(self.spectrum_frames)])
 
@@ -3877,53 +4031,90 @@ class NeoRadioMain(Screen):
             self.update_picon(self.get_picon_station())
             self["status_label"].setText(tr("status_prefix", tr("reloaded")))
         elif action == "about":
-            about = tr("about_text", PLUGIN_VERSION, FAV_FILE, USER_STATIONS_FILE)
-            self.session.open(MessageBox, about, MessageBox.TYPE_INFO)
+            self.session.open(NeoRadioAbout)
 
     def open_radio_browser_country_menu(self):
         if self.consume_screensaver_key():
             return
         self.touch_activity()
-        try:
-            self["status_label"].setText(tr("status_prefix", tr("radiobrowser_downloading", 'countries')))
-        except Exception:
-            pass
-        try:
-            countries = radio_browser_countrycodes()
-        except Exception as e:
-            self.session.open(MessageBox, tr("radiobrowser_fail", to_text(e)), MessageBox.TYPE_INFO, timeout=10)
-            return
-        options = [(tr("radiobrowser_clear"), "__clear__")]
-        for item in countries:
-            code = to_text(item.get('name', '')).strip().upper()
-            count = safe_int(item.get('stationcount', 0), 0)
-            if code:
-                options.append((tr("radiobrowser_country_item", code, count), code))
-        self.session.openWithCallback(self.radio_browser_country_callback, ChoiceBox, title=tr("radiobrowser_country_title"), list=options)
+        self.start_radio_browser_manual_job('countries')
 
-    def radio_browser_country_callback(self, answer):
-        if not answer:
+    def start_radio_browser_manual_job(self, mode, code=''):
+        if self.rb_manual_running or self.rb_auto_running:
+            self.session.open(MessageBox, tr('radiobrowser_busy'), MessageBox.TYPE_INFO, timeout=5)
             return
-        self.touch_activity()
-        code = to_text(answer[1]).strip().upper()
-        if code == "__CLEAR__":
-            save_json_file(RADIO_BROWSER_STATIONS_FILE, [])
-            self.base_stations = load_stations()
-            self.refresh_list()
-            self["status_label"].setText(tr("status_prefix", tr("radiobrowser_cleared")))
-            return
-        if not code:
-            return
+        mode = to_text(mode).strip()
+        code = to_text(code).strip().upper()
+        self.rb_manual_mode = mode
+        self.rb_manual_code = code
+        self.rb_manual_result = None
+        self.rb_manual_error = None
+        label = code if mode == 'stations' else 'countries'
         try:
-            self["status_label"].setText(tr("status_prefix", tr("radiobrowser_downloading", code)))
+            self["status_label"].setText(tr("status_prefix", tr("radiobrowser_downloading", label)))
         except Exception:
             pass
-        try:
-            limit = safe_int(getattr(config.plugins.neoradio.radio_browser_limit, 'value', RADIO_BROWSER_DEFAULT_LIMIT), RADIO_BROWSER_DEFAULT_LIMIT)
-            stations = radio_browser_fetch_stations(code, limit)
-        except Exception as e:
-            self.session.open(MessageBox, tr("radiobrowser_fail", to_text(e)), MessageBox.TYPE_INFO, timeout=12)
+        if threading is None:
+            try:
+                self.rb_manual_result = self.radio_browser_manual_fetch(mode, code)
+            except Exception as e:
+                self.rb_manual_error = to_text(e)
+            self.finish_radio_browser_manual_job()
             return
+        self.rb_manual_running = True
+        try:
+            worker = threading.Thread(target=self.radio_browser_manual_worker, args=(mode, code))
+            worker.setDaemon(True)
+            worker.start()
+            self.rb_manual_timer.start(250)
+        except Exception as e:
+            self.rb_manual_running = False
+            self.rb_manual_error = to_text(e)
+            self.finish_radio_browser_manual_job()
+
+    def radio_browser_manual_fetch(self, mode, code):
+        if mode == 'countries':
+            return radio_browser_countrycodes()
+        if mode == 'stations':
+            limit = safe_int(getattr(config.plugins.neoradio.radio_browser_limit, 'value', RADIO_BROWSER_DEFAULT_LIMIT), RADIO_BROWSER_DEFAULT_LIMIT)
+            return radio_browser_fetch_stations(code, limit)
+        raise Exception('invalid Radio-Browser operation')
+
+    def radio_browser_manual_worker(self, mode, code):
+        try:
+            self.rb_manual_result = self.radio_browser_manual_fetch(mode, code)
+            self.rb_manual_error = None
+        except Exception as e:
+            self.rb_manual_result = None
+            self.rb_manual_error = to_text(e)
+
+    def on_radio_browser_manual_timer(self):
+        if self.rb_manual_result is None and self.rb_manual_error is None:
+            return
+        try:
+            self.rb_manual_timer.stop()
+        except Exception:
+            pass
+        self.rb_manual_running = False
+        self.finish_radio_browser_manual_job()
+
+    def finish_radio_browser_manual_job(self):
+        mode = self.rb_manual_mode
+        code = self.rb_manual_code
+        if self.rb_manual_error:
+            self.session.open(MessageBox, tr("radiobrowser_fail", to_text(self.rb_manual_error)), MessageBox.TYPE_INFO, timeout=10)
+            return
+        if mode == 'countries':
+            countries = self.rb_manual_result or []
+            options = [(tr("radiobrowser_clear"), "__clear__")]
+            for item in countries:
+                item_code = to_text(item.get('name', '')).strip().upper()
+                count = safe_int(item.get('stationcount', 0), 0)
+                if item_code:
+                    options.append((tr("radiobrowser_country_item", item_code, count), item_code))
+            self.session.openWithCallback(self.radio_browser_country_callback, ChoiceBox, title=tr("radiobrowser_country_title"), list=options)
+            return
+        stations = self.rb_manual_result or []
         if not stations:
             self.session.open(MessageBox, tr("radiobrowser_empty", code), MessageBox.TYPE_INFO, timeout=8)
             return
@@ -3939,6 +4130,20 @@ class NeoRadioMain(Screen):
         self.current_filter = tr("all")
         self.refresh_list(select_name=to_text(stations[0].get('name', '')), select_url=to_text(stations[0].get('url', '')))
         self["status_label"].setText(tr("status_prefix", tr("radiobrowser_done", code, len(stations))))
+
+    def radio_browser_country_callback(self, answer):
+        if not answer:
+            return
+        self.touch_activity()
+        code = to_text(answer[1]).strip().upper()
+        if code == "__CLEAR__":
+            save_json_file(RADIO_BROWSER_STATIONS_FILE, [])
+            self.base_stations = load_stations()
+            self.refresh_list()
+            self["status_label"].setText(tr("status_prefix", tr("radiobrowser_cleared")))
+            return
+        if code:
+            self.start_radio_browser_manual_job('stations', code)
 
     def choose_country(self):
         options = [(tr("all_countries"), u"")]
@@ -4063,30 +4268,86 @@ class NeoRadioMain(Screen):
         if not url:
             self.session.open(MessageBox, tr("github_not_set"), MessageBox.TYPE_INFO, timeout=6)
             return
-        self["status_label"].setText(tr("status_prefix", tr("github_checking")))
         try:
-            raw = fetch_text_url(url, timeout=10)
-            info = json.loads(raw)
-            remote_version = to_text(info.get('version', u'')).strip()
-            if not remote_version:
-                raise Exception('missing version')
-            if is_remote_version_newer(remote_version, PLUGIN_VERSION):
-                ipk_url = extract_manifest_ipk_url(info)
-                if not ipk_url:
-                    self.session.open(MessageBox, tr("github_missing_ipk"), MessageBox.TYPE_INFO, timeout=8)
-                    return
-                changelog = to_text(info.get('changelog', u'-')).strip() or u'-'
-                self.github_update_info = {
-                    'version': remote_version,
-                    'ipk': ipk_url,
-                    'changelog': changelog,
-                }
-                prompt = tr("github_install_prompt", remote_version, changelog)
-                self.session.openWithCallback(self.github_install_prompt_callback, MessageBox, prompt, MessageBox.TYPE_YESNO)
-            else:
-                self.session.open(MessageBox, tr("github_up_to_date"), MessageBox.TYPE_INFO, timeout=6)
+            if to_text(urlparse(url).scheme).lower() != 'https':
+                raise Exception('update manifest must use HTTPS')
         except Exception:
             self.session.open(MessageBox, tr("github_error"), MessageBox.TYPE_INFO, timeout=6)
+            return
+        if self.github_check_running or self.github_update_running:
+            self.session.open(MessageBox, tr("github_update_busy"), MessageBox.TYPE_INFO, timeout=5)
+            return
+        self["status_label"].setText(tr("status_prefix", tr("github_checking")))
+        self.github_check_result = None
+        self.github_check_error = None
+        if threading is None:
+            try:
+                self.github_check_result = self.fetch_github_manifest(url)
+            except Exception as e:
+                self.github_check_error = to_text(e)
+            self.finish_github_check()
+            return
+        self.github_check_running = True
+        try:
+            worker = threading.Thread(target=self.github_check_worker, args=(url,))
+            worker.setDaemon(True)
+            worker.start()
+            self.github_check_timer.start(250)
+        except Exception as e:
+            self.github_check_running = False
+            self.github_check_error = to_text(e)
+            self.finish_github_check()
+
+    def fetch_github_manifest(self, url):
+        raw = fetch_text_url(url, timeout=10)
+        info = json.loads(raw)
+        if not isinstance(info, dict):
+            raise Exception('invalid manifest')
+        remote_version = to_text(info.get('version', u'')).strip()
+        if not remote_version:
+            raise Exception('missing version')
+        return info
+
+    def github_check_worker(self, url):
+        try:
+            self.github_check_result = self.fetch_github_manifest(url)
+            self.github_check_error = None
+        except Exception as e:
+            self.github_check_result = None
+            self.github_check_error = to_text(e)
+
+    def on_github_check_timer(self):
+        if self.github_check_result is None and self.github_check_error is None:
+            return
+        try:
+            self.github_check_timer.stop()
+        except Exception:
+            pass
+        self.github_check_running = False
+        self.finish_github_check()
+
+    def finish_github_check(self):
+        if self.github_check_error:
+            self.session.open(MessageBox, tr("github_error"), MessageBox.TYPE_INFO, timeout=6)
+            return
+        info = self.github_check_result or {}
+        remote_version = to_text(info.get('version', u'')).strip()
+        if is_remote_version_newer(remote_version, PLUGIN_VERSION):
+            ipk_url = extract_manifest_ipk_url(info)
+            if not ipk_url:
+                self.session.open(MessageBox, tr("github_missing_ipk"), MessageBox.TYPE_INFO, timeout=8)
+                return
+            changelog = to_text(info.get('changelog', u'-')).strip() or u'-'
+            self.github_update_info = {
+                'version': remote_version,
+                'ipk': ipk_url,
+                'sha256': to_text(info.get('sha256', u'')).strip(),
+                'changelog': changelog,
+            }
+            prompt = tr("github_install_prompt", remote_version, changelog)
+            self.session.openWithCallback(self.github_install_prompt_callback, MessageBox, prompt, MessageBox.TYPE_YESNO)
+        else:
+            self.session.open(MessageBox, tr("github_up_to_date"), MessageBox.TYPE_INFO, timeout=6)
 
     def github_install_prompt_callback(self, answer):
         if not answer:
@@ -4101,13 +4362,69 @@ class NeoRadioMain(Screen):
 
     def install_github_update(self, ipk_url, remote_version):
         self.touch_activity()
+        if self.github_update_running:
+            self.session.open(MessageBox, tr("github_update_busy"), MessageBox.TYPE_INFO, timeout=5)
+            return
         self["status_label"].setText(tr("status_prefix", tr("github_installing", remote_version)))
-        safe_url = to_text(ipk_url).replace('"', '%22')
-        cmd = 'rm -f "%(tmp)s"; wget --no-check-certificate -O "%(tmp)s" "%(url)s" && opkg install --force-reinstall "%(tmp)s"' % {
-            'tmp': UPDATE_TEMP_IPK,
-            'url': safe_url,
-        }
         self.github_update_info['version'] = remote_version
+        self.github_update_info['ipk'] = to_text(ipk_url).strip()
+        self.github_update_result = None
+        self.github_update_error = None
+        if threading is None:
+            try:
+                self.github_update_result = prepare_update_ipk(
+                    self.github_update_info['ipk'],
+                    remote_version,
+                    to_text(self.github_update_info.get('sha256', u'')).strip() or None,
+                )
+            except Exception as e:
+                self.github_update_error = to_text(e)
+            self.finish_github_update_download()
+            return
+        self.github_update_running = True
+        try:
+            worker = threading.Thread(target=self.github_update_worker)
+            worker.setDaemon(True)
+            worker.start()
+            self.github_update_timer.start(300)
+        except Exception as e:
+            self.github_update_running = False
+            self.github_update_error = to_text(e)
+            self.finish_github_update_download()
+
+    def github_update_worker(self):
+        try:
+            self.github_update_result = prepare_update_ipk(
+                to_text(self.github_update_info.get('ipk', u'')).strip(),
+                to_text(self.github_update_info.get('version', u'')).strip(),
+                to_text(self.github_update_info.get('sha256', u'')).strip() or None,
+            )
+            self.github_update_error = None
+        except Exception as e:
+            self.github_update_result = None
+            self.github_update_error = to_text(e)
+
+    def on_github_update_timer(self):
+        if self.github_update_result is None and self.github_update_error is None:
+            return
+        try:
+            self.github_update_timer.stop()
+        except Exception:
+            pass
+        self.github_update_running = False
+        self.finish_github_update_download()
+
+    def finish_github_update_download(self):
+        remote_version = to_text(self.github_update_info.get('version', u'?'))
+        if self.github_update_error:
+            try:
+                if os.path.exists(UPDATE_TEMP_IPK):
+                    os.remove(UPDATE_TEMP_IPK)
+            except Exception:
+                pass
+            self.session.open(MessageBox, tr("github_download_fail", remote_version, self.github_update_error), MessageBox.TYPE_INFO, timeout=12)
+            return
+        cmd = 'opkg install --force-reinstall "%s"' % UPDATE_TEMP_IPK
         if ComponentsConsole is not None:
             try:
                 self.github_console = ComponentsConsole()
@@ -4130,7 +4447,7 @@ class NeoRadioMain(Screen):
         else:
             output = to_text(result).strip()
             if not output:
-                output = u'opkg/wget returned code %s' % to_text(retval)
+                output = u'opkg returned code %s' % to_text(retval)
             if len(output) > 700:
                 output = output[-700:]
             self.session.open(MessageBox, tr("github_install_fail", remote_version, output), MessageBox.TYPE_INFO, timeout=12)
@@ -4138,7 +4455,13 @@ class NeoRadioMain(Screen):
     def github_restart_callback(self, answer):
         if answer:
             self["status_label"].setText(tr("status_prefix", tr("github_restarting")))
-            os.system('(sleep 2; killall -9 enigma2) >/dev/null 2>&1 &')
+            if TryQuitMainloop is not None:
+                try:
+                    self.session.open(TryQuitMainloop, 3)
+                    return
+                except Exception:
+                    pass
+            os.system('(sleep 1; killall -9 enigma2) >/dev/null 2>&1 &')
         else:
             self["status_label"].setText(tr("status_prefix", tr("github_restart_later")))
 
@@ -4161,7 +4484,7 @@ class NeoRadioMain(Screen):
             return
         self.touch_activity()
         self.network_meta_worker_id += 1
-        for timer_obj in (getattr(self, 'timer', None), getattr(self, 'saver_timer', None), getattr(self, 'audio_anim_timer', None), getattr(self, 'rb_auto_timer', None)):
+        for timer_obj in (getattr(self, 'timer', None), getattr(self, 'saver_timer', None), getattr(self, 'audio_anim_timer', None), getattr(self, 'rb_auto_timer', None), getattr(self, 'rb_manual_timer', None), getattr(self, 'remote_picon_timer', None), getattr(self, 'github_update_timer', None), getattr(self, 'github_check_timer', None)):
             try:
                 if timer_obj is not None:
                     timer_obj.stop()

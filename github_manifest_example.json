@@ -1,8 +1,9 @@
 {
-  "changelog": "NeoRadio 2.0: wersja zbudowana na bazie 1.3.9. Zachowano rozbudowane funkcje 1.3.9, dodano aktualizację bazy stacji z pliku userbouquet.iptv_radio.radio oraz czyszczenie plików instalacyjnych NeoRadio z /tmp po instalacji.",
-  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
   "name": "NeoRadio",
-  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
-  "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
-  "version": "2.0"
+  "version": "3.0.1",
+  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/download/v3.0.1/enigma2-plugin-extensions-neoradio_3.0.1_all.ipk",
+  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/tag/v3.0.1",
+  "project_page": "https://olioli2013.github.io/aio-iptv-projekt/",
+  "sha256": "PUT_64_CHARACTER_SHA256_HERE",
+  "changelog": "Describe the update here."
 }

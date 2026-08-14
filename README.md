@@ -1,108 +1,88 @@
-# NeoRadio 2.0
+# NeoRadio 3.0.0 for Enigma2
 
-NeoRadio is a modern Enigma2 internet radio plugin focused on fast playback, readable metadata, SAT/IPTV picon support, bilingual Polish/English UI, and GitHub-based updates.
+**NeoRadio** is an internet-radio plugin for Enigma2 receivers. Version 3.0.0 is a maintenance, security and interface release built from NeoRadio 2.1 after a full static/package audit.
 
+The plugin keeps compatibility-oriented code for **Python 2.7 and Python 3 Enigma2 images**, while improving network handling, Radio-Browser integration, picon caching, update validation and the visual identity used by the AIO projects.
 
-## What's new in 2.0
+Project website: **https://olioli2013.github.io/aio-iptv-projekt/**  
+Repository: **https://github.com/OliOli2013/NeoRadio**  
+Author: **Paweł Pawełek**
 
-- rebuilt from the full NeoRadio 1.3.9 package, preserving the expanded audio controls and UI assets
-- updated the built-in radio database using the supplied  Radio Streams
-- added installer cleanup for temporary NeoRadio installation/update files in `/tmp`
+## Main features
 
-## What's new in 1.3.9
+- internet radio playback through Enigma2 service reference 4097
+- Radio-Browser station download by country (background worker where available)
+- fallback mirror discovery if the configured Radio-Browser endpoints fail
+- automatic first-run Radio-Browser cache population (system country, with PL fallback)
+- local/custom station support through `/etc/enigma2/neoradio_user_stations.json`
+- favorites and recently played history
+- station filters, search and language grouping
+- Enigma2 / ICY / optional JSON-text endpoint metadata
+- SAT/IPTV/local picon lookup and remote logo cache
+- album/cover artwork support
+- optional screensaver overlay
+- audio balance, treble and bass controls where supported by the receiver/audio stack
+- Polish and English user interface
+- GitHub update checking with package validation
+- AIO-family dark navy / cyan / gold visual identity
+- built-in About screen with project website and QR code
 
-- added three audio potentiometers on the main radio screen: left/right balance, treble, and bass
-- added direct remote control shortcuts: `1/3` balance, `4/6` treble, `7/9` bass, `5` reset
-- added persistent audio settings in Enigma2 config while keeping the existing station list, metadata, picons, screensaver, and GitHub update behavior unchanged
+## Remote control
 
-## What's new in 1.3.4
+- **OK / Green** – play selected station
+- **Red / Exit** – close NeoRadio
+- **Yellow** – favorite on/off
+- **Blue** – filters/bouquets
+- **Menu** – settings and tools
+- **Info** – station details
+- **1 / 3** – balance left/right
+- **4 / 6** – treble down/up
+- **7 / 9** – bass down/up
+- **5** – reset audio controls
+- **0** – change audio-control visual theme
+- **Volume +/- / Mute** – receiver volume controls
 
-- imported stations from the supplied `userbouquet.iptv_radio.radio` bouquet
-- normalized duplicate country/bouquet naming such as `Polska`, `Poland`, and `Polen`
-- added station language filters: Polish, Arabic, French, German, Italian, and Other
-- added a separate Blue-button filters/bouquets screen so the Menu button opens settings immediately
-- restored the last selected filter and last station URL on startup
-- added persistent recently played history in `/etc/enigma2/neoradio_history.json`
-- kept existing options such as keep-playing, autoplay, picons, screensaver, and GitHub update URL persistent through Enigma2 config
+## Station sources in 3.0.0
 
-## What's new in 1.3.3
+NeoRadio merges and deduplicates the following sources instead of forcing the Radio-Browser cache to replace everything:
 
-- cleaned up the main screen layout so the clock, station description, and live metadata no longer overlap
-- moved the live metadata into a dedicated lower information block for better readability
-- shortened overly long footer/source lines to keep RDS / ICY details visible on screen
-- kept station description stable instead of mixing it with now-playing text near the clock
-- retained the stronger **ICY metadata** parsing and optional station endpoint support from 1.3.x
+1. packaged `stations.json`
+2. `/etc/enigma2/neoradio_user_stations.json`
+3. `/etc/enigma2/neoradio_radiobrowser_stations.json`
 
-## Metadata model
+The packaged database may remain intentionally small/empty. On a normal network-connected receiver NeoRadio populates the Radio-Browser cache automatically. Custom stations remain available and are no longer ignored by the Radio-Browser mode used in 2.1.
 
-NeoRadio now uses the following priority chain:
+## Safe update model
 
-1. Enigma2 service tags (`sTagTitle`, `sTagArtist`, `sTagAlbum`, `sTagComment`)
-2. direct stream metadata via `Icy-MetaData: 1`
-3. optional station endpoint defined per station in JSON
+The updater now:
 
-This gives much better results on streams that do not fully expose metadata through Enigma2 alone.
+- accepts an HTTPS manifest
+- downloads the IPK without a shell-built `wget` command
+- limits update size
+- supports SHA-256 verification from `manifest.json`
+- reads the IPK `control` archive before installation
+- verifies package name and expected version
+- installs only after validation
+- uses Enigma2 `TryQuitMainloop` for GUI restart when available
 
-## Custom station example with external metadata endpoint
+## Build
 
-The plugin supports additional optional fields in `neoradio_user_stations.json`:
+On Linux with Python 3:
 
-```json
-[
-  {
-    "name": "Moja stacja",
-    "url": "https://radio.example.com/live.mp3",
-    "genre": "Custom",
-    "country": "Polska",
-    "bitrate": "128",
-    "description": "Przykładowa stacja z zewnętrznymi metadanymi.",
-    "homepage": "https://radio.example.com",
-    "picon": "/usr/share/enigma2/picon/moja_stacja.png",
-    "metadata_url": "https://radio.example.com/api/nowplaying",
-    "metadata_type": "json",
-    "metadata_title_key": "now_playing.song.title",
-    "metadata_artist_key": "now_playing.song.artist",
-    "metadata_album_key": "now_playing.song.album",
-    "metadata_text_key": "now_playing.song.text",
-    "metadata_program_key": "live.show.name",
-    "metadata_cover_key": "now_playing.song.art"
-  }
-]
+```bash
+./release/build_ipk.sh
 ```
 
-### Supported metadata fields
+Output is written to `releases/enigma2-plugin-extensions-neoradio_3.0.0_all.ipk`.
 
-- `metadata_url`
-- `metadata_type` = `auto`, `json`, `text`
-- `metadata_title_key`
-- `metadata_artist_key`
-- `metadata_album_key`
-- `metadata_text_key`
-- `metadata_program_key`
-- `metadata_cover_key`
+Run the static audit:
 
-Nested JSON paths are supported with dot notation.
-
-## GitHub updates
-
-The plugin checks `manifest.json` and expects a payload like this:
-
-```json
-{
-  "name": "NeoRadio",
-  "version": "2.0",
-  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/enigma2-plugin-extensions-neoradio_all.ipk",
-  "source": "https://github.com/OliOli2013/NeoRadio/releases/latest/download/neoradio_repo.tar.gz",
-  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/latest",
-  "changelog": "Added stronger ICY metadata parsing, optional per-station JSON/text metadata endpoints, improved Now Playing fallback logic, refreshed default artwork, and cleaner metadata presentation in the UI."
-}
+```bash
+python3 tools/static_audit.py
 ```
 
-## Repository layout
+## Important compatibility note
 
-```text
-pkgroot/                                 Files installed on the Enigma2 receiver
-release/CONTROL/control                  Package metadata
-release/build_ipk.sh                     Build helper for .ipk output
-manifest.json                            GitHub update manifest
-```
+Static validation cannot replace testing on real Enigma2 hardware. Before publishing the release broadly, test at minimum one Python 2 image and one Python 3 image, both HD and Full HD GUI layouts, stream playback, metadata, picons, Radio-Browser download and self-update.
+
+See `AUDIT_3.0.0_PL.md` for the detailed audit and `CHANGELOG_3.0.0.md` for the release changes.
