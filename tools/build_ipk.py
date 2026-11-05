@@ -13,14 +13,14 @@ PKGROOT = os.path.join(ROOT, 'pkgroot')
 CONTROL_DIR = os.path.join(ROOT, 'release', 'CONTROL')
 OUTPUT_DIR = os.path.join(ROOT, 'releases')
 PACKAGE = 'enigma2-plugin-extensions-neoradio'
-VERSION = '3.0.0'
+VERSION = '3.1.0'
 OUTPUT = os.path.join(OUTPUT_DIR, '%s_%s_all.ipk' % (PACKAGE, VERSION))
 
 
 def tar_filter(info):
     parts = info.name.split('/')
     base = parts[-1] if parts else info.name
-    if '__pycache__' in parts or base.endswith(('.pyc', '.pyo', '.orig', '.part', '.tmp')):
+    if '__pycache__' in parts or base.endswith(('.pyc', '.pyo', '.orig', '.part', '.tmp', '.bak')):
         return None
     return info
 

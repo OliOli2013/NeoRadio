@@ -23,15 +23,19 @@ jobs:
         run: python tools/static_audit.py
       - name: Build IPK
         run: python tools/build_ipk.py
+      - name: Build DEB
+        run: python tools/build_deb.py
       - name: Validate archive
         run: |
-          ar t releases/enigma2-plugin-extensions-neoradio_3.0.0_all.ipk
+          ar t releases/enigma2-plugin-extensions-neoradio_3.1.0_all.ipk
           rm -rf /tmp/neoradio-ipk-check && mkdir -p /tmp/neoradio-ipk-check
           cd /tmp/neoradio-ipk-check
-          ar x "$GITHUB_WORKSPACE/releases/enigma2-plugin-extensions-neoradio_3.0.0_all.ipk"
+          ar x "$GITHUB_WORKSPACE/releases/enigma2-plugin-extensions-neoradio_3.1.0_all.ipk"
           tar -tzf control.tar.gz | grep -E '(^|/)control$'
           tar -tzf data.tar.gz | grep 'usr/lib/enigma2/python/Plugins/Extensions/NeoRadio/plugin.py'
       - uses: actions/upload-artifact@v4
         with:
-          name: NeoRadio-3.0.0-IPK
-          path: releases/enigma2-plugin-extensions-neoradio_3.0.0_all.ipk
+          name: NeoRadio-3.1.0-IPK-DEB
+          path: |
+            releases/enigma2-plugin-extensions-neoradio_3.1.0_all.ipk
+            releases/enigma2-plugin-extensions-neoradio_3.1.0_all.deb

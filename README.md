@@ -1,4 +1,4 @@
-# NeoRadio 3.0.0 for Enigma2
+# NeoRadio 3.1.0 for Enigma2
 
 **NeoRadio** is an internet-radio plugin for Enigma2 receivers. Version 3.0.0 is a maintenance, security and interface release built from NeoRadio 2.1 after a full static/package audit.
 
@@ -73,7 +73,7 @@ On Linux with Python 3:
 ./release/build_ipk.sh
 ```
 
-Output is written to `releases/enigma2-plugin-extensions-neoradio_3.0.0_all.ipk`.
+Output is written to `releases/enigma2-plugin-extensions-neoradio_3.1.0_all.ipk`.
 
 Run the static audit:
 
@@ -86,3 +86,11 @@ python3 tools/static_audit.py
 Static validation cannot replace testing on real Enigma2 hardware. Before publishing the release broadly, test at minimum one Python 2 image and one Python 3 image, both HD and Full HD GUI layouts, stream playback, metadata, picons, Radio-Browser download and self-update.
 
 See `AUDIT_3.0.0_PL.md` for the detailed audit and `CHANGELOG_3.0.0.md` for the release changes.
+
+
+## NeoRadio 3.1.0 — UI refresh
+- A fixed, centered author/version credit beneath remote-control color buttons (HD and FHD).
+- Subtle cyan section accents; improved yellow-key label contrast.
+- Existing dynamic source-metadata footer remains unchanged.
+- Playback, Radio-Browser, favorites, picon lookup, screensaver, audio and settings logic unchanged.
+- Builds both IPK and DEB. See `README_UPGRADE_3_1_0_PL.md`.

@@ -63,8 +63,11 @@ def main():
     version_match = re.search(r'^PLUGIN_VERSION\s*=\s*[\"\']([^\"\']+)', src, re.M)
     version = version_match.group(1) if version_match else ''
     control = parse_control(CONTROL)
-    check(version == '3.0.0', 'unexpected PLUGIN_VERSION: %s' % version)
+    check(version == '3.1.0', 'unexpected PLUGIN_VERSION: %s' % version)
     check(control.get('Version') == version, 'control/plugin version mismatch')
+    # NeoRadio 3.1 footer verification
+    check('self["credits_footer"] = Label' in src, 'missing fixed author footer Label')
+    check(src.count('name="credits_footer"') == 2, 'footer must exist in HD and FHD skin')
     check(control.get('Package') == 'enigma2-plugin-extensions-neoradio', 'unexpected package name')
     check('RADIO_BROWSER_ONLY_MODE = False' in src, 'Radio-Browser-only mode must be disabled')
     m = re.search(r'^RADIO_BROWSER_DEFAULT_LIMIT\s*=\s*(\d+)', src, re.M)

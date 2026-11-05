@@ -81,7 +81,7 @@ except Exception:
     eDVBVolumecontrol = None
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "3.0.0"
+PLUGIN_VERSION = "3.1.0"
 PLUGIN_NAME = "NeoRadio"
 PLUGIN_TITLE = "NeoRadio"
 PLUGIN_DESC = "NeoRadio - internet radio for Enigma2"
@@ -1879,6 +1879,9 @@ def get_skin():
         <screen name="NeoRadioMain" position="center,center" size="1680,940" title="NeoRadio Online" backgroundColor="#00081418">
             <eLabel position="0,0" size="1680,940" backgroundColor="#00081418" zPosition="0" />
             <eLabel position="22,20" size="500,840" backgroundColor="#00101a2d" zPosition="0" />
+            <eLabel position="22,20" size="4,840" backgroundColor="#004b9ac8" zPosition="1" />
+            <eLabel position="542,20" size="4,600" backgroundColor="#004b9ac8" zPosition="1" />
+            <eLabel position="542,644" size="790,3" backgroundColor="#003a81ac" zPosition="2" />
             <eLabel position="542,20" size="1116,600" backgroundColor="#00101a2d" zPosition="0" />
             <eLabel position="736,404" size="520,132" backgroundColor="#00111d31" zPosition="1" />
             <eLabel position="1412,164" size="224,224" backgroundColor="#00121f36" zPosition="1" />
@@ -1944,10 +1947,13 @@ def get_skin():
 
             <widget name="key_red" position="22,882" size="240,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#00a32020" halign="center" valign="center" zPosition="2" />
             <widget name="key_green" position="282,882" size="240,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#001c7f39" halign="center" valign="center" zPosition="2" />
-            <widget name="key_yellow" position="542,882" size="240,30" font="Regular;24" foregroundColor="#00000000" backgroundColor="#00b99211" halign="center" valign="center" zPosition="2" />
+            <widget name="key_yellow" position="542,882" size="240,30" font="Regular;24" foregroundColor="#00131b25" backgroundColor="#00b99211" halign="center" valign="center" zPosition="2" />
             <widget name="key_blue" position="802,882" size="240,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#001d4fc9" halign="center" valign="center" zPosition="2" />
             <widget name="key_menu" position="1062,882" size="280,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#00303a4d" halign="center" valign="center" zPosition="2" />
             <widget name="key_info" position="1362,882" size="296,30" font="Regular;24" foregroundColor="#00ffffff" backgroundColor="#00434b5b" halign="center" valign="center" zPosition="2" />
+
+            <eLabel position="22,918" size="1636,2" backgroundColor="#003a81ac" zPosition="1" />
+            <widget name="credits_footer" position="28,922" size="1624,16" font="Regular;16" foregroundColor="#0096cceb" backgroundColor="#00081418" halign="center" transparent="0" zPosition="2" />
 
             <widget name="saver_bg" position="0,0" size="1680,940" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00060d16" transparent="0" zPosition="10" />
             <widget name="saver_picon" position="1260,690" size="260,120" alphatest="blend" zPosition="12" />
@@ -1961,6 +1967,9 @@ def get_skin():
     <screen name="NeoRadioMain" position="center,center" size="1180,660" title="NeoRadio Online" backgroundColor="#00081418">
         <eLabel position="0,0" size="1180,660" backgroundColor="#00081418" zPosition="0" />
         <eLabel position="20,20" size="420,560" backgroundColor="#00101a2d" zPosition="0" />
+        <eLabel position="20,20" size="3,560" backgroundColor="#004b9ac8" zPosition="1" />
+        <eLabel position="460,20" size="3,400" backgroundColor="#004b9ac8" zPosition="1" />
+        <eLabel position="460,434" size="400,2" backgroundColor="#003a81ac" zPosition="1" />
         <eLabel position="460,20" size="700,400" backgroundColor="#00101a2d" zPosition="0" />
         <eLabel position="606,220" size="340,110" backgroundColor="#00111d31" zPosition="1" />
         <eLabel position="934,104" size="176,176" backgroundColor="#00121f36" zPosition="1" />
@@ -2025,10 +2034,13 @@ def get_skin():
 
         <widget name="key_red" position="20,614" size="140,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#00a32020" halign="center" valign="center" zPosition="2" />
         <widget name="key_green" position="170,614" size="140,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#001c7f39" halign="center" valign="center" zPosition="2" />
-        <widget name="key_yellow" position="320,614" size="140,24" font="Regular;18" foregroundColor="#00000000" backgroundColor="#00b99211" halign="center" valign="center" zPosition="2" />
+        <widget name="key_yellow" position="320,614" size="140,24" font="Regular;18" foregroundColor="#00131b25" backgroundColor="#00b99211" halign="center" valign="center" zPosition="2" />
         <widget name="key_blue" position="470,614" size="140,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#001d4fc9" halign="center" valign="center" zPosition="2" />
         <widget name="key_menu" position="620,614" size="220,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#00303a4d" halign="center" valign="center" zPosition="2" />
         <widget name="key_info" position="850,614" size="220,24" font="Regular;18" foregroundColor="#00ffffff" backgroundColor="#00434b5b" halign="center" valign="center" zPosition="2" />
+
+        <eLabel position="20,642" size="1050,2" backgroundColor="#003a81ac" zPosition="1" />
+        <widget name="credits_footer" position="24,645" size="1042,14" font="Regular;12" foregroundColor="#0096cceb" backgroundColor="#00081418" halign="center" transparent="0" zPosition="2" />
 
         <widget name="saver_bg" position="0,0" size="1180,660" font="Regular;1" foregroundColor="#00000000" backgroundColor="#00060d16" transparent="0" zPosition="10" />
         <widget name="saver_picon" position="870,476" size="180,90" alphatest="blend" zPosition="12" />
@@ -2203,6 +2215,7 @@ class NeoRadioMain(Screen):
         self["audio_bass"] = Label(text_type(""))
         self["audio_bass_help"] = Label(text_type(""))
         self["audio_help"] = Label(text_type(""))
+        self["credits_footer"] = Label(u"NeoRadio %s   |   Paweł Pawełek   |   AIO Team   |   Enigma2" % PLUGIN_VERSION)
         self["footer_brand"] = Label(text_type(""))
         self["footer_label"] = Label(text_type(""))
         self["station_name"] = Label(u"-")
