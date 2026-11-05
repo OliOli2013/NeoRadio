@@ -124,6 +124,10 @@ def main():
 
     bad_refs = []
     for path in walk_text_files():
+        # Radio-Browser station homepages are external data, not project links.
+        # Do not fail CI solely because a station has a social-media homepage.
+        if os.path.normpath(path) == os.path.normpath(os.path.join(PLUGIN_DIR, 'stations.json')):
+            continue
         try:
             text = open(path, 'r', encoding='utf-8', errors='ignore').read().lower()
         except Exception:
