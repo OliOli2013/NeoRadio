@@ -1,0 +1,10 @@
+{
+  "name": "NeoRadio",
+  "version": "3.1.0",
+  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/download/v3.1.0/enigma2-plugin-extensions-neoradio_3.1.0_all.ipk",
+  "deb": "https://github.com/OliOli2013/NeoRadio/releases/download/v3.1.0/enigma2-plugin-extensions-neoradio_3.1.0_all.deb",
+  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/tag/v3.1.0",
+  "project_page": "https://github.com/OliOli2013/NeoRadio",
+  "sha256": "ee02bd7975b4c7d805d00804945d31eb2f20c421464b8bd10a58d0db0200e90a",
+  "changelog": "NeoRadio 3.1.0: new independent author/version footer in HD and FHD, modern AIO styling, improved key contrast; playback features unchanged."
+}
