@@ -81,7 +81,7 @@ except Exception:
     eDVBVolumecontrol = None
 from Tools.Directories import resolveFilename, SCOPE_CONFIG
 
-PLUGIN_VERSION = "3.2.0"
+PLUGIN_VERSION = "3.2.1"
 PLUGIN_NAME = "NeoRadio"
 PLUGIN_TITLE = "NeoRadio"
 PLUGIN_DESC = "NeoRadio - internet radio for Enigma2"
@@ -2086,109 +2086,30 @@ def get_default_skin():
 
 
 
-def _skin_regex_replace(xml, pattern, repl):
-    try:
-        return re.sub(pattern, repl, xml, flags=re.S)
-    except Exception:
-        return xml
-
-
 def build_themed_skin(theme):
-    xml = get_default_skin()
-    width = getDesktop(0).size().width()
-    is_fhd = width >= 1920
-    size = "1680,940" if is_fhd else "1180,660"
-    asset = text_type("")
-    if theme == 'retro':
-        asset = os.path.join(SKIN_ASSET_DIR, 'skin_retro_fhd.png' if is_fhd else 'skin_retro_hd.png')
-    elif theme == 'future':
-        asset = os.path.join(SKIN_ASSET_DIR, 'skin_future_fhd.png' if is_fhd else 'skin_future_hd.png')
-    if not asset:
-        return xml
-
-    xml = xml.replace('backgroundColor="#00081418">', 'backgroundColor="#00000000">\n            <ePixmap position="0,0" size="%s" pixmap="%s" zPosition="-5" alphatest="blend" />' % (size, asset.replace('\\', '/')), 1)
-
-    # Let the themed background be visible while keeping widgets readable.
-    for color in ('#00081418', '#00101a2d', '#00121f36', '#00111d31', '#000d1626', '#00131d2f'):
-        xml = xml.replace('backgroundColor="%s"' % color, 'backgroundColor="#00000000"')
-
-    if theme == 'future':
-        list_bg = '#000b1421'
-        list_sel_fg = '#00fff5b3'
-        list_sel_bg = '#0052b7ff'
-        text_main = '#00ffffff'
-        text_accent = '#007ff2ff'
-        text_gold = '#00ffd86b'
-        text_soft = '#00d7e9ff'
-        audio_title = '#00ffd86b'
-    else:
-        list_bg = '#00321b08'
-        list_sel_fg = '#00301808'
-        list_sel_bg = '#00f0c05a'
-        text_main = '#00fff7df'
-        text_accent = '#00f5d092'
-        text_gold = '#00ffc865'
-        text_soft = '#00f1e3c4'
-        audio_title = '#00ffcc77'
-
-    # Hide duplicated static labels already present on the baked concept art.
-    hidden = ('list_title','header_title','spectrum_title','audio_title','picon_large_title','credits_footer','key_red','key_green','key_yellow','key_blue','key_menu','key_info','footer_brand','footer_label')
-    for name in hidden:
-        xml = _skin_regex_replace(xml, r'(<widget name="%s"[^>]*foregroundColor=")[^"]+("[^>]*>)' % name, r'\1#00000000\2')
-        xml = _skin_regex_replace(xml, r'(<widget name="%s"[^>]*backgroundColor=")[^"]+("[^>]*>)' % name, r'\1#00000000\2')
-
-    # List and info blocks should remain readable above the background artwork.
-    for name in ('station_list',):
-        xml = _skin_regex_replace(xml, r'(<widget name="%s"[^>]*backgroundColor=")[^"]+("[^>]*>)' % name, r'\1%s\2' % list_bg)
-        xml = _skin_regex_replace(xml, r'(<widget name="%s"[^>]*backgroundColorSelected=")[^"]+("[^>]*>)' % name, r'\1%s\2' % list_sel_bg)
-        xml = _skin_regex_replace(xml, r'(<widget name="%s"[^>]*foregroundColorSelected=")[^"]+("[^>]*>)' % name, r'\1%s\2' % list_sel_fg)
-
-    for name in ('filter_label', 'search_label', 'help_label'):
-        xml = _skin_regex_replace(xml, r'(<widget name="%s"[^>]*backgroundColor=")[^"]+("[^>]*>)' % name, r'\1%s\2' % list_bg)
-
-    for name in ('status_label','station_name','station_meta','station_url','station_desc_title','station_desc','station_extra','hero_clock','hero_date','np_header','np_title','np_artist','np_album','np_status','spectrum_label','clock_label','visualizer_label'):
-        xml = _skin_regex_replace(xml, r'(<widget name="%s"[^>]*backgroundColor=")[^"]+("[^>]*>)' % name, r'\1#00000000\2')
-
-    color_map = {
-        'status_label': '#001eff6b' if theme == 'future' else '#0018da5a',
-        'station_name': text_main,
-        'station_meta': text_accent,
-        'station_url': text_soft,
-        'station_desc_title': text_gold,
-        'station_desc': text_soft,
-        'station_extra': text_accent,
-        'hero_clock': text_main,
-        'hero_date': text_gold,
-        'np_header': text_gold,
-        'np_title': text_main,
-        'np_artist': text_soft,
-        'np_album': text_soft,
-        'np_status': '#001eff6b' if theme == 'future' else '#0018da5a',
-        'clock_label': text_main if theme == 'future' else text_gold,
-        'visualizer_label': text_gold,
-        'spectrum_label': '#0070f0ae' if theme == 'future' else '#00ffca56',
-        'audio_balance_title': text_main,
-        'audio_treble_title': text_main,
-        'audio_bass_title': text_main,
-        'audio_balance_help': text_soft,
-        'audio_treble_help': text_soft,
-        'audio_bass_help': text_soft,
-    }
-    for name, color in color_map.items():
-        xml = _skin_regex_replace(xml, r'(<widget name="%s"[^>]*foregroundColor=")[^"]+("[^>]*>)' % name, r'\1%s\2' % color)
-
-    return xml
+    # Retro and Future are independent screens, not recolors of default skin.
+    # In case of missing artwork (e.g. incomplete installation), recover safely.
+    try:
+        from Plugins.Extensions.NeoRadio.skin_layouts import create_theme_skin
+        fhd = getDesktop(0).size().width() >= 1920
+        filename = 'skin_%s_%s.png' % (theme, 'fhd' if fhd else 'hd')
+        asset_path = os.path.join(SKIN_ASSET_DIR, filename)
+        if not os.path.isfile(asset_path):
+            raise IOError('missing skin artwork: %s' % filename)
+        return create_theme_skin(theme, fhd, SKIN_ASSET_DIR)
+    except Exception as error:
+        try:
+            print('[NeoRadio] themed skin unavailable: %s' % to_text(error))
+        except Exception:
+            pass
+        return get_default_skin()
 
 
 def get_skin(theme=None):
     theme_value = get_skin_theme_value() if theme is None else to_text(theme).strip().lower()
-    if theme_value == 'retro':
-        return build_themed_skin('retro')
-    if theme_value == 'future':
-        return build_themed_skin('future')
+    if theme_value in ('retro', 'future'):
+        return build_themed_skin(theme_value)
     return get_default_skin()
-
-
 
 
 
@@ -2377,6 +2298,11 @@ class NeoRadioMain(Screen):
         self["key_menu"] = Label(text_type(""))
         self["key_info"] = Label(text_type(""))
         self["station_list"] = MenuList([])
+        # Live information shown in the Future concept's stat capsules.
+        # These are harmless unused sources in the unmodified default skin.
+        self["detail_bitrate"] = Label(text_type(""))
+        self["detail_country"] = Label(text_type(""))
+        self["detail_favorite"] = Label(text_type(""))
         self["cover"] = Pixmap()
         self["picon"] = Pixmap()
         self["picon_large_title"] = Label(text_type(""))
@@ -2673,7 +2599,10 @@ class NeoRadioMain(Screen):
         self["footer_brand"].setText(tr('by_author'))
         self["station_desc_title"].setText(tr('station_desc_title'))
         self["spectrum_title"].setText(tr('spectrum_title'))
-        self["np_header"].setText(tr('np_header'))
+        if get_skin_theme_value() == 'retro':
+            self["np_header"].setText(u"Teraz gra" if get_active_language() == 'pl' else u"Now playing")
+        else:
+            self["np_header"].setText(tr('np_header'))
         self["np_title"].setText(tr('np_title'))
         self["np_artist"].setText(tr('np_artist'))
         self["np_album"].setText(tr('np_album'))
@@ -3443,6 +3372,9 @@ class NeoRadioMain(Screen):
             self["station_url"].setText(text_type(""))
             self["station_desc"].setText(tr("nothing_to_show"))
             self["station_extra"].setText(text_type(""))
+            self["detail_bitrate"].setText(text_type(""))
+            self["detail_country"].setText(text_type(""))
+            self["detail_favorite"].setText(text_type(""))
             self.update_cover(None)
             self.update_picon(self.get_picon_station())
             self.set_footer_default()
@@ -3453,6 +3385,9 @@ class NeoRadioMain(Screen):
         bitrate = to_text(station.get("bitrate", u"?"))
         fav = tr("fav_yes") if name in self.favorites else tr("fav_no")
         meta = tr("meta_line", genre, country, bitrate, fav)
+        self["detail_bitrate"].setText(shorten_text(u"%s kbps" % bitrate, 20))
+        self["detail_country"].setText(shorten_text(country, 15))
+        self["detail_favorite"].setText(tr("fav_label", fav))
         desc = to_text(station.get("description", u""))
         if not desc:
             desc = tr("metadata_waiting")
@@ -3721,6 +3656,14 @@ class NeoRadioMain(Screen):
         return value
 
     def get_audio_card_asset_path(self, control_name, value, active=False):
+        skin = get_skin_theme_value()
+        if skin in ('retro', 'future'):
+            resolution = 'fhd' if self.is_fhd else 'hd'
+            file_name = 'eq_%s_%s_%s_%+03d.png' % (
+                skin, resolution, control_name, self.clamp_audio_value(value))
+            themed_path = os.path.join(SKIN_ASSET_DIR, 'audio', file_name)
+            if os.path.isfile(themed_path):
+                return themed_path
         theme = self.get_audio_theme_value()
         mode = 'fhd' if self.is_fhd else 'hd'
         value = self.clamp_audio_value(value)
@@ -3753,6 +3696,12 @@ class NeoRadioMain(Screen):
 
     def update_audio_controls_labels(self):
         try:
+            if get_skin_theme_value() in ('retro', 'future'):
+                self["audio_balance"].setText(self.audio_control_value_text('balance'))
+                self["audio_treble"].setText(self.audio_control_value_text('treble'))
+                self["audio_bass"].setText(self.audio_control_value_text('bass'))
+                self.update_audio_control_cards()
+                return
             bal_value = self.clamp_audio_value(self.audio_balance_value)
             bal_side = u"C"
             if bal_value < 0:

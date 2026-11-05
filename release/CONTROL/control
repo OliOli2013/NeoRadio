@@ -1,8 +1,8 @@
 Package: enigma2-plugin-extensions-neoradio
-Version: 3.2.0
+Version: 3.2.1
 Architecture: all
 Maintainer: Paweł Pawełek <aio-iptv@wp.pl>
 Section: base
 Priority: optional
 Depends: enigma2
-Description: NeoRadio 3.2.0 - internet radio plugin for Enigma2 with three selectable UI skins (default, retro, future), Radio-Browser, metadata, picons and secure updates
+Description: NeoRadio 3.2.1 - internet radio for Enigma2 with real Retro/Future skins, HD/FHD screens, dynamic metadata, picons and audio EQ controls
