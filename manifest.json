@@ -1,9 +1,9 @@
 {
   "name": "NeoRadio",
-  "version": "3.0.0",
-  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/download/v3.0.0/enigma2-plugin-extensions-neoradio_3.0.0_all.ipk",
-  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/tag/v3.0.0",
+  "version": "3.1.0",
+  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/download/v3.1.0/enigma2-plugin-extensions-neoradio_all.ipk",
+  "release_page": "https://github.com/OliOli2013/NeoRadio/releases/tag/v3.1.0",
   "project_page": "https://olioli2013.github.io/aio-iptv-projekt/",
-  "sha256": "50ef58384a6b6fe121a415bb319f68f47bd11621cb6fe9d479abb234c64e700a",
-  "changelog": "NeoRadio 3.0.0: corrected INFO key handling across Enigma2 images, fixed project information screen opening with compatibility fallback, and added automatic cleanup of NeoRadio installer/update files from /tmp after installation."
+  "sha256": "ee02bd7975b4c7d805d00804945d31eb2f20c421464b8bd10a58d0db0200e90a",
+  "changelog": "NeoRadio 3.1.0: odświeżony interfejs HD/FHD, osobna stopka Paweł Pawełek | AIO Team, zachowane odtwarzanie, ulubione, Radio-Browser, RDS/ICY i regulacja dźwięku."
 }
