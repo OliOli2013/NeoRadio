@@ -1,0 +1,8 @@
+{
+  "name": "NeoRadio",
+  "version": "3.2.0",
+  "url": "https://github.com/OliOli2013/NeoRadio/releases/download/v3.2.0/enigma2-plugin-extensions-neoradio_3.2.0_all.ipk",
+  "ipk": "https://github.com/OliOli2013/NeoRadio/releases/download/v3.2.0/enigma2-plugin-extensions-neoradio_3.2.0_all.ipk",
+  "sha256": "1353863420eb34feae6d310d566e10238163dee8a3e9c80b7dc0e1666f68f83f",
+  "changelog": "Three selectable skins: default, retro radio, future radio. Reopen plugin after changing the skin."
+}
